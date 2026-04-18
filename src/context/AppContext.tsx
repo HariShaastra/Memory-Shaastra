@@ -1,5 +1,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, AppView, StudyTask, FirstLetterAid, ExamPlan, FileAttachment, Mnemonic, MemoryPalace, LinkChain, Flashcard, Revision } from '../types';
+import { 
+  User, 
+  AppView, 
+  StudyTask, 
+  FirstLetterAid, 
+  ExamPlan, 
+  FileAttachment, 
+  Mnemonic, 
+  MemoryPalace, 
+  LinkChain, 
+  Flashcard, 
+  Revision,
+  GamificationState,
+  Level,
+  Badge
+} from '../types';
 
 interface AppContextType {
   user: User | null;
@@ -15,6 +30,8 @@ interface AppContextType {
   setMemoryPalaces: React.Dispatch<React.SetStateAction<MemoryPalace[]>>;
   linkChains: LinkChain[];
   setLinkChains: React.Dispatch<React.SetStateAction<LinkChain[]>>;
+  storyChains: LinkChain[];
+  setStoryChains: React.Dispatch<React.SetStateAction<LinkChain[]>>;
   firstLetterEntries: FirstLetterAid[];
   setFirstLetterEntries: React.Dispatch<React.SetStateAction<FirstLetterAid[]>>;
   flashcards: Flashcard[];
@@ -26,6 +43,11 @@ interface AppContextType {
   handleFileUpload: (file: File) => Promise<FileAttachment>;
   isSidebarOpen: boolean;
   setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  gamification: GamificationState;
+  addXP: (amount: number) => void;
+  level: Level;
+  updateStreak: () => void;
+  unlockBadge: (badge: Badge) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -73,6 +95,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [storyChains, setStoryChains] = useState<LinkChain[]>(() => {
+    const saved = localStorage.getItem('ms_story_chains');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [firstLetterEntries, setFirstLetterEntries] = useState<FirstLetterAid[]>(() => {
     const saved = localStorage.getItem('ms_first_letter');
     return saved ? JSON.parse(saved) : [];
@@ -106,6 +133,55 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [gamification, setGamification] = useState<GamificationState>(() => {
+    const saved = localStorage.getItem('ms_gamification');
+    return saved ? JSON.parse(saved) : {
+      xp: 0,
+      streak: 0,
+      lastActiveDate: null,
+      badges: []
+    };
+  });
+
+  const level = ((): Level => {
+    const { xp } = gamification;
+    if (xp < 500) return 'Beginner';
+    if (xp < 1500) return 'Sharp Learner';
+    if (xp < 3000) return 'Memory Master';
+    return 'Shaastra Sage';
+  })();
+
+  const addXP = (amount: number) => {
+    setGamification(prev => ({ ...prev, xp: prev.xp + amount }));
+  };
+
+  const updateStreak = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const lastActive = gamification.lastActiveDate;
+
+    if (lastActive === today) return;
+
+    const lastDate = lastActive ? new Date(lastActive) : null;
+    const tomorrow = lastDate ? new Date(lastDate) : null;
+    if (tomorrow) tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const isConsecutive = tomorrow && tomorrow.toISOString().split('T')[0] === today;
+
+    setGamification(prev => ({
+      ...prev,
+      lastActiveDate: today,
+      streak: isConsecutive ? prev.streak + 1 : 1
+    }));
+  };
+
+  const unlockBadge = (badge: Badge) => {
+    if (gamification.badges.find(b => b.id === badge.id)) return;
+    setGamification(prev => ({
+      ...prev,
+      badges: [...prev.badges, { ...badge, unlockedAt: new Date().toISOString() }]
+    }));
+  };
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -130,6 +206,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [linkChains]);
 
   useEffect(() => {
+    localStorage.setItem('ms_story_chains', JSON.stringify(storyChains));
+  }, [storyChains]);
+
+  useEffect(() => {
     localStorage.setItem('ms_first_letter', JSON.stringify(firstLetterEntries));
   }, [firstLetterEntries]);
 
@@ -145,6 +225,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('ms_exam_plans', JSON.stringify(examPlans));
   }, [examPlans]);
 
+  useEffect(() => {
+    localStorage.setItem('ms_gamification', JSON.stringify(gamification));
+  }, [gamification]);
+
   return (
     <AppContext.Provider value={{ 
       user, setUser, 
@@ -153,12 +237,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       mnemonics, setMnemonics,
       memoryPalaces, setMemoryPalaces,
       linkChains, setLinkChains,
+      storyChains, setStoryChains,
       firstLetterEntries, setFirstLetterEntries,
       flashcards, setFlashcards,
       revisions, setRevisions,
       examPlans, setExamPlans,
       handleFileUpload,
-      isSidebarOpen, setIsSidebarOpen
+      isSidebarOpen, setIsSidebarOpen,
+      gamification, addXP, level, updateStreak, unlockBadge
     }}>
       {children}
     </AppContext.Provider>

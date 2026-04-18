@@ -9,6 +9,24 @@ export interface FileAttachment {
 export interface User {
   email: string;
   name: string;
+  photoUrl?: string;
+  avatarId?: number;
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  icon: string;
+  unlockedAt: string;
+}
+
+export type Level = 'Beginner' | 'Sharp Learner' | 'Memory Master' | 'Shaastra Sage';
+
+export interface GamificationState {
+  xp: number;
+  streak: number;
+  lastActiveDate: string | null;
+  badges: Badge[];
 }
 
 export interface Flashcard {
@@ -31,15 +49,17 @@ export interface Mnemonic {
   attachments?: FileAttachment[];
 }
 
+export interface PalaceLocation {
+  id: string;
+  name: string;
+  concept?: string;
+  attachments?: FileAttachment[];
+}
+
 export interface MemoryPalace {
   id: string;
   name: string;
-  locations: {
-    id: string;
-    name: string;
-    concept?: string;
-    attachments?: FileAttachment[];
-  }[];
+  locations: PalaceLocation[];
 }
 
 export interface LinkChain {
@@ -138,9 +158,10 @@ export type AppView =
   | 'mnemonics' 
   | 'palace' 
   | 'linking' 
+  | 'story'
   | 'first-letter' 
   | 'scheduler' 
-  | 'icebreaker' 
+  | 'memory-boost' 
   | 'settings'
   | 'planner'
   | 'exam-mode';

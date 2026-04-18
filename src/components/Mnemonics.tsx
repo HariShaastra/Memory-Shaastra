@@ -1,17 +1,25 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { Plus, Trash2, PenTool, Edit2, Check, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Plus, Trash2, PenTool, Edit2, Play, ChevronLeft, Sparkles, Brain } from 'lucide-react';
 import { Mnemonic } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
+import { MaanasMascot } from './MaanasMascot';
 
 export default function Mnemonics() {
-  const { mnemonics, setMnemonics } = useAppContext();
+  const { mnemonics, setMnemonics, goBack, addXP } = useAppContext();
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newPhrase, setNewPhrase] = useState('');
+
+  // Practice Mode State
+  const [practiceMode, setPracticeMode] = useState(false);
+  const [currentMnemonic, setCurrentMnemonic] = useState<Mnemonic | null>(null);
+  const [step, setStep] = useState<'memorize' | 'test'>('memorize');
+  const [userTestValue, setUserTestValue] = useState('');
+  const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
 
   const addMnemonic = () => {
     if (!newTitle || !newPhrase) return;
@@ -22,13 +30,14 @@ export default function Mnemonics() {
     };
     setMnemonics([item, ...mnemonics]);
     resetForm();
+    addXP(20);
   };
 
   const startEditing = (item: Mnemonic) => {
     setEditingId(item.id);
     setNewTitle(item.title);
     setNewPhrase(item.phrase);
-    setIsAdding(false);
+    setIsAdding(true);
   };
 
   const saveEdit = () => {
@@ -50,87 +59,247 @@ export default function Mnemonics() {
     setMnemonics(mnemonics.filter(m => m.id !== id));
   };
 
+  const startPractice = (m: Mnemonic) => {
+    setCurrentMnemonic(m);
+    setPracticeMode(true);
+    setStep('memorize');
+    setFeedback(null);
+    setUserTestValue('');
+  };
+
+  const handleTest = () => {
+    if (!currentMnemonic) return;
+    const isCorrect = userTestValue.trim().toLowerCase() === currentMnemonic.phrase.trim().toLowerCase();
+    setFeedback(isCorrect ? 'correct' : 'wrong');
+    if (isCorrect) addXP(30);
+  };
+
+  if (practiceMode && currentMnemonic) {
+    return (
+      <div className="max-w-2xl mx-auto px-6 py-12 space-y-8">
+        <header className="flex items-center gap-4">
+          <button onClick={() => setPracticeMode(false)} className="p-3 bg-[#2a221f] rounded-2xl shadow-sm border border-[#3f332c] hover:text-orange-500 transition-all"><ChevronLeft size={24} /></button>
+          <div>
+            <h1 className="text-2xl font-black tracking-tight italic bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase">Practice Mode</h1>
+            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-widest">{currentMnemonic.title}</p>
+          </div>
+        </header>
+
+        <div className="bg-[#2a221f] p-12 rounded-[4rem] shadow-2xl shadow-orange-900/10 border border-[#3f332c] min-h-[500px] flex flex-col items-center justify-center text-center relative">
+          <AnimatePresence mode="wait">
+            {step === 'memorize' ? (
+              <motion.div key="memorize" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-10">
+                <MaanasMascot size={180} expression="encouraging" />
+                <div className="space-y-4">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500 mb-2 block">Read and Memorize</span>
+                  <p className="text-4xl font-black text-orange-50 leading-tight italic tracking-tighter">"{currentMnemonic.phrase}"</p>
+                </div>
+                <button 
+                  onClick={() => setStep('test')}
+                  className="px-12 py-5 bg-orange-600 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl shadow-orange-600/20 active:scale-95"
+                >
+                  I've got it!
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div key="test" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 w-full max-w-sm">
+                <MaanasMascot size={180} expression={feedback === 'correct' ? 'proud' : feedback === 'wrong' ? 'sad' : 'focused'} />
+                <div className="space-y-4">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">Recall the phrase</h3>
+                  <textarea 
+                    autoFocus
+                    value={userTestValue}
+                    onChange={(e) => setUserTestValue(e.target.value)}
+                    className="w-full bg-[#1a1614] border border-[#3f332c] rounded-[2.5rem] py-10 px-8 text-2xl font-black text-center text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 transition-all resize-none italic"
+                    placeholder="Type it here..."
+                  />
+                </div>
+                {feedback === 'correct' ? (
+                  <div className="space-y-6">
+                    <p className="text-emerald-400 font-black text-xl flex items-center justify-center gap-2 italic uppercase tracking-tighter">
+                      <Sparkles /> Correct! +30 XP
+                    </p>
+                    <button 
+                      onClick={() => setPracticeMode(false)}
+                      className="w-full py-5 bg-emerald-500 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs active:scale-95 shadow-xl shadow-emerald-500/20"
+                    >
+                      Awesome!
+                    </button>
+                  </div>
+                ) : feedback === 'wrong' ? (
+                  <div className="space-y-6">
+                    <p className="text-rose-400 font-bold italic tracking-tight">Not quite. Let's try again!</p>
+                    <div className="flex gap-3 justify-center">
+                      <button 
+                        onClick={() => { setStep('memorize'); setFeedback(null); setUserTestValue(''); }}
+                        className="flex-1 py-4 bg-white/5 text-orange-200/40 rounded-2xl font-black uppercase tracking-widest text-[10px]"
+                      >
+                        See Phrase
+                      </button>
+                      <button 
+                        onClick={() => { setFeedback(null); setUserTestValue(''); }}
+                        className="flex-1 py-4 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px]"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={handleTest}
+                    className="w-full py-5 bg-orange-600 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs active:scale-95 shadow-xl shadow-orange-600/20"
+                  >
+                    Check Answer
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 md:mb-12">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight italic serif">{t.mnemonics}</h2>
-          <p className="text-zinc-500 text-sm">Create catchy phrases to remember complex sequences.</p>
+    <div className="max-w-6xl mx-auto px-6 py-12 space-y-12">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="flex items-center gap-4">
+           <button onClick={goBack} className="p-3 bg-[#2a221f] rounded-2xl shadow-sm border border-[#3f332c] hover:text-orange-500 transition-all">
+             <ChevronLeft size={24} />
+           </button>
+           <div>
+            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">Wisdom Keys</h2>
+            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Technique: Sacred Mnemonics</p>
+           </div>
         </div>
         <button 
           onClick={() => { resetForm(); setIsAdding(true); }}
-          className="flex items-center space-x-2 bg-emerald-500 text-white px-6 py-3 rounded-2xl text-sm font-bold hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 w-full md:w-auto justify-center"
+          className="flex items-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 w-full md:w-auto justify-center active:scale-95"
         >
           <Plus size={18} />
-          <span>{t.add} {t.mnemonic}</span>
+          <span>Manifest Wisdom Key</span>
         </button>
       </header>
 
-      {(isAdding || editingId) && (
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white border border-zinc-200 rounded-3xl p-6 mb-8 shadow-xl"
-        >
-          <h3 className="text-lg font-bold mb-4">
-            {editingId ? t.edit : t.add} {t.mnemonic}
-          </h3>
-          <div className="space-y-4">
-            <input 
-              type="text" 
-              placeholder="Concept Name (e.g. Order of Planets)"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-            <textarea 
-              placeholder="Mnemonic Phrase..."
-              value={newPhrase}
-              onChange={(e) => setNewPhrase(e.target.value)}
-              rows={3}
-              className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-            />
-            <div className="flex justify-end space-x-3">
-              <button onClick={resetForm} className="px-6 py-2 text-sm text-zinc-500 font-bold uppercase tracking-widest hover:text-zinc-700">
-                {t.cancel}
-              </button>
-              <button 
-                onClick={editingId ? saveEdit : addMnemonic} 
-                className="px-6 py-2 bg-emerald-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-600"
-              >
-                {t.save}
-              </button>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Mascot Tip */}
+        <div className="lg:col-span-1">
+          <div className="bg-[#2a221f] p-10 rounded-[4rem] border border-[#3f332c] flex flex-col items-center text-center sticky top-24 shadow-2xl shadow-orange-900/5">
+            <MaanasMascot size={150} expression="encouraging" />
+            <div className="mt-8 space-y-4">
+              <h3 className="font-black text-orange-500 uppercase tracking-widest text-[10px]">Trainer's Tip</h3>
+              <p className="text-orange-100/70 font-bold italic text-lg leading-relaxed">"Make phrases bizarre, emotional, or funny. The weirder it is, the easier your brain stores it!"</p>
             </div>
           </div>
-        </motion.div>
-      )}
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {mnemonics.map((item) => (
-          <div key={item.id} className="bg-white border border-zinc-200 rounded-3xl p-6 hover:border-emerald-500/50 transition-all group shadow-sm">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                <PenTool size={20} />
+        {/* Right Column: List and Add Form */}
+        <div className="lg:col-span-2 space-y-8">
+          <AnimatePresence>
+            {(isAdding || editingId) && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-[#2a221f] border border-[#3f332c] rounded-[3rem] p-10 shadow-2xl"
+              >
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-12 h-12 bg-orange-500/10 text-orange-500 rounded-2xl flex items-center justify-center border border-orange-500/20">
+                    <PenTool size={24} />
+                  </div>
+                  <h3 className="text-2xl font-black text-orange-100 uppercase tracking-tighter italic">
+                    {editingId ? 'Refine' : 'Forge'} Mnemonic
+                  </h3>
+                </div>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-2">Concept Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Order of Planets"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 text-orange-100 font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all italic"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-2">Mnemonic Phrase</label>
+                    <textarea 
+                      placeholder="e.g. My Very Educated Mother Just Served Us Noodles"
+                      value={newPhrase}
+                      onChange={(e) => setNewPhrase(e.target.value)}
+                      rows={3}
+                      className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 text-orange-100 font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all resize-none italic"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-4">
+                    <button onClick={resetForm} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-[#3f332c] hover:text-orange-200/40">
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={editingId ? saveEdit : addMnemonic} 
+                      className="px-10 py-4 bg-orange-600 text-white rounded-[1.8rem] text-xs font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95"
+                    >
+                      Save to Forge
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="grid grid-cols-1 gap-6">
+            {mnemonics.length === 0 ? (
+              <div className="text-center py-24 bg-[#2a221f]/30 border-2 border-dashed border-[#3f332c] rounded-[4rem] flex flex-col items-center">
+                <Brain size={48} className="text-[#3f332c] mb-4" />
+                <p className="text-orange-200/20 font-black italic uppercase tracking-widest text-xs">The forge is cold. Add a phrase.</p>
+                <button onClick={() => setIsAdding(true)} className="mt-4 text-orange-500 font-black uppercase tracking-widest text-[10px] hover:underline">Start Creating</button>
               </div>
-              <div className="flex space-x-2">
-                <button 
-                  onClick={() => startEditing(item)}
-                  className="text-zinc-300 hover:text-emerald-500 transition-colors p-1"
+            ) : (
+              mnemonics.map((item) => (
+                <motion.div 
+                  layout
+                  key={item.id} 
+                  className="bg-[#2a221f] border border-[#3f332c] rounded-[3rem] p-10 hover:bg-[#2d2522] transition-all group shadow-sm flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden"
                 >
-                  <Edit2 size={16} />
-                </button>
-                <button 
-                  onClick={() => deleteMnemonic(item.id)}
-                  className="text-zinc-300 hover:text-red-500 transition-colors p-1"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-            <h3 className="font-bold text-lg mb-2">{item.title}</h3>
-            <p className="text-zinc-500 text-sm leading-relaxed italic">"{item.phrase}"</p>
+                  <div className="flex items-center gap-8 flex-1 w-full relative z-10">
+                    <div className="w-16 h-16 rounded-3xl bg-[#1a1614] text-orange-500 flex items-center justify-center shrink-0 border border-[#3f332c] group-hover:bg-orange-600 group-hover:text-white transition-all">
+                      <PenTool size={28} />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-black text-2xl text-orange-100 tracking-tighter italic mb-1">{item.title}</h3>
+                      <p className="text-orange-400 font-black text-xl italic drop-shadow-sm">"{item.phrase}"</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 shrink-0 relative z-10">
+                    <button 
+                      onClick={() => startPractice(item)}
+                      className="flex items-center gap-3 bg-orange-600 text-white px-10 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
+                    >
+                      <Play size={18} fill="currentColor" />
+                      <span>Practice</span>
+                    </button>
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                       <button 
+                        onClick={() => startEditing(item)}
+                        className="p-4 text-orange-200/20 hover:text-orange-400 bg-white/5 rounded-2xl transition-all"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button 
+                        onClick={() => deleteMnemonic(item.id)}
+                        className="p-4 text-orange-200/20 hover:text-rose-500 bg-white/5 rounded-2xl transition-all"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );

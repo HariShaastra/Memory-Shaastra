@@ -86,45 +86,116 @@ export const StudyPlanner: React.FC = () => {
     if (filter === 'completed') return task.completed;
     if (filter === 'daily') {
       const today = new Date().toISOString().split('T')[0];
-      return !task.completed && task.plannedDate === today;
+      return !task.completed && (task.plannedDate === today || !task.plannedDate);
     }
     return !task.completed; // Weekly/All
   });
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-      <header className="flex items-center justify-between">
+    <div className="max-w-4xl mx-auto px-6 py-12 space-y-8">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={goBack}
-            className="p-2 rounded-full hover:bg-slate-100 transition-colors"
-          >
-            <ChevronLeft size={24} />
-          </button>
-          <h1 className="text-2xl font-bold">{t.planner}</h1>
+           <div>
+            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">Study Quest</h2>
+            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Plan your victory</p>
+           </div>
         </div>
-        <button 
-          onClick={() => { resetForm(); setIsAdding(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all active:scale-95"
-        >
-          <Plus size={20} />
-          <span>{t.add}</span>
-        </button>
+        {!isAdding && (
+          <button 
+            onClick={() => { resetForm(); setIsAdding(true); }}
+            className="flex items-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-[10px] hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 w-full md:w-auto justify-center active:scale-95"
+          >
+            <Plus size={18} />
+            <span>Add Task</span>
+          </button>
+        )}
       </header>
 
+      {/* Quick Add Form (Inline) */}
+      <AnimatePresence>
+        {isAdding && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-[#2a221f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-orange-200/40 font-black ml-2">Topic</label>
+                <input 
+                  type="text"
+                  value={newTask.topic}
+                  onChange={e => setNewTask(prev => ({ ...prev, topic: e.target.value }))}
+                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
+                  placeholder="e.g. Chemical Reactions"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-orange-200/40 font-black ml-2">Subject</label>
+                <input 
+                  type="text"
+                  value={newTask.subject}
+                  onChange={e => setNewTask(prev => ({ ...prev, subject: e.target.value }))}
+                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
+                  placeholder="e.g. Science"
+                />
+              </div>
+            </div>
+            
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 space-y-1">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-orange-200/40 font-black ml-2">Date</label>
+                <input 
+                  type="date"
+                  value={newTask.plannedDate}
+                  onChange={e => setNewTask(prev => ({ ...prev, plannedDate: e.target.value }))}
+                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
+                />
+              </div>
+              <div className="flex-1 space-y-1">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-orange-200/40 font-black ml-2">Duration</label>
+                <input 
+                  type="text"
+                  value={newTask.estimatedTime}
+                  onChange={e => setNewTask(prev => ({ ...prev, estimatedTime: e.target.value }))}
+                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
+                  placeholder="e.g. 45 mins"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => { setIsAdding(false); resetForm(); }}
+                className="px-6 py-2 text-[10px] font-black uppercase tracking-widest text-orange-200/30 hover:text-orange-200/60"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={addTask}
+                className="px-10 py-4 bg-orange-600 text-white rounded-[1.5rem] font-black text-xs uppercase shadow-xl shadow-orange-600/20 active:scale-95"
+              >
+                {editingId ? 'Update Task' : 'Confirm Task'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Filters */}
-      <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
+      <div className="flex gap-2 p-1.5 bg-[#2a221f] rounded-2xl w-fit border border-[#3f332c]/50">
         {(['daily', 'weekly', 'completed'] as const).map(f => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
               filter === f 
-                ? 'bg-white shadow-sm text-indigo-600' 
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/20' 
+                : 'text-orange-200/40 hover:text-orange-100'
             }`}
           >
-            {f === 'daily' ? t.dailyTasks : f === 'weekly' ? t.weeklyOverview : t.completed}
+            {f === 'daily' ? 'Today' : f === 'weekly' ? 'All' : 'Done'}
           </button>
         ))}
       </div>
@@ -137,34 +208,38 @@ export const StudyPlanner: React.FC = () => {
               <motion.div
                 key={task.id}
                 layout
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className={`group flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-200 transition-all ${
-                  task.completed ? 'opacity-60' : 'hover:border-indigo-300'
+                className={`group flex items-center gap-5 p-6 bg-[#2a221f] rounded-[2rem] border border-[#3f332c] transition-all hover:bg-[#2d2522] ${
+                  task.completed ? 'opacity-40 grayscale' : ''
                 }`}
               >
                 <button 
                   onClick={() => toggleTask(task.id)}
-                  className={`transition-colors ${task.completed ? 'text-emerald-500' : 'text-slate-300 hover:text-indigo-500'}`}
+                  className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+                    task.completed 
+                      ? 'bg-emerald-500 border-emerald-500 text-white' 
+                      : 'border-orange-500/20 text-transparent hover:border-orange-500'
+                  }`}
                 >
-                  {task.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+                  {task.completed && <CheckCircle2 size={16} />}
                 </button>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className={`font-bold truncate ${task.completed ? 'line-through text-slate-400' : ''}`}>
+                  <h3 className={`font-black text-lg italic tracking-tight text-orange-100 ${task.completed ? 'line-through opacity-50' : ''}`}>
                     {task.topic}
                   </h3>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                    <span className="flex items-center gap-1 text-xs text-slate-500">
-                      <Book size={12} /> {task.subject}
+                  <div className="flex flex-wrap gap-x-6 gap-y-1 mt-1">
+                    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-orange-200/40">
+                      <Book size={10} className="text-orange-500" /> {task.subject}
                     </span>
-                    <span className="flex items-center gap-1 text-xs text-slate-500">
-                      <Calendar size={12} /> {task.plannedDate}
+                    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-orange-200/40">
+                      <Calendar size={10} className="text-amber-500" /> {task.plannedDate}
                     </span>
                     {task.estimatedTime && (
-                      <span className="flex items-center gap-1 text-xs text-slate-500">
-                        <Clock size={12} /> {task.estimatedTime}
+                      <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-orange-200/40">
+                        <Clock size={10} className="text-orange-400" /> {task.estimatedTime}
                       </span>
                     )}
                   </div>
@@ -173,99 +248,26 @@ export const StudyPlanner: React.FC = () => {
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
                   <button 
                     onClick={() => startEdit(task)}
-                    className="p-2 text-slate-300 hover:text-indigo-500"
+                    className="p-3 text-orange-200/40 hover:text-orange-500 bg-white/5 rounded-xl transition-all"
                   >
-                    <Edit2 size={18} />
+                    <Edit2 size={16} />
                   </button>
                   <button 
                     onClick={() => deleteTask(task.id)}
-                    className="p-2 text-slate-300 hover:text-rose-500"
+                    className="p-3 text-orange-200/40 hover:text-rose-500 bg-white/5 rounded-xl transition-all"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </motion.div>
             ))
           ) : (
-            <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-              <p className="text-slate-400 italic">No tasks found for this view.</p>
+            <div className="text-center py-20 bg-[#2a221f]/30 rounded-[3rem] border-2 border-dashed border-[#3f332c]">
+              <p className="text-orange-200/20 font-black uppercase tracking-widest text-xs">No tasks found in your path</p>
             </div>
           )}
         </AnimatePresence>
       </div>
-
-      {/* Add/Edit Task Modal */}
-      <AnimatePresence>
-        {isAdding && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl"
-            >
-              <h2 className="text-xl font-bold mb-6">{editingId ? t.edit : t.add} {t.planner}</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-500 mb-1">{t.subject}</label>
-                  <input 
-                    type="text"
-                    value={newTask.subject}
-                    onChange={e => setNewTask(prev => ({ ...prev, subject: e.target.value }))}
-                    className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="e.g. Biology"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-500 mb-1">{t.topic}</label>
-                  <input 
-                    type="text"
-                    value={newTask.topic}
-                    onChange={e => setNewTask(prev => ({ ...prev, topic: e.target.value }))}
-                    className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="e.g. Cell Structure"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-500 mb-1">{t.date}</label>
-                    <input 
-                      type="date"
-                      value={newTask.plannedDate}
-                      onChange={e => setNewTask(prev => ({ ...prev, plannedDate: e.target.value }))}
-                      className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-500 mb-1">{t.time}</label>
-                    <input 
-                      type="text"
-                      value={newTask.estimatedTime}
-                      onChange={e => setNewTask(prev => ({ ...prev, estimatedTime: e.target.value }))}
-                      className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="e.g. 1h 30m"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-3 mt-8">
-                <button 
-                  onClick={() => { setIsAdding(false); resetForm(); }}
-                  className="flex-1 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors"
-                >
-                  {t.cancel}
-                </button>
-                <button 
-                  onClick={addTask}
-                  className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all"
-                >
-                  {t.save}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

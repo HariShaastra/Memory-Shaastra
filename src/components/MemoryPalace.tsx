@@ -1,224 +1,336 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { Plus, Trash2, Map, MapPin, ChevronRight, Edit2, Check, X } from 'lucide-react';
-import { MemoryPalace as PalaceType } from '../types';
+import { motion, AnimatePresence } from 'motion/react';
+import { Plus, Trash2, Map, Edit2, Play, ChevronLeft, Sparkles, Home, Box, ArrowRight, ArrowLeft, ChevronRight } from 'lucide-react';
+import { MemoryPalace as PalaceType, PalaceLocation } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
+import { MaanasMascot } from './MaanasMascot';
 
 export default function MemoryPalace() {
-  const { memoryPalaces, setMemoryPalaces } = useAppContext();
+  const { memoryPalaces, setMemoryPalaces, goBack, addXP } = useAppContext();
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [editingLocId, setEditingLocId] = useState<string | null>(null);
-  const [editLocName, setEditLocName] = useState('');
-  const [editLocConcept, setEditLocConcept] = useState('');
+  const [isAddingPalace, setIsAddingPalace] = useState(false);
+  const [activePalaceId, setActivePalaceId] = useState<string | null>(null);
+  const [newPalaceName, setNewPalaceName] = useState('');
+  
+  const [isAddingLocation, setIsAddingLocation] = useState(false);
+  const [newLocName, setNewLocName] = useState('');
+  const [newLocConcept, setNewLocConcept] = useState('');
 
-  const selectedPalace = memoryPalaces.find(p => p.id === selectedId);
+  // Practice State
+  const [practiceMode, setPracticeMode] = useState(false);
+  const [currentLocIdx, setCurrentLocIdx] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
+
+  const activePalace = memoryPalaces.find(p => p.id === activePalaceId);
 
   const addPalace = () => {
-    if (!newName) return;
+    if (!newPalaceName) return;
     const palace: PalaceType = {
       id: Date.now().toString(),
-      name: newName,
+      name: newPalaceName,
       locations: []
     };
-    setMemoryPalaces([...memoryPalaces, palace]);
-    setNewName('');
-    setIsAdding(false);
+    setMemoryPalaces([palace, ...memoryPalaces]);
+    setNewPalaceName('');
+    setIsAddingPalace(false);
+    addXP(50);
   };
 
-  const deletePalace = (e: React.MouseEvent, id: string) => {
+  const addLocation = () => {
+    if (!newLocName || !newLocConcept || !activePalaceId) return;
+    const loc: PalaceLocation = {
+      id: Date.now().toString(),
+      name: newLocName,
+      concept: newLocConcept
+    };
+    setMemoryPalaces(memoryPalaces.map(p => 
+      p.id === activePalaceId ? { ...p, locations: [...p.locations, loc] } : p
+    ));
+    setNewLocName('');
+    setNewLocConcept('');
+    setIsAddingLocation(false);
+    addXP(10);
+  };
+
+  const deletePalace = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setMemoryPalaces(memoryPalaces.filter(p => p.id !== id));
-    if (selectedId === id) setSelectedId(null);
+    if (activePalaceId === id) setActivePalaceId(null);
   };
 
-  const addLocation = (palaceId: string) => {
-    const name = prompt('Location Name (e.g. Bedroom Window):');
-    if (!name) return;
-    const concept = prompt('Concept to attach (optional):') || '';
-    
-    setMemoryPalaces(memoryPalaces.map(p => {
-      if (p.id === palaceId) {
-        return {
-          ...p,
-          locations: [...p.locations, { id: Date.now().toString(), name, concept }]
-        };
-      }
-      return p;
-    }));
+  const deleteLocation = (locId: string) => {
+    if (!activePalaceId) return;
+    setMemoryPalaces(memoryPalaces.map(p => 
+      p.id === activePalaceId ? { ...p, locations: p.locations.filter(l => l.id !== locId) } : p
+    ));
   };
 
-  const deleteLocation = (palaceId: string, locId: string) => {
-    setMemoryPalaces(memoryPalaces.map(p => {
-      if (p.id === palaceId) {
-        return {
-          ...p,
-          locations: p.locations.filter(l => l.id !== locId)
-        };
-      }
-      return p;
-    }));
+  const startPractice = () => {
+    if (!activePalace || activePalace.locations.length === 0) return;
+    setPracticeMode(true);
+    setCurrentLocIdx(0);
+    setShowAnswer(false);
   };
 
-  const startEditingLoc = (loc: { id: string, name: string, concept: string }) => {
-    setEditingLocId(loc.id);
-    setEditLocName(loc.name);
-    setEditLocConcept(loc.concept);
-  };
+  if (practiceMode && activePalace) {
+    const loc = activePalace.locations[currentLocIdx];
+    return (
+      <div className="max-w-3xl mx-auto px-6 py-12 space-y-8">
+        <header className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setPracticeMode(false)} className="p-3 bg-[#2a221f] rounded-2xl shadow-sm border border-[#3f332c] hover:text-orange-500 transition-all"><ChevronLeft size={24} /></button>
+            <div>
+               <h1 className="text-2xl font-black tracking-tight italic bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase">Palace Walk</h1>
+               <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-widest">{activePalace.name}</p>
+            </div>
+          </div>
+          <div className="text-orange-200/40 font-black text-sm italic">
+            {currentLocIdx + 1} / {activePalace.locations.length}
+          </div>
+        </header>
 
-  const saveLocEdit = (palaceId: string) => {
-    if (!editingLocId) return;
-    setMemoryPalaces(memoryPalaces.map(p => {
-      if (p.id === palaceId) {
-        return {
-          ...p,
-          locations: p.locations.map(l => 
-            l.id === editingLocId ? { ...l, name: editLocName, concept: editLocConcept } : l
-          )
-        };
-      }
-      return p;
-    }));
-    setEditingLocId(null);
-  };
+        <div className="bg-[#2a221f] p-12 rounded-[4rem] shadow-2xl shadow-orange-900/10 border border-[#3f332c] min-h-[550px] flex flex-col items-center justify-center text-center relative overflow-hidden">
+          <MaanasMascot size={180} expression={showAnswer ? 'proud' : 'focused'} />
+          
+          <div className="mt-12 space-y-8 w-full">
+            <div className="space-y-4">
+              <span className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-500">Current Station</span>
+              <h2 className="text-5xl font-black text-orange-50 tracking-tighter italic drop-shadow-lg">{loc.name}</h2>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {showAnswer ? (
+                <motion.div 
+                   initial={{ opacity: 0, scale: 0.9 }}
+                   animate={{ opacity: 1, scale: 1 }}
+                   className="bg-orange-500/10 p-10 rounded-[3rem] border border-orange-500/20 shadow-xl"
+                >
+                   <span className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-400 block mb-2">Stored Concept</span>
+                   <p className="text-4xl font-black text-orange-100 italic tracking-tighter">"{loc.concept}"</p>
+                </motion.div>
+              ) : (
+                <button 
+                  onClick={() => setShowAnswer(true)}
+                  className="w-full py-8 bg-orange-600 text-white rounded-[2.5rem] font-black uppercase tracking-widest shadow-xl shadow-orange-600/30 active:scale-95 transition-all text-sm mb-4"
+                >
+                  Reveal Stored Item
+                </button>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="flex gap-4 mt-12 w-full max-w-sm">
+            <button 
+              disabled={currentLocIdx === 0}
+              onClick={() => { setCurrentLocIdx(prev => prev - 1); setShowAnswer(false); }}
+              className="flex-1 py-5 bg-white/5 text-orange-200/40 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 disabled:opacity-10 border border-[#3f332c]"
+            >
+              <ArrowLeft size={16} /> Prev
+            </button>
+            {currentLocIdx < activePalace.locations.length - 1 ? (
+              <button 
+                onClick={() => { setCurrentLocIdx(prev => prev + 1); setShowAnswer(false); }}
+                className="flex-1 py-5 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 shadow-lg shadow-orange-600/20"
+              >
+                Next <ArrowRight size={16} />
+              </button>
+            ) : (
+              <button 
+                onClick={() => { setPracticeMode(false); addXP(100); }}
+                className="flex-1 py-5 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/30 active:scale-95"
+              >
+                Finish Walk <Sparkles size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-5xl mx-auto p-4 md:p-8">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 md:mb-12">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight italic serif dark:text-white">{t.palace}</h2>
-          <p className="text-zinc-500 text-sm">Assign concepts to locations in a familiar place.</p>
+    <div className="max-w-6xl mx-auto px-6 py-12 space-y-12">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="flex items-center gap-4">
+           <button onClick={goBack} className="p-3 bg-[#2a221f] rounded-2xl shadow-sm border border-[#3f332c] hover:text-orange-500 transition-all">
+             <ChevronLeft size={24} />
+           </button>
+           <div>
+            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">Ethereal Halls</h2>
+            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Technique: Method of Loci</p>
+           </div>
         </div>
-        {!selectedId && (
+        {!activePalaceId && (
           <button 
-            onClick={() => setIsAdding(true)}
-            className="flex items-center space-x-2 bg-emerald-500 text-white px-6 py-3 rounded-2xl text-sm font-bold hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 w-full md:w-auto justify-center"
+            onClick={() => setIsAddingPalace(true)}
+            className="flex items-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 w-full md:w-auto justify-center active:scale-95"
           >
             <Plus size={18} />
-            <span>{t.add} {t.palace}</span>
+            <span>Construct New Palace</span>
           </button>
         )}
       </header>
 
-      {selectedId ? (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-          <button 
-            onClick={() => setSelectedId(null)}
-            className="mb-8 text-xs font-bold uppercase tracking-widest text-zinc-500 hover:text-emerald-500 flex items-center space-x-2"
-          >
-            <ChevronRight className="rotate-180" size={14} />
-            <span>{t.back}</span>
-          </button>
-
-          <div className="bg-white dark:bg-[#151619] border border-zinc-200 dark:border-white/10 rounded-3xl p-6 md:p-8 shadow-xl">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-              <h3 className="text-2xl font-bold dark:text-white">{selectedPalace?.name}</h3>
-              <button 
-                onClick={() => addLocation(selectedId)}
-                className="bg-zinc-100 dark:bg-white/5 text-zinc-900 dark:text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-zinc-200 dark:hover:bg-white/10"
+      {!activePalaceId ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <AnimatePresence>
+            {isAddingPalace && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-[#2a221f] p-10 rounded-[4rem] border-2 border-dashed border-[#3f332c] flex flex-col items-center justify-center space-y-8 shadow-2xl shadow-orange-900/5"
               >
-                {t.add} {t.items}
-              </button>
-            </div>
+                <Home size={48} className="text-[#3f332c]" />
+                <div className="w-full space-y-2">
+                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest text-center">Give your palace a name</p>
+                  <input 
+                    autoFocus
+                    type="text"
+                    placeholder="e.g. My Old School"
+                    value={newPalaceName}
+                    onChange={(e) => setNewPalaceName(e.target.value)}
+                    className="w-full text-center bg-[#1a1614] border border-[#3f332c] rounded-2xl py-5 px-6 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic text-xl"
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <button onClick={() => setIsAddingPalace(false)} className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-[#3f332c] hover:text-orange-200/40">Cancel</button>
+                  <button onClick={addPalace} className="px-10 py-4 bg-orange-600 text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95">Foundation Laid</button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-            <div className="space-y-4">
-              {selectedPalace?.locations.map((loc, i) => (
-                <div key={loc.id} className="flex items-center space-x-4 p-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 group">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold shrink-0">
-                    {i + 1}
+          {memoryPalaces.map(palace => (
+            <motion.div 
+              layout
+              key={palace.id}
+              onClick={() => setActivePalaceId(palace.id)}
+              className="bg-[#2a221f] p-10 rounded-[4rem] border border-[#3f332c] shadow-sm hover:bg-[#342a27] transition-all cursor-pointer group relative overflow-hidden flex flex-col justify-between min-h-[300px]"
+            >
+              <div className="absolute top-0 left-0 w-2 h-full bg-orange-500 opacity-0 group-hover:opacity-100 transition-all" />
+              <div>
+                <div className="flex justify-between items-start mb-8">
+                  <div className="w-16 h-16 bg-[#1a1614] text-orange-500 rounded-3xl flex items-center justify-center border border-[#3f332c] group-hover:bg-orange-600 group-hover:text-white transition-all shadow-inner">
+                    <Home size={32} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    {editingLocId === loc.id ? (
-                      <div className="space-y-2">
-                        <input 
-                          type="text" 
-                          value={editLocName}
-                          onChange={(e) => setEditLocName(e.target.value)}
-                          className="w-full bg-white dark:bg-black/20 border border-zinc-200 dark:border-white/10 rounded-lg px-2 py-1 text-sm dark:text-white"
-                        />
-                        <input 
-                          type="text" 
-                          value={editLocConcept}
-                          onChange={(e) => setEditLocConcept(e.target.value)}
-                          className="w-full bg-white dark:bg-black/20 border border-zinc-200 dark:border-white/10 rounded-lg px-2 py-1 text-xs dark:text-white"
-                        />
-                        <div className="flex space-x-2">
-                          <button onClick={() => saveLocEdit(selectedId)} className="text-emerald-500"><Check size={16}/></button>
-                          <button onClick={() => setEditingLocId(null)} className="text-red-500"><X size={16}/></button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <h4 className="font-bold text-sm dark:text-white truncate">{loc.name}</h4>
-                        <p className="text-xs text-zinc-500 truncate">{loc.concept || 'No concept attached'}</p>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={() => startEditingLoc(loc)}
-                      className="text-zinc-300 hover:text-emerald-500 transition-colors"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button 
-                      onClick={() => deleteLocation(selectedId, loc.id)}
-                      className="text-zinc-300 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+                  <button 
+                    onClick={(e) => deletePalace(palace.id, e)}
+                    className="p-3 text-orange-200/20 hover:text-rose-500 rounded-2xl hover:bg-white/5 transition-all opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 size={20} />
+                  </button>
                 </div>
-              ))}
-              {selectedPalace?.locations.length === 0 && (
-                <div className="text-center py-12 text-zinc-500 italic text-sm">
-                  No locations added yet. Start by adding your first location.
-                </div>
-              )}
+                <h3 className="text-2xl font-black text-orange-100 tracking-tighter italic mb-2 drop-shadow-sm">{palace.name}</h3>
+                <p className="text-orange-200/40 font-black uppercase text-[10px] tracking-[0.2em]">{palace.locations.length} Connected Stations</p>
+              </div>
+              
+              <div className="flex items-center gap-2 mt-8 text-orange-500 font-black text-[10px] uppercase tracking-widest">
+                <span>Explore Palace</span>
+                <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8 bg-[#2a221f] p-10 rounded-[4rem] border border-[#3f332c] shadow-xl">
+            <div className="flex items-center gap-8">
+              <div className="w-20 h-20 bg-orange-600 text-white rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-orange-600/30 ring-4 ring-orange-600/10">
+                <Home size={40} />
+              </div>
+              <div>
+                <h3 className="text-3xl font-black text-orange-100 tracking-tighter italic mb-1 uppercase">{activePalace.name}</h3>
+                <button onClick={() => setActivePalaceId(null)} className="text-orange-500 font-black text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1">Change Realm <ArrowRight size={10} /></button>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setIsAddingLocation(true)}
+                className="flex items-center gap-3 bg-white/5 text-orange-100 px-8 py-5 rounded-[2rem] font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-all border border-[#3f332c]"
+              >
+                <Plus size={18} /> New Station
+              </button>
+              <button 
+                disabled={activePalace.locations.length === 0}
+                onClick={startPractice}
+                className="flex items-center gap-3 bg-orange-600 text-white px-12 py-5 rounded-[2rem] font-black uppercase text-[10px] tracking-widest hover:bg-orange-700 shadow-xl shadow-orange-600/20 disabled:hidden transition-all active:scale-95"
+              >
+                <Play size={18} fill="currentColor" /> Begin Journey
+              </button>
             </div>
           </div>
-        </motion.div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isAdding && (
-            <div className="bg-white dark:bg-[#151619] border-2 border-dashed border-emerald-500/30 rounded-3xl p-6 flex flex-col justify-center">
-              <input 
-                autoFocus
-                type="text" 
-                placeholder="Palace Name..."
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addPalace()}
-                className="bg-transparent border-b border-zinc-200 dark:border-white/10 py-2 text-sm outline-none mb-4 dark:text-white"
-              />
-              <div className="flex justify-end space-x-2">
-                <button onClick={() => setIsAdding(false)} className="text-[10px] font-bold uppercase text-zinc-500">{t.cancel}</button>
-                <button onClick={addPalace} className="text-[10px] font-bold uppercase text-emerald-500">{t.save}</button>
-              </div>
+
+          <AnimatePresence>
+            {isAddingLocation && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-[#2a221f] p-10 rounded-[3.5rem] border border-[#3f332c] flex flex-col md:flex-row gap-8 items-end shadow-2xl"
+              >
+                <div className="flex-2 w-full space-y-2">
+                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">Station Name (Location)</p>
+                  <input 
+                    type="text"
+                    placeholder="e.g. Wooden Sofa in the lounge"
+                    value={newLocName}
+                    onChange={(e) => setNewLocName(e.target.value)}
+                    className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-5 px-8 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
+                  />
+                </div>
+                <div className="flex-2 w-full space-y-2">
+                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">Memorized Concept</p>
+                  <input 
+                    type="text"
+                    placeholder="e.g. King Louis XVI"
+                    value={newLocConcept}
+                    onChange={(e) => setNewLocConcept(e.target.value)}
+                    className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-5 px-8 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
+                  />
+                </div>
+                <div className="flex gap-4 shrink-0 mb-1">
+                  <button onClick={() => setIsAddingLocation(false)} className="px-6 py-3 text-[10px] font-black text-[#3f332c] uppercase hover:text-orange-200/40">Cancel</button>
+                  <button onClick={addLocation} className="px-10 py-5 bg-emerald-500 text-white rounded-[1.5rem] font-black text-[10px] uppercase shadow-xl shadow-emerald-500/20 active:scale-95">Anchor Concept</button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {activePalace.locations.map((loc, idx) => (
+              <motion.div 
+                layout
+                key={loc.id}
+                className="bg-[#2a221f] p-8 rounded-[3.5rem] border border-[#3f332c] shadow-sm relative group overflow-hidden hover:bg-[#2d2522] transition-all"
+              >
+                <div className="flex justify-between items-start mb-6">
+                  <div className="flex items-center gap-4">
+                    <span className="text-4xl font-black text-orange-900/40 group-hover:text-orange-500/20 transition-all italic font-display">{(idx + 1).toString().padStart(2, '0')}</span>
+                    <Box size={20} className="text-orange-500/40 group-hover:text-orange-500 transition-all" />
+                  </div>
+                  <button onClick={() => deleteLocation(loc.id)} className="opacity-0 group-hover:opacity-100 p-3 text-orange-200/20 hover:text-rose-500 bg-white/5 rounded-2xl transition-all"><Trash2 size={18} /></button>
+                </div>
+                <h4 className="text-2xl font-black text-orange-100 tracking-tighter bg-[#1a1614] px-6 py-4 rounded-2xl mb-6 italic truncate border border-[#3f332c]">{loc.name}</h4>
+                <div className="space-y-1.5 px-2">
+                  <p className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-500">Stored Concept</p>
+                  <p className="font-black text-orange-100/70 italic text-lg line-clamp-2 leading-tight">"{loc.concept}"</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {activePalace.locations.length === 0 && (
+            <div className="text-center py-32 bg-[#2a221f]/30 rounded-[5rem] border-2 border-dashed border-[#3f332c] flex flex-col items-center">
+              <Map size={64} className="text-[#3f332c] mb-6" />
+              <p className="text-orange-200/20 font-black italic uppercase tracking-[0.3em] text-xs">The palace is silent. Populating stations...</p>
+              <button 
+                onClick={() => setIsAddingLocation(true)}
+                className="mt-6 text-orange-500 font-black uppercase tracking-widest text-[10px] hover:underline"
+              >
+                Add Your First Station
+              </button>
             </div>
           )}
-          {memoryPalaces.map((p) => (
-            <div 
-              key={p.id} 
-              onClick={() => setSelectedId(p.id)}
-              className="bg-white dark:bg-[#151619] border border-zinc-200 dark:border-white/10 rounded-3xl p-6 hover:border-emerald-500/50 transition-all cursor-pointer group shadow-sm relative"
-            >
-              <button 
-                onClick={(e) => deletePalace(e, p.id)}
-                className="absolute top-4 right-4 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Trash2 size={16} />
-              </button>
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <Map size={24} />
-              </div>
-              <h3 className="font-bold text-lg mb-1 dark:text-white">{p.name}</h3>
-              <p className="text-zinc-500 text-[10px] uppercase tracking-widest">{p.locations.length} {t.items}</p>
-            </div>
-          ))}
         </div>
       )}
     </div>
