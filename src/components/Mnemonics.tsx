@@ -80,7 +80,7 @@ export default function Mnemonics() {
         <header className="flex items-center gap-4">
           <button onClick={() => setPracticeMode(false)} className="p-3 bg-[#2a221f] rounded-2xl shadow-sm border border-[#3f332c] hover:text-orange-500 transition-all"><ChevronLeft size={24} /></button>
           <div>
-            <h1 className="text-2xl font-black tracking-tight italic bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase">Practice Mode</h1>
+            <h1 className="text-2xl font-black tracking-tight italic bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase">Practice</h1>
             <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-widest">{currentMnemonic.title}</p>
           </div>
         </header>
@@ -168,8 +168,8 @@ export default function Mnemonics() {
              <ChevronLeft size={24} />
            </button>
            <div>
-            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">Wisdom Keys</h2>
-            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Technique: Sacred Mnemonics</p>
+            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">{t.mnemonics}</h2>
+            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Words to Remember</p>
            </div>
         </div>
         <button 
@@ -177,7 +177,7 @@ export default function Mnemonics() {
           className="flex items-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 w-full md:w-auto justify-center active:scale-95"
         >
           <Plus size={18} />
-          <span>Manifest Wisdom Key</span>
+          <span>Add New Trick</span>
         </button>
       </header>
 
@@ -187,8 +187,8 @@ export default function Mnemonics() {
           <div className="bg-[#2a221f] p-10 rounded-[4rem] border border-[#3f332c] flex flex-col items-center text-center sticky top-24 shadow-2xl shadow-orange-900/5">
             <MaanasMascot size={150} expression="encouraging" />
             <div className="mt-8 space-y-4">
-              <h3 className="font-black text-orange-500 uppercase tracking-widest text-[10px]">Trainer's Tip</h3>
-              <p className="text-orange-100/70 font-bold italic text-lg leading-relaxed">"Make phrases bizarre, emotional, or funny. The weirder it is, the easier your brain stores it!"</p>
+              <h3 className="font-black text-orange-500 uppercase tracking-widest text-[10px]">Helper Tip</h3>
+              <p className="text-orange-100/70 font-bold italic text-lg leading-relaxed">"Make phrases funny or weird. It helps you remember."</p>
             </div>
           </div>
         </div>
@@ -208,12 +208,12 @@ export default function Mnemonics() {
                     <PenTool size={24} />
                   </div>
                   <h3 className="text-2xl font-black text-orange-100 uppercase tracking-tighter italic">
-                    {editingId ? 'Refine' : 'Forge'} Mnemonic
+                    {editingId ? 'Edit' : 'Add'} Trick
                   </h3>
                 </div>
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-2">Concept Name</label>
+                    <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-2">Name</label>
                     <input 
                       type="text" 
                       placeholder="e.g. Order of Planets"
@@ -240,7 +240,7 @@ export default function Mnemonics() {
                       onClick={editingId ? saveEdit : addMnemonic} 
                       className="px-10 py-4 bg-orange-600 text-white rounded-[1.8rem] text-xs font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95"
                     >
-                      Save to Forge
+                      Save
                     </button>
                   </div>
                 </div>
@@ -252,8 +252,8 @@ export default function Mnemonics() {
             {mnemonics.length === 0 ? (
               <div className="text-center py-24 bg-[#2a221f]/30 border-2 border-dashed border-[#3f332c] rounded-[4rem] flex flex-col items-center">
                 <Brain size={48} className="text-[#3f332c] mb-4" />
-                <p className="text-orange-200/20 font-black italic uppercase tracking-widest text-xs">The forge is cold. Add a phrase.</p>
-                <button onClick={() => setIsAdding(true)} className="mt-4 text-orange-500 font-black uppercase tracking-widest text-[10px] hover:underline">Start Creating</button>
+                <p className="text-orange-200/20 font-black italic uppercase tracking-widest text-xs">Nothing here. Add a phrase!</p>
+                <button onClick={() => setIsAdding(true)} className="mt-4 text-orange-500 font-black uppercase tracking-widest text-[10px] hover:underline">Start Now</button>
               </div>
             ) : (
               mnemonics.map((item) => (

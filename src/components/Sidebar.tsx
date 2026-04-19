@@ -70,21 +70,21 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const { currentView, setView, setUser, user } = useApp();
 
   const mainItems = [
-    { id: 'dashboard', label: 'Home', icon: Home },
-    { id: 'planner', label: 'Plan', icon: Calendar },
-    { id: 'focus', label: 'Timer', icon: Timer },
+    { id: 'dashboard', label: t.home, icon: Home },
+    { id: 'planner', label: t.planner, icon: Calendar },
+    { id: 'focus', label: t.focus, icon: Timer },
     { id: 'memory-boost', label: 'Boost', icon: Zap },
-    { id: 'flashcards', label: 'Cards', icon: BookOpen },
-    { id: 'scheduler', label: 'Review', icon: Calendar },
-    { id: 'exam-mode', label: 'Exam', icon: Target },
+    { id: 'flashcards', label: t.flashcards, icon: BookOpen },
+    { id: 'scheduler', label: t.scheduler, icon: Calendar },
+    { id: 'exam-mode', label: t.examMode, icon: Target },
   ];
 
   const toolItems = [
-    { id: 'mnemonics', label: 'Phrases', icon: Quote },
-    { id: 'palace', label: 'Palace', icon: Home },
-    { id: 'linking', label: 'Link', icon: LinkIcon },
-    { id: 'story', label: 'Story', icon: Book },
-    { id: 'first-letter', label: 'Letters', icon: Type },
+    { id: 'mnemonics', label: t.mnemonics, icon: Quote },
+    { id: 'palace', label: t.palace, icon: Home },
+    { id: 'linking', label: t.linking, icon: LinkIcon },
+    { id: 'story', label: t.story, icon: Book },
+    { id: 'first-letter', label: t.firstLetter, icon: Type },
   ];
 
   const bottomItems = [
@@ -126,7 +126,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-rose-400 hover:bg-rose-500/10 transition-all font-bold"
           >
             <LogOut size={20} />
-            <span className="text-sm">Leave</span>
+            <span className="text-sm">{t.logout}</span>
           </button>
         ) : (
           <button 
@@ -134,7 +134,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-orange-400 hover:bg-orange-500/10 transition-all font-bold"
           >
             <LogIn size={20} />
-            <span className="text-sm">Enter</span>
+            <span className="text-sm">{t.signIn}</span>
           </button>
         )}
       </div>

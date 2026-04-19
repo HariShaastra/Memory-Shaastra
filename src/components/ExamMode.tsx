@@ -125,13 +125,13 @@ export const ExamMode: React.FC = () => {
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => setEditingPlan(null)} className="p-3 bg-[#2a221f] rounded-2xl shadow-sm border border-[#3f332c] hover:text-orange-500 transition-all"><ChevronLeft size={24} /></button>
-            <h1 className="text-3xl font-black text-orange-100 italic uppercase tracking-tighter">{isCreating ? 'Forge Exam Plan' : 'Refine Exam Plan'}</h1>
+            <h1 className="text-3xl font-black text-orange-100 italic uppercase tracking-tighter">{isCreating ? 'Make Study Plan' : 'Edit Study Plan'}</h1>
           </div>
           <button 
             onClick={savePlan}
             className="px-8 py-4 bg-orange-600 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl shadow-orange-600/20 active:scale-95 transition-all flex items-center gap-2"
           >
-            <Save size={18} /> Seal Plan
+            <Save size={18} /> Save Plan
           </button>
         </header>
 
@@ -336,15 +336,15 @@ export const ExamMode: React.FC = () => {
           <div className="flex items-center gap-4">
             <button onClick={goBack} className="p-3 bg-[#2a221f] rounded-2xl shadow-sm border border-[#3f332c] hover:text-orange-500 transition-all"><ChevronLeft size={24} /></button>
             <div>
-              <h1 className="text-3xl font-black text-orange-100 italic uppercase tracking-tighter">Exam Sanctums</h1>
-              <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Strategic Study Planning</p>
+              <h1 className="text-3xl font-black text-orange-100 italic uppercase tracking-tighter">Study Center</h1>
+              <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Make Your Plan</p>
             </div>
           </div>
           <button 
             onClick={createNewPlan}
             className="px-10 py-5 bg-orange-600 text-white rounded-[2.5rem] font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-orange-600/20 hover:bg-orange-700 transition-all active:scale-95 flex items-center gap-3"
           >
-            <Plus size={20} /> Manifest New Plan
+            <Plus size={20} /> Add New Plan
           </button>
         </header>
 
@@ -355,8 +355,8 @@ export const ExamMode: React.FC = () => {
               <div className="absolute inset-0 bg-orange-600/10 blur-[40px] rounded-full" />
               <MaanasMascot size={200} expression="encouraging" />
             </div>
-            <p className="text-orange-200/20 font-black italic uppercase tracking-[0.3em] text-xs max-w-xs mx-auto leading-relaxed relative z-10">Your mental sanctum is waiting for its first scroll. Manifest your destiny, explorer.</p>
-            <button onClick={createNewPlan} className="mt-8 px-12 py-5 bg-orange-600 text-white rounded-[2.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-orange-700 transition-all active:scale-95 shadow-2xl shadow-orange-600/30 relative z-10">Manifest First Scroll</button>
+            <p className="text-orange-200/20 font-black italic uppercase tracking-[0.3em] text-xs max-w-xs mx-auto leading-relaxed relative z-10">You have no study plans. Add your first one to start!</p>
+            <button onClick={createNewPlan} className="mt-8 px-12 py-5 bg-orange-600 text-white rounded-[2.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-orange-700 transition-all active:scale-95 shadow-2xl shadow-orange-600/30 relative z-10">Add First Plan</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-2">
@@ -412,7 +412,7 @@ export const ExamMode: React.FC = () => {
 
                 <div className="mt-10 pt-6 flex justify-center">
                   <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest flex items-center gap-2 group-hover:gap-4 transition-all">
-                    Enter Plan <ChevronRight size={14} />
+                    Start <ChevronRight size={14} />
                   </span>
                 </div>
               </div>
@@ -433,20 +433,20 @@ export const ExamMode: React.FC = () => {
                 <div className="w-20 h-20 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-rose-500/20">
                   <AlertCircle size={40} />
                 </div>
-                <h2 className="text-2xl font-black text-orange-100 italic uppercase mb-4">Dissolve Plan?</h2>
-                <p className="text-orange-100/40 font-bold mb-10 italic">This scroll will be incinerated. All subjects and topics within will be lost forever.</p>
+                <h2 className="text-2xl font-black text-orange-100 italic uppercase mb-4">Delete Plan?</h2>
+                <p className="text-orange-100/40 font-bold mb-10 italic">This will delete your plan and all subjects. Are you sure?</p>
                 <div className="flex gap-4">
                   <button 
                     onClick={() => setConfirmDeleteId(null)}
                     className="flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-[#3f332c] hover:text-orange-200/40 transition-all"
                   >
-                    Keep It
+                    No
                   </button>
                   <button 
                     onClick={() => deletePlan(confirmDeleteId)}
                     className="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-rose-600/20 hover:bg-rose-700 transition-all active:scale-95"
                   >
-                    Incinerate
+                    Yes, Delete
                   </button>
                 </div>
               </motion.div>
@@ -480,8 +480,8 @@ export const ExamMode: React.FC = () => {
           <div>
             <h1 className="text-4xl font-black text-orange-100 italic tracking-tighter uppercase drop-shadow-sm">{activePlan.title}</h1>
             <div className="flex items-center gap-4 mt-2">
-              <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest bg-orange-950/30 px-3 py-1 rounded-full border border-orange-500/20 italic">Commander Mode</span>
-              <span className="text-[10px] text-orange-200/20 font-black uppercase tracking-[0.2em]">Target Date: {activePlan.examDate || 'The Unknown'}</span>
+              <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest bg-orange-950/30 px-3 py-1 rounded-full border border-orange-500/20 italic">Study Mode</span>
+              <span className="text-[10px] text-orange-200/20 font-black uppercase tracking-[0.2em]">Exam Date: {activePlan.examDate || 'Not set'}</span>
             </div>
           </div>
         </div>
@@ -490,13 +490,13 @@ export const ExamMode: React.FC = () => {
             onClick={() => { setEditingPlan(activePlan); setIsCreating(false); }}
             className="flex items-center gap-3 px-8 py-4 bg-[#2a221f] border border-[#3f332c] rounded-[2rem] text-[10px] font-black uppercase tracking-widest text-orange-200/50 hover:bg-[#322925] hover:text-orange-100 transition-all shadow-sm active:scale-95"
           >
-            <Edit2 size={16} /> Refine Scroll
+            <Edit2 size={16} /> Edit Plan
           </button>
           <button 
             onClick={() => setConfirmDeleteId(activePlan.id)}
             className="text-[10px] text-rose-500/40 hover:text-rose-500 font-black uppercase tracking-widest active:scale-95 transition-all"
           >
-            Abondon Quest
+            Delete Plan
           </button>
         </div>
       </header>
@@ -508,8 +508,8 @@ export const ExamMode: React.FC = () => {
             <Calendar size={28} />
           </div>
           <div>
-            <p className="text-[10px] text-orange-200/20 uppercase tracking-[0.2em] font-black mb-2">Judgment Day</p>
-            <p className="text-2xl font-black text-orange-100 italic capitalize tracking-tighter">{activePlan.examDate || 'Eternal'}</p>
+            <p className="text-[10px] text-orange-200/20 uppercase tracking-[0.2em] font-black mb-2">Exam Day</p>
+            <p className="text-2xl font-black text-orange-100 italic capitalize tracking-tighter">{activePlan.examDate || 'No date'}</p>
           </div>
         </div>
         
@@ -518,7 +518,7 @@ export const ExamMode: React.FC = () => {
             <BookOpen size={28} />
           </div>
           <div>
-            <p className="text-[10px] text-orange-200/20 uppercase tracking-[0.2em] font-black mb-2">Scroll Mastery</p>
+            <p className="text-[10px] text-orange-200/20 uppercase tracking-[0.2em] font-black mb-2">Study Progress</p>
             <p className="text-2xl font-black text-orange-100 italic capitalize tracking-tighter">{totalItems - completedItems} / {totalItems} Left</p>
           </div>
         </div>
@@ -532,8 +532,8 @@ export const ExamMode: React.FC = () => {
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between text-[10px] text-orange-200/20 uppercase tracking-[0.2em] font-black">
-              <span>Overall Achievement</span>
-              <span>Completion Velocity</span>
+              <span>Your Progress</span>
+              <span>How Fast You Learn</span>
             </div>
             <div className="h-2.5 bg-[#1a1614] rounded-full overflow-hidden border border-[#3f332c] shadow-inner">
               <motion.div 
@@ -552,7 +552,7 @@ export const ExamMode: React.FC = () => {
           <div className="flex items-center justify-between px-2">
             <h2 className="text-xl font-black text-orange-100 uppercase italic tracking-tight flex items-center gap-4">
               <Clock className="text-orange-500" size={24} />
-              Chronology
+              Time Line
             </h2>
             <button 
               onClick={() => {
@@ -616,7 +616,7 @@ export const ExamMode: React.FC = () => {
         <div className="lg:col-span-3 space-y-10">
           <h2 className="text-2xl font-black text-orange-100 uppercase italic tracking-tight flex items-center gap-6 px-4">
             <List className="text-orange-500" size={32} />
-            The Master Ledger
+            Study List
           </h2>
           <div className="space-y-12 px-2">
             {activePlan.subjects.map((subject, sIndex) => (
@@ -627,7 +627,7 @@ export const ExamMode: React.FC = () => {
                     {subject.name}
                   </h3>
                   <div className="flex gap-4">
-                     <span className="text-[10px] font-black text-orange-200/20 uppercase tracking-[0.2em]">{subject.chapters.length} Scrolls</span>
+                     <span className="text-[10px] font-black text-orange-200/20 uppercase tracking-[0.2em]">{subject.chapters.length} Topics</span>
                   </div>
                 </div>
                 
@@ -648,7 +648,7 @@ export const ExamMode: React.FC = () => {
                           }}
                           className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all px-4 py-1.5 rounded-full border ${chapter.topics.every(t => t.completed) ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'text-orange-200/20 hover:text-orange-500 border-[#3f332c]'}`}
                         >
-                          {chapter.topics.every(t => t.completed) ? 'Conquered' : 'Conquer All'}
+                          {chapter.topics.every(t => t.completed) ? 'Done' : 'All Done'}
                         </button>
                       </div>
                       

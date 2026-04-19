@@ -109,8 +109,8 @@ export default function LinkingMethod() {
           <div className="flex items-center gap-4">
             <button onClick={() => setPracticeMode(false)} className="p-3 bg-[#2a221f] rounded-2xl shadow-sm border border-[#3f332c] hover:text-orange-500 transition-all"><ChevronLeft size={24} /></button>
             <div>
-              <h1 className="text-2xl font-black tracking-tight italic bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase text-shadow-sm">Chain Recall</h1>
-              <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-widest">{activeChain.title}</p>
+            <h1 className="text-2xl font-black tracking-tight italic bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase text-shadow-sm">Practice</h1>
+            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-widest">{activeChain.title}</p>
             </div>
           </div>
           <div className="text-orange-200/40 font-black text-sm italic">
@@ -186,8 +186,8 @@ export default function LinkingMethod() {
              <ChevronLeft size={24} />
            </button>
            <div>
-            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">Neural Chains</h2>
-            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Technique: Chain Association</p>
+            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">{t.linking}</h2>
+            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Link words together</p>
            </div>
         </div>
         {!isAddingChain && !practiceMode && (
@@ -213,13 +213,13 @@ export default function LinkingMethod() {
                   <div className="w-14 h-14 bg-orange-600/10 text-orange-500 rounded-2xl flex items-center justify-center border border-orange-500/20">
                     <Layers size={28} />
                   </div>
-                  <h3 className="text-3xl font-black text-orange-100 uppercase tracking-tighter italic">
-                    {activeChainId ? 'Refine' : 'Forge'} Story Chain
+              <h3 className="text-3xl font-black text-orange-100 uppercase tracking-tighter italic">
+                    {activeChainId ? 'Edit' : 'Add'} Trick
                   </h3>
                 </div>
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-4">Realm of Knowledge (Title)</label>
+                    <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-4">Name</label>
                     <input 
                       type="text" 
                       placeholder="e.g. European Capitals"
@@ -229,7 +229,7 @@ export default function LinkingMethod() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-4">Items to Link (separate with commas)</label>
+                    <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-4">Items (use commas)</label>
                     <input 
                       type="text" 
                       placeholder="Paris, London, Berlin, Rome..."
@@ -239,7 +239,7 @@ export default function LinkingMethod() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-4">Linking Visualization (The Story)</label>
+                    <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-4">The Story</label>
                     <textarea 
                       placeholder="Mnemonic tip: Paris Eiffel Tower grew clock hands from London..."
                       value={newStory}
@@ -256,7 +256,7 @@ export default function LinkingMethod() {
                       onClick={activeChainId ? saveEdit : addChain} 
                       className="px-10 py-5 bg-orange-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 hover:bg-orange-700 transition-all active:scale-95"
                     >
-                      Save Chain to Memory
+                      Save
                     </button>
                   </div>
                 </div>
@@ -333,7 +333,7 @@ export default function LinkingMethod() {
                         className="w-full flex items-center justify-center gap-4 bg-orange-600 text-white px-10 py-5 rounded-[2.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
                       >
                         <Play size={20} fill="currentColor" />
-                        <span>Begin Recall Test</span>
+                        <span>Practice</span>
                       </button>
                     </div>
                   </motion.div>

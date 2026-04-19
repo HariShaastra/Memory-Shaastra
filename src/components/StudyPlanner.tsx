@@ -96,8 +96,8 @@ export const StudyPlanner: React.FC = () => {
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex items-center gap-4">
            <div>
-            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">Study Quest</h2>
-            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Plan your victory</p>
+            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">{t.planner}</h2>
+            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">List your tasks</p>
            </div>
         </div>
         {!isAdding && (
@@ -154,7 +154,7 @@ export const StudyPlanner: React.FC = () => {
                 />
               </div>
               <div className="flex-1 space-y-1">
-                <label className="text-[10px] uppercase tracking-[0.2em] text-orange-200/40 font-black ml-2">Duration</label>
+                <label className="text-[10px] uppercase tracking-[0.2em] text-orange-200/40 font-black ml-2">Time</label>
                 <input 
                   type="text"
                   value={newTask.estimatedTime}
@@ -176,7 +176,7 @@ export const StudyPlanner: React.FC = () => {
                 onClick={addTask}
                 className="px-10 py-4 bg-orange-600 text-white rounded-[1.5rem] font-black text-xs uppercase shadow-xl shadow-orange-600/20 active:scale-95"
               >
-                {editingId ? 'Update Task' : 'Confirm Task'}
+                {editingId ? 'Save' : 'Add'}
               </button>
             </div>
           </motion.div>
@@ -263,7 +263,7 @@ export const StudyPlanner: React.FC = () => {
             ))
           ) : (
             <div className="text-center py-20 bg-[#2a221f]/30 rounded-[3rem] border-2 border-dashed border-[#3f332c]">
-              <p className="text-orange-200/20 font-black uppercase tracking-widest text-xs">No tasks found in your path</p>
+              <p className="text-orange-200/20 font-black uppercase tracking-widest text-xs">No tasks here.</p>
             </div>
           )}
         </AnimatePresence>

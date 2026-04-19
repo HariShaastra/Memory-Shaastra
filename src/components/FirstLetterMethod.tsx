@@ -113,7 +113,7 @@ export default function FirstLetterMethod() {
         <header className="flex items-center justify-between">
           <button onClick={() => setPracticeMode(false)} className="p-3 bg-[#2a221f] rounded-2xl shadow-sm border border-[#3f332c] transition-all hover:bg-[#342a27]"><ChevronLeft size={24} /></button>
           <div className="text-center">
-            <h1 className="text-2xl font-black tracking-tight italic bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase text-shadow-sm">Recall Test</h1>
+            <h1 className="text-2xl font-black tracking-tight italic bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase text-shadow-sm">Practice</h1>
             <p className="text-orange-200/40 text-xs font-bold uppercase tracking-widest">{activeAid.title}</p>
           </div>
           <div className="w-12 h-12 flex items-center justify-center bg-orange-500/10 text-orange-400 rounded-xl font-black border border-orange-500/20">
@@ -141,7 +141,7 @@ export default function FirstLetterMethod() {
                 onClick={() => { setPracticeMode(false); addXP(60); }}
                 className="w-full max-w-sm py-6 bg-orange-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95 transition-all"
               >
-                Finish Practice
+                Done
               </button>
             </div>
           </div>
@@ -158,8 +158,8 @@ export default function FirstLetterMethod() {
              <ChevronLeft size={24} />
            </button>
            <div>
-            <h2 className="text-3xl font-black tracking-tight italic font-display bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase">Seed Letters</h2>
-            <p className="text-orange-200/40 text-xs font-bold uppercase tracking-widest">Technique: Initialism Mastery</p>
+            <h2 className="text-3xl font-black tracking-tight italic font-display bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase">{t.firstLetter}</h2>
+            <p className="text-orange-200/40 text-xs font-bold uppercase tracking-widest">Learn First Letters</p>
            </div>
         </div>
         {!isAddingAid && (
@@ -184,12 +184,12 @@ export default function FirstLetterMethod() {
                <div className="w-14 h-14 bg-orange-600/10 text-orange-500 rounded-2xl flex items-center justify-center">
                 <Type size={28} />
               </div>
-              <h3 className="text-2xl font-black text-orange-100 uppercase tracking-tighter italic">Inscribe Seed Letters</h3>
+              <h3 className="text-2xl font-black text-orange-100 uppercase tracking-tighter italic">Add New Trick</h3>
             </div>
             
             <div className="space-y-6">
               <div className="space-y-2">
-                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-2">Topic Name</p>
+                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-2">Name</p>
                 <input 
                   autoFocus
                   type="text"
@@ -279,7 +279,7 @@ export default function FirstLetterMethod() {
                 onClick={() => startPractice(aid)}
                 className="w-full py-4 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-orange-700 transition-all shadow-lg shadow-orange-600/10"
               >
-                <Play size={14} fill="currentColor" /> Test Recall
+                <Play size={14} fill="currentColor" /> Practice
               </button>
             </motion.div>
           ))}

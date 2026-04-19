@@ -81,7 +81,7 @@ export default function MemoryPalace() {
           <div className="flex items-center gap-4">
             <button onClick={() => setPracticeMode(false)} className="p-3 bg-[#2a221f] rounded-2xl shadow-sm border border-[#3f332c] hover:text-orange-500 transition-all"><ChevronLeft size={24} /></button>
             <div>
-               <h1 className="text-2xl font-black tracking-tight italic bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase">Palace Walk</h1>
+               <h1 className="text-2xl font-black tracking-tight italic bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase">Practice</h1>
                <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-widest">{activePalace.name}</p>
             </div>
           </div>
@@ -95,7 +95,7 @@ export default function MemoryPalace() {
           
           <div className="mt-12 space-y-8 w-full">
             <div className="space-y-4">
-              <span className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-500">Current Station</span>
+              <span className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-500">Step</span>
               <h2 className="text-5xl font-black text-orange-50 tracking-tighter italic drop-shadow-lg">{loc.name}</h2>
             </div>
 
@@ -106,7 +106,7 @@ export default function MemoryPalace() {
                    animate={{ opacity: 1, scale: 1 }}
                    className="bg-orange-500/10 p-10 rounded-[3rem] border border-orange-500/20 shadow-xl"
                 >
-                   <span className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-400 block mb-2">Stored Concept</span>
+                   <span className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-400 block mb-2">Item to remember</span>
                    <p className="text-4xl font-black text-orange-100 italic tracking-tighter">"{loc.concept}"</p>
                 </motion.div>
               ) : (
@@ -114,7 +114,7 @@ export default function MemoryPalace() {
                   onClick={() => setShowAnswer(true)}
                   className="w-full py-8 bg-orange-600 text-white rounded-[2.5rem] font-black uppercase tracking-widest shadow-xl shadow-orange-600/30 active:scale-95 transition-all text-sm mb-4"
                 >
-                  Reveal Stored Item
+                  Show Item
                 </button>
               )}
             </AnimatePresence>
@@ -140,7 +140,7 @@ export default function MemoryPalace() {
                 onClick={() => { setPracticeMode(false); addXP(100); }}
                 className="flex-1 py-5 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/30 active:scale-95"
               >
-                Finish Walk <Sparkles size={16} />
+                Done <Sparkles size={16} />
               </button>
             )}
           </div>
@@ -157,8 +157,8 @@ export default function MemoryPalace() {
              <ChevronLeft size={24} />
            </button>
            <div>
-            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">Ethereal Halls</h2>
-            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Technique: Method of Loci</p>
+            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">{t.palace}</h2>
+            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Place items in a room</p>
            </div>
         </div>
         {!activePalaceId && (
@@ -167,7 +167,7 @@ export default function MemoryPalace() {
             className="flex items-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 w-full md:w-auto justify-center active:scale-95"
           >
             <Plus size={18} />
-            <span>Construct New Palace</span>
+            <span>Add New Room</span>
           </button>
         )}
       </header>
@@ -183,11 +183,11 @@ export default function MemoryPalace() {
               >
                 <Home size={48} className="text-[#3f332c]" />
                 <div className="w-full space-y-2">
-                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest text-center">Give your palace a name</p>
+                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest text-center">Give it a name</p>
                   <input 
                     autoFocus
                     type="text"
-                    placeholder="e.g. My Old School"
+                    placeholder="e.g. My Bedroom"
                     value={newPalaceName}
                     onChange={(e) => setNewPalaceName(e.target.value)}
                     className="w-full text-center bg-[#1a1614] border border-[#3f332c] rounded-2xl py-5 px-6 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic text-xl"
@@ -195,7 +195,7 @@ export default function MemoryPalace() {
                 </div>
                 <div className="flex gap-4">
                   <button onClick={() => setIsAddingPalace(false)} className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-[#3f332c] hover:text-orange-200/40">Cancel</button>
-                  <button onClick={addPalace} className="px-10 py-4 bg-orange-600 text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95">Foundation Laid</button>
+                  <button onClick={addPalace} className="px-10 py-4 bg-orange-600 text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95">Save</button>
                 </div>
               </motion.div>
             )}
@@ -222,11 +222,11 @@ export default function MemoryPalace() {
                   </button>
                 </div>
                 <h3 className="text-2xl font-black text-orange-100 tracking-tighter italic mb-2 drop-shadow-sm">{palace.name}</h3>
-                <p className="text-orange-200/40 font-black uppercase text-[10px] tracking-[0.2em]">{palace.locations.length} Connected Stations</p>
+                <p className="text-orange-200/40 font-black uppercase text-[10px] tracking-[0.2em]">{palace.locations.length} Steps</p>
               </div>
               
               <div className="flex items-center gap-2 mt-8 text-orange-500 font-black text-[10px] uppercase tracking-widest">
-                <span>Explore Palace</span>
+                <span>Open</span>
                 <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </div>
             </motion.div>
@@ -241,7 +241,7 @@ export default function MemoryPalace() {
               </div>
               <div>
                 <h3 className="text-3xl font-black text-orange-100 tracking-tighter italic mb-1 uppercase">{activePalace.name}</h3>
-                <button onClick={() => setActivePalaceId(null)} className="text-orange-500 font-black text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1">Change Realm <ArrowRight size={10} /></button>
+                <button onClick={() => setActivePalaceId(null)} className="text-orange-500 font-black text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1">Change Room <ArrowRight size={10} /></button>
               </div>
             </div>
             <div className="flex gap-4">
@@ -249,14 +249,14 @@ export default function MemoryPalace() {
                 onClick={() => setIsAddingLocation(true)}
                 className="flex items-center gap-3 bg-white/5 text-orange-100 px-8 py-5 rounded-[2rem] font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-all border border-[#3f332c]"
               >
-                <Plus size={18} /> New Station
+                <Plus size={18} /> New Step
               </button>
               <button 
                 disabled={activePalace.locations.length === 0}
                 onClick={startPractice}
                 className="flex items-center gap-3 bg-orange-600 text-white px-12 py-5 rounded-[2rem] font-black uppercase text-[10px] tracking-widest hover:bg-orange-700 shadow-xl shadow-orange-600/20 disabled:hidden transition-all active:scale-95"
               >
-                <Play size={18} fill="currentColor" /> Begin Journey
+                <Play size={18} fill="currentColor" /> Practice
               </button>
             </div>
           </div>
@@ -269,20 +269,20 @@ export default function MemoryPalace() {
                 className="bg-[#2a221f] p-10 rounded-[3.5rem] border border-[#3f332c] flex flex-col md:flex-row gap-8 items-end shadow-2xl"
               >
                 <div className="flex-2 w-full space-y-2">
-                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">Station Name (Location)</p>
+                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">Room Spot (e.g. Bed)</p>
                   <input 
                     type="text"
-                    placeholder="e.g. Wooden Sofa in the lounge"
+                    placeholder="e.g. Wooden Sofa"
                     value={newLocName}
                     onChange={(e) => setNewLocName(e.target.value)}
                     className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-5 px-8 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
                   />
                 </div>
                 <div className="flex-2 w-full space-y-2">
-                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">Memorized Concept</p>
+                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">Item to remember</p>
                   <input 
                     type="text"
-                    placeholder="e.g. King Louis XVI"
+                    placeholder="e.g. Newton's Law"
                     value={newLocConcept}
                     onChange={(e) => setNewLocConcept(e.target.value)}
                     className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-5 px-8 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
@@ -290,7 +290,7 @@ export default function MemoryPalace() {
                 </div>
                 <div className="flex gap-4 shrink-0 mb-1">
                   <button onClick={() => setIsAddingLocation(false)} className="px-6 py-3 text-[10px] font-black text-[#3f332c] uppercase hover:text-orange-200/40">Cancel</button>
-                  <button onClick={addLocation} className="px-10 py-5 bg-emerald-500 text-white rounded-[1.5rem] font-black text-[10px] uppercase shadow-xl shadow-emerald-500/20 active:scale-95">Anchor Concept</button>
+                  <button onClick={addLocation} className="px-10 py-5 bg-emerald-500 text-white rounded-[1.5rem] font-black text-[10px] uppercase shadow-xl shadow-emerald-500/20 active:scale-95">Save</button>
                 </div>
               </motion.div>
             )}
@@ -312,7 +312,7 @@ export default function MemoryPalace() {
                 </div>
                 <h4 className="text-2xl font-black text-orange-100 tracking-tighter bg-[#1a1614] px-6 py-4 rounded-2xl mb-6 italic truncate border border-[#3f332c]">{loc.name}</h4>
                 <div className="space-y-1.5 px-2">
-                  <p className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-500">Stored Concept</p>
+                  <p className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-500">Item to remember</p>
                   <p className="font-black text-orange-100/70 italic text-lg line-clamp-2 leading-tight">"{loc.concept}"</p>
                 </div>
               </motion.div>
@@ -322,12 +322,12 @@ export default function MemoryPalace() {
           {activePalace.locations.length === 0 && (
             <div className="text-center py-32 bg-[#2a221f]/30 rounded-[5rem] border-2 border-dashed border-[#3f332c] flex flex-col items-center">
               <Map size={64} className="text-[#3f332c] mb-6" />
-              <p className="text-orange-200/20 font-black italic uppercase tracking-[0.3em] text-xs">The palace is silent. Populating stations...</p>
+              <p className="text-orange-200/20 font-black italic uppercase tracking-[0.3em] text-xs">Room is empty.</p>
               <button 
                 onClick={() => setIsAddingLocation(true)}
                 className="mt-6 text-orange-500 font-black uppercase tracking-widest text-[10px] hover:underline"
               >
-                Add Your First Station
+                Add Your First Step
               </button>
             </div>
           )}

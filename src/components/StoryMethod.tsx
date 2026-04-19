@@ -80,7 +80,7 @@ export default function StoryMethod() {
          <header className="flex items-center justify-between">
           <button onClick={() => setPracticeMode(false)} className="p-3 bg-[#2a221f] rounded-2xl shadow-sm border border-[#3f332c] transition-all hover:text-orange-500"><ChevronLeft size={24} /></button>
           <div className="text-center">
-            <h1 className="text-2xl font-black tracking-tight italic bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase text-shadow-sm">Epic Story Recall</h1>
+            <h1 className="text-2xl font-black tracking-tight italic bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent uppercase text-shadow-sm">Practice</h1>
             <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-widest">{activeStory.title}</p>
           </div>
           <div className="w-12 h-12 flex items-center justify-center bg-orange-600/10 text-orange-500 border border-orange-500/20 rounded-xl font-black text-xs">
@@ -157,8 +157,8 @@ export default function StoryMethod() {
              <ChevronLeft size={24} />
            </button>
            <div>
-            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">Chronicles</h2>
-            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Technique: Narrative Association</p>
+            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">{t.story}</h2>
+            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Make a story to remember</p>
            </div>
         </div>
         {!isAddingStory && (
@@ -167,7 +167,7 @@ export default function StoryMethod() {
             className="flex items-center gap-4 bg-orange-600 text-white px-10 py-5 rounded-[2.5rem] font-black uppercase tracking-widest text-[10px] hover:bg-orange-700 transition-all shadow-2xl shadow-orange-600/20 w-full md:w-auto justify-center active:scale-95"
           >
             <Plus size={20} />
-            <span>Cast New Story Saga</span>
+            <span>Add New Story</span>
           </button>
         )}
       </header>
@@ -183,12 +183,12 @@ export default function StoryMethod() {
                <div className="w-16 h-16 bg-orange-600/10 text-orange-500 rounded-2xl flex items-center justify-center border border-orange-500/20">
                 <BookOpen size={32} />
               </div>
-              <h3 className="text-3xl font-black text-orange-100 uppercase tracking-tighter italic drop-shadow-sm">Chronicle Your Saga</h3>
+              <h3 className="text-3xl font-black text-orange-100 uppercase tracking-tighter italic drop-shadow-sm">Add New Story</h3>
             </div>
             
             <div className="space-y-8">
               <div className="space-y-2">
-                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-6">Saga Title</p>
+                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-6">Name</p>
                 <input 
                   autoFocus
                   type="text"
@@ -200,7 +200,7 @@ export default function StoryMethod() {
               </div>
 
               <div className="space-y-2">
-                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-6">Anchors to Link (separated by commas)</p>
+                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-6">Items (use commas)</p>
                 <input 
                   type="text"
                   placeholder="Nucleus, Mitochondria, Ribosomes..."
@@ -211,7 +211,7 @@ export default function StoryMethod() {
               </div>
 
               <div className="space-y-2">
-                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-6">The Living Narrative</p>
+                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-6">The Story</p>
                 <textarea 
                   placeholder="Once upon a time, in a microscopic castle ruled by King Nucleus..."
                   value={newStoryText}
@@ -223,7 +223,7 @@ export default function StoryMethod() {
 
               <div className="flex justify-end gap-6 pt-4">
                 <button onClick={resetForm} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-[#3f332c] hover:text-orange-200/40 transition-all">Cancel</button>
-                <button onClick={addStory} className="px-12 py-5 bg-orange-600 text-white rounded-[2rem] font-black text-[10px] uppercase shadow-xl shadow-orange-600/20 hover:bg-orange-700 transition-all active:scale-95">Inscribe Saga</button>
+                <button onClick={addStory} className="px-12 py-5 bg-orange-600 text-white rounded-[2rem] font-black text-[10px] uppercase shadow-xl shadow-orange-600/20 hover:bg-orange-700 transition-all active:scale-95">Save</button>
               </div>
             </div>
           </motion.div>
@@ -269,7 +269,7 @@ export default function StoryMethod() {
                 onClick={() => startPractice(story)}
                 className="w-full py-6 bg-orange-600 text-white rounded-[2.8rem] font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-4 hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
               >
-                <Play size={20} fill="currentColor" /> Live the Saga Recall
+                <Play size={20} fill="currentColor" /> Practice
               </button>
             </motion.div>
           ))}
@@ -277,13 +277,13 @@ export default function StoryMethod() {
           {storyChains.length === 0 && (
              <div className="col-span-full py-32 bg-[#2a221f]/30 rounded-[5rem] border-2 border-dashed border-[#3f332c] flex flex-col items-center">
                 <BookOpen size={64} className="text-[#3f332c] mb-8" />
-                <h4 className="text-2xl font-black text-orange-200/20 uppercase tracking-[0.3em] italic mb-4">No Sagas Inscribed</h4>
-                <p className="text-orange-200/40 font-bold italic mb-10">Turn dry facts into an epic adventure.</p>
+                <h4 className="text-2xl font-black text-orange-200/20 uppercase tracking-[0.3em] italic mb-4">Nothing here</h4>
+                <p className="text-orange-200/40 font-bold italic mb-10">Turn facts into a story.</p>
                 <button 
                   onClick={() => setIsAddingStory(true)}
                   className="px-14 py-5 bg-orange-600 text-white rounded-full font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-orange-600/20 hover:bg-orange-700 transition-all active:scale-95"
                 >
-                  Summon First Saga
+                  Add First Story
                 </button>
              </div>
           )}

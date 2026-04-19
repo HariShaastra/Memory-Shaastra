@@ -74,7 +74,7 @@ export const HomeScreen: React.FC = () => {
           </div>
           <div className="text-left space-y-2">
             <h2 className="text-2xl font-black text-orange-100 tracking-tighter">
-              Namaste, <span className="text-orange-500">{user?.name || 'Seeker'}</span>!
+              Hello, <span className="text-orange-500">{user?.name || 'Friend'}</span>!
             </h2>
             <div className="space-y-1">
               <div className="flex justify-between items-end">
@@ -136,7 +136,7 @@ export const HomeScreen: React.FC = () => {
           className="mt-6 bg-[#2a221f] p-8 rounded-[4rem] rounded-tl-none shadow-2xl shadow-orange-900/20 border border-[#3f332c] max-w-sm text-center relative"
         >
           <div className="space-y-4">
-            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-500 block text-left">Maanas says:</span>
+            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-500 block text-left">Help:</span>
             <p className="text-orange-100/90 leading-relaxed font-bold text-xl italic drop-shadow-sm">
               "{user?.name ? `${user.name}, ${randomSuggestion.charAt(0).toLowerCase() + randomSuggestion.slice(1)}` : randomSuggestion}"
             </p>
@@ -205,8 +205,8 @@ export const HomeScreen: React.FC = () => {
                 <Zap size={32} className="text-white fill-white" />
               </div>
               <div className="text-left">
-                <span className="block text-xs uppercase font-black tracking-[0.2em] text-orange-100 opacity-70 mb-1">{t.todaysTarget}: {todayTarget} tasks remaining</span>
-                <span className="text-2xl font-black italic uppercase tracking-tight">Begin Daily Boost</span>
+                <span className="block text-xs uppercase font-black tracking-[0.2em] text-orange-100 opacity-70 mb-1">{t.todaysTarget}: {todayTarget} left</span>
+                <span className="text-2xl font-black italic uppercase tracking-tight">Start Review</span>
               </div>
             </div>
             <ChevronRight size={32} className="opacity-0 group-hover:opacity-100 transition-opacity translate-x-[-10px] group-hover:translate-x-0 transition-transform" />
@@ -241,11 +241,11 @@ export const HomeScreen: React.FC = () => {
         <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-orange-400/40 text-center mb-8">{t.memoryTools}</h3>
         <div className="flex flex-wrap justify-center gap-3">
           {[
-            { id: 'mnemonics', icon: Brain, label: 'Wisdom Keys', view: 'mnemonics', color: 'text-orange-500' },
-            { id: 'palace', icon: Timer, label: 'Ethereal Halls', view: 'palace', color: 'text-amber-500' },
-            { id: 'linking', icon: Zap, label: 'Neural Chains', view: 'linking', color: 'text-orange-400' },
-            { id: 'story', icon: Book, label: 'Chronicles', view: 'story', color: 'text-orange-600' },
-            { id: 'first-letter', icon: Type, label: 'Seed Letters', view: 'first-letter', color: 'text-amber-600' },
+            { id: 'mnemonics', icon: Brain, label: 'Memory Words', view: 'mnemonics', color: 'text-orange-500' },
+            { id: 'palace', icon: Timer, label: 'Room Trick', view: 'palace', color: 'text-amber-500' },
+            { id: 'linking', icon: Zap, label: 'Link Trick', view: 'linking', color: 'text-orange-400' },
+            { id: 'story', icon: Book, label: 'Story Method', view: 'story', color: 'text-orange-600' },
+            { id: 'first-letter', icon: Type, label: 'Letter Trick', view: 'first-letter', color: 'text-amber-600' },
           ].map((tool) => (
             <button
               key={tool.id}
@@ -262,7 +262,7 @@ export const HomeScreen: React.FC = () => {
       {/* Disclaimer */}
       <footer className="w-full pt-8 pb-4 text-center border-t border-[#3f332c]">
         <p className="text-[10px] text-orange-200/20 font-black tracking-widest uppercase italic">
-          Disclaimer: Memory Shaastra is a sacred guide for your mind. It empowers recall but does not replace the deep study of your original scrolls (books). Use it with balance.
+          Disclaimer: This app helps you remember things. You still need to study your books to learn everything.
         </p>
       </footer>
     </div>
