@@ -13,7 +13,8 @@ import {
   Revision,
   GamificationState,
   Level,
-  Badge
+  Badge,
+  StudyMaterial
 } from '../types';
 
 interface AppContextType {
@@ -40,6 +41,8 @@ interface AppContextType {
   setRevisions: React.Dispatch<React.SetStateAction<Revision[]>>;
   examPlans: ExamPlan[];
   setExamPlans: React.Dispatch<React.SetStateAction<ExamPlan[]>>;
+  studyMaterials: StudyMaterial[];
+  setStudyMaterials: React.Dispatch<React.SetStateAction<StudyMaterial[]>>;
   handleFileUpload: (file: File) => Promise<FileAttachment>;
   isSidebarOpen: boolean;
   setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -58,7 +61,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return saved ? JSON.parse(saved) : null;
   });
   
-  const [viewHistory, setViewHistory] = useState<AppView[]>(['dashboard']);
+  const [viewHistory, setViewHistory] = useState<AppView[]>(['focus']);
   const currentView = viewHistory[viewHistory.length - 1];
 
   const setView = (view: AppView) => {
@@ -130,6 +133,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [examPlans, setExamPlans] = useState<ExamPlan[]>(() => {
     const saved = localStorage.getItem('ms_exam_plans');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [studyMaterials, setStudyMaterials] = useState<StudyMaterial[]>(() => {
+    const saved = localStorage.getItem('ms_study_materials');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -226,6 +234,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [examPlans]);
 
   useEffect(() => {
+    localStorage.setItem('ms_study_materials', JSON.stringify(studyMaterials));
+  }, [studyMaterials]);
+
+  useEffect(() => {
     localStorage.setItem('ms_gamification', JSON.stringify(gamification));
   }, [gamification]);
 
@@ -242,6 +254,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       flashcards, setFlashcards,
       revisions, setRevisions,
       examPlans, setExamPlans,
+      studyMaterials, setStudyMaterials,
       handleFileUpload,
       isSidebarOpen, setIsSidebarOpen,
       gamification, addXP, level, updateStreak, unlockBadge

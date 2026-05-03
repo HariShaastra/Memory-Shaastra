@@ -46,8 +46,8 @@ const NavItem = ({ item, id, currentView, setView, onClose }: NavItemProps) => {
       }}
       className={`w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all duration-300 relative group overflow-hidden ${
         isActive 
-          ? 'bg-orange-600/10 text-orange-400 border border-orange-500/20 shadow-[0_0_20px_rgba(234,88,12,0.1)]' 
-          : 'text-orange-100/60 hover:text-orange-100 hover:bg-[#2a221f]'
+          ? 'bg-orange-600/20 text-orange-500 border border-orange-500/30 shadow-[0_0_25px_rgba(234,88,12,0.15)]' 
+          : 'text-orange-100/80 hover:text-white hover:bg-[#2a221f]'
       }`}
     >
       {isActive && (
@@ -70,13 +70,13 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const { currentView, setView, setUser, user } = useApp();
 
   const mainItems = [
-    { id: 'dashboard', label: t.home, icon: Home },
-    { id: 'planner', label: t.planner, icon: Calendar },
     { id: 'focus', label: t.focus, icon: Timer },
-    { id: 'memory-boost', label: 'Boost', icon: Zap },
+    { id: 'dashboard', label: t.home, icon: Home },
+    { id: 'exam-mode', label: t.examMode, icon: Target },
+    { id: 'planner', label: t.planner, icon: Calendar },
+    { id: 'memory-boost', label: t.memoryBoost, icon: Zap },
     { id: 'flashcards', label: t.flashcards, icon: BookOpen },
     { id: 'scheduler', label: t.scheduler, icon: Calendar },
-    { id: 'exam-mode', label: t.examMode, icon: Target },
   ];
 
   const toolItems = [
@@ -104,14 +104,14 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
       
       <div className="flex-1 px-4 space-y-8 mt-4 overflow-y-auto pb-8 scrollbar-hide">
         <div>
-          <p className="px-4 text-[9px] uppercase font-black tracking-[0.2em] text-orange-300 opacity-90 mb-4 font-sans">Main</p>
+          <p className="px-4 text-[10px] uppercase font-black tracking-[0.3em] text-orange-500 mb-4 font-sans italic">Overview</p>
           <div className="space-y-1">
             {mainItems.map(item => <NavItem key={item.id} item={item} id={item.id} currentView={currentView} setView={setView} onClose={onClose} />)}
           </div>
         </div>
 
         <div>
-          <p className="px-4 text-[9px] uppercase tracking-[0.2em] text-orange-300 opacity-90 mb-4 font-sans">Skills</p>
+          <p className="px-4 text-[10px] uppercase tracking-[0.3em] text-orange-500 mb-4 font-sans italic">Tools</p>
           <div className="space-y-1">
             {toolItems.map(item => <NavItem key={item.id} item={item} id={item.id} currentView={currentView} setView={setView} onClose={onClose} />)}
           </div>

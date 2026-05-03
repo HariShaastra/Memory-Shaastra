@@ -150,6 +150,14 @@ export interface ExamPlan {
   isActive: boolean;
 }
 
+export interface StudyMaterial {
+  id: string;
+  title: string;
+  content: string;
+  attachments: FileAttachment[];
+  createdAt: string;
+}
+
 export type AppView = 
   | 'auth' 
   | 'dashboard' 

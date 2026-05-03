@@ -49,7 +49,7 @@ export const HomeScreen: React.FC = () => {
   const getDaysToGo = () => {
     if (!activePlan?.examDate) return null;
     const diff = new Date(activePlan.examDate).getTime() - new Date().getTime();
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   };
 
   const daysToGo = getDaysToGo();
