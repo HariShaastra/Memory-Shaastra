@@ -45,8 +45,8 @@ export default function Auth() {
             <div className="absolute inset-0 bg-orange-600/20 blur-[40px] rounded-full" />
             <MaanasMascot size={140} expression="happy" />
           </div>
-          <h1 className="text-4xl font-black tracking-tighter italic text-orange-100 mt-2 uppercase drop-shadow-sm leading-none">The Sacred Vault</h1>
-          <p className="text-[10px] text-orange-200/40 font-black uppercase tracking-[0.3em] mt-4 px-8 leading-relaxed italic">Synchronize your soul's journey across the infinite void.</p>
+          <h1 className="text-4xl font-black tracking-tighter italic text-orange-100 mt-2 uppercase drop-shadow-sm leading-none">Maanas Account</h1>
+          <p className="text-[10px] text-orange-200/40 font-black uppercase tracking-[0.3em] mt-4 px-8 leading-relaxed italic">Your personal study companion for a better memory.</p>
         </div>
 
         <div className="flex bg-[#1a1614] p-2 rounded-[2rem] mb-10 border border-[#3f332c] relative z-10 shadow-inner">
@@ -54,13 +54,13 @@ export default function Auth() {
             onClick={() => setIsLogin(true)}
             className={`flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] rounded-[1.5rem] transition-all italic ${isLogin ? 'bg-orange-600 text-white shadow-xl shadow-orange-600/20' : 'text-orange-200/20'}`}
           >
-            Re-Enter
+            Login
           </button>
           <button 
             onClick={() => setIsLogin(false)}
             className={`flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] rounded-[1.5rem] transition-all italic ${!isLogin ? 'bg-orange-600 text-white shadow-xl shadow-orange-600/20' : 'text-orange-200/20'}`}
           >
-            Awaken
+            Register
           </button>
         </div>
 
@@ -68,7 +68,7 @@ export default function Auth() {
           {!isLogin && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-6">
               <div className="space-y-2.5">
-                <label className="text-[9px] font-black text-orange-200/20 uppercase tracking-[0.3em] ml-6 italic">Mortal Name</label>
+                <label className="text-[9px] font-black text-orange-200/20 uppercase tracking-[0.3em] ml-6 italic">Full Name</label>
                 <div className="relative">
                   <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-orange-200/20" size={18} />
                   <input 
@@ -77,7 +77,7 @@ export default function Auth() {
                     onChange={(e) => setName(e.target.value)}
                     required
                     className="w-full bg-[#1a1614] border border-[#3f332c] rounded-[1.5rem] py-5 pl-14 pr-6 text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all text-orange-100 font-bold italic shadow-inner"
-                    placeholder="Identify yourself..."
+                    placeholder="Enter your name..."
                   />
                 </div>
               </div>
@@ -85,7 +85,7 @@ export default function Auth() {
           )}
 
           <div className="space-y-2.5">
-            <label className="text-[9px] font-black text-orange-200/20 uppercase tracking-[0.3em] ml-6 italic">Soul Seal (Email)</label>
+            <label className="text-[9px] font-black text-orange-200/20 uppercase tracking-[0.3em] ml-6 italic">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-orange-200/20" size={18} />
               <input 
@@ -94,13 +94,13 @@ export default function Auth() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full bg-[#1a1614] border border-[#3f332c] rounded-[1.5rem] py-5 pl-14 pr-6 text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all text-orange-100 font-bold italic shadow-inner"
-                placeholder="seeker@void.com"
+                placeholder="your@email.com"
               />
             </div>
           </div>
 
           <div className="space-y-2.5">
-            <label className="text-[9px] font-black text-orange-200/20 uppercase tracking-[0.3em] ml-6 italic">Secret Sigil (Password)</label>
+            <label className="text-[9px] font-black text-orange-200/20 uppercase tracking-[0.3em] ml-6 italic">Password</label>
             <div className="relative">
               <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-orange-200/20" size={18} />
               <input 
@@ -125,7 +125,7 @@ export default function Auth() {
             ) : (
               <>
                 {isLogin ? <LogIn size={22} className="relative z-10" /> : <UserPlus size={22} className="relative z-10" />}
-                <span className="uppercase tracking-[0.3em] text-[10px] font-black relative z-10 italic">{isLogin ? 'Enter The Vault' : 'Ignite Journey'}</span>
+                <span className="uppercase tracking-[0.3em] text-[10px] font-black relative z-10 italic">{isLogin ? 'Login Now' : 'Sign Up'}</span>
               </>
             )}
           </button>
@@ -133,12 +133,12 @@ export default function Auth() {
           <button 
             type="button"
             onClick={() => {
-              setUser({ id: 'guest', name: 'Wandering Soul', email: 'seeker@void.com' } as any);
+              setUser({ id: 'guest', name: 'Explorer', email: 'guest@maanas.com' } as any);
               setView('dashboard');
             }}
             className="w-full py-4 text-[9px] text-orange-200/20 font-black uppercase tracking-[0.4em] hover:text-orange-200/40 transition-all italic"
           >
-            Walk as Shadow (Guest)
+            Enter as Explorer (Guest)
           </button>
         </form>
       </motion.div>

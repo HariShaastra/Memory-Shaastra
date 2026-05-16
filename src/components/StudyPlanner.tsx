@@ -245,16 +245,16 @@ export const StudyPlanner: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                <div className="flex items-center gap-2">
                   <button 
                     onClick={() => startEdit(task)}
-                    className="p-3 text-orange-200/40 hover:text-orange-500 bg-white/5 rounded-xl transition-all"
+                    className="p-3.5 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 rounded-xl transition-all shadow-lg active:scale-95"
                   >
                     <Edit2 size={16} />
                   </button>
                   <button 
                     onClick={() => deleteTask(task.id)}
-                    className="p-3 text-orange-200/40 hover:text-rose-500 bg-white/5 rounded-xl transition-all"
+                    className="p-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-xl transition-all shadow-lg active:scale-95"
                   >
                     <Trash2 size={16} />
                   </button>

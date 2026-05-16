@@ -40,66 +40,41 @@ export const MaanasMascot: React.FC<MaanasMascotProps> = ({
         className="w-full h-full relative"
       >
         <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-lg">
-          {/* Head - Simple Cute Circle */}
-          <circle cx="50" cy="35" r="22" fill="#ffe4d6" />
+          {/* Base Head - Very Circular & Cute */}
+          <circle cx="50" cy="40" r="22" fill="#ffdca2" />
           
-          {/* Ears */}
-          <circle cx="28" cy="38" r="4" fill="#ffe4d6" />
-          <circle cx="72" cy="38" r="4" fill="#ffe4d6" />
-
-          {/* Body / Robes - Orange draped style */}
+          {/* Choti (Original Style) */}
           <path 
-            d="M28,55 Q50,45 72,55 L75,85 Q50,95 25,85 Z" 
-            fill="#f97316" 
+            d="M50,18 Q52,8 56,12 Q54,18 51,17" 
+            fill="#3e2723" 
           />
-          
-          {/* Saffron Sash (Diagonal Drapery) */}
+
+          {/* Saffron Body - Original Simple Arc */}
           <path 
-            d="M30,55 Q50,48 70,55 L70,85 Q50,80 30,85 Z" 
+            d="M25,95 C25,75 35,60 50,60 C65,60 75,75 75,95 Z" 
             fill="#ea580c" 
-            opacity="0.8"
           />
 
-          {/* Face - Keeping it very simple and welcoming */}
-          <g className="transition-all duration-300">
-            {/* Eyes - Smiling / Closed for peace */}
-            {expression === 'sad' ? (
-              <>
-                <path d="M40,35 Q44,39 48,35" fill="none" stroke="#6b21a8" strokeWidth="1.5" strokeLinecap="round" />
-                <path d="M52,35 Q56,39 60,35" fill="none" stroke="#6b21a8" strokeWidth="1.5" strokeLinecap="round" />
-              </>
-            ) : (
-              <>
-                <motion.path 
-                  d="M40,35 Q44,31 48,35" fill="none" stroke="#4a2c1d" strokeWidth="1.5" strokeLinecap="round"
-                  animate={expression === 'focused' ? { d: "M40,35 Q44,35 48,35" } : {}}
-                />
-                <motion.path 
-                  d="M52,35 Q56,31 60,35" fill="none" stroke="#4a2c1d" strokeWidth="1.5" strokeLinecap="round"
-                  animate={expression === 'focused' ? { d: "M52,35 Q56,35 60,35" } : {}}
-                />
-              </>
-            )}
-
-            {/* Mouth - Gentle Smile */}
+          {/* Facial Features - Simple & Kind */}
+          <g transform="translate(0, 2)">
+            {/* Friendly Motivated Eyes */}
+            <circle cx="43" cy="38" r="2.8" fill="#4a2c1d" />
+            <circle cx="57" cy="38" r="2.8" fill="#4a2c1d" />
+            <circle cx="44.2" cy="36.8" r="0.8" fill="white" />
+            <circle cx="58.2" cy="36.8" r="0.8" fill="white" />
+            
+            {/* Handsome Motivating Smile */}
             <path 
-              d={expression === 'happy' || expression === 'encouraging' || expression === 'proud' ? "M42,46 Q50,52 58,46" : "M45,46 Q50,50 55,46"} 
+              d="M41,50 Q50,55 59,50" 
               fill="none" 
               stroke="#4a2c1d" 
-              strokeWidth={expression === 'happy' || expression === 'encouraging' ? "2" : "1.5"} 
-              strokeLinecap="round"
-              className={expression === 'sad' ? 'opacity-0' : 'opacity-100'} 
+              strokeWidth="2.2" 
+              strokeLinecap="round" 
             />
-            {expression === 'sad' && (
-              <path d="M46,48 Q50,45 54,48" fill="none" stroke="#4a2c1d" strokeWidth="1" strokeLinecap="round" />
-            )}
             
-            {/* Third Eye / Wisdom Bindi (Red for tradition/focus) */}
-            <circle cx="50" cy="22" r="1.5" fill="#e11d48" opacity="0.6" />
+            {/* Wisdom Dot */}
+            <circle cx="50" cy="24" r="1.5" fill="#be123c" opacity="0.9" />
           </g>
-
-          {/* Hands - Folded in front */}
-          <path d="M40,70 Q50,75 60,70" fill="none" stroke="#ea580c" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </motion.div>
     </div>

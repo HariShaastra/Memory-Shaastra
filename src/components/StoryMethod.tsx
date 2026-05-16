@@ -243,7 +243,7 @@ export default function StoryMethod() {
                   </div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); setStoryChains(storyChains.filter(s => s.id !== story.id)); }}
-                    className="p-3 text-orange-200/20 hover:text-rose-500 bg-white/5 rounded-2xl transition-all opacity-0 group-hover:opacity-100"
+                    className="p-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
                   >
                     <Trash2 size={20} />
                   </button>

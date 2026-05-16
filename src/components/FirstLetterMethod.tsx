@@ -252,9 +252,19 @@ export default function FirstLetterMethod() {
                   <div className="w-14 h-14 bg-orange-600/10 text-orange-400 rounded-2xl flex items-center justify-center">
                     <Type size={28} />
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <button onClick={() => startEditing(aid)} className="p-2 text-orange-200/20 hover:text-orange-400 hover:bg-white/5 rounded-lg transition-colors"><Edit2 size={16} /></button>
-                    <button onClick={(e) => deleteAid(aid.id, e)} className="p-2 text-orange-200/20 hover:text-rose-400 hover:bg-white/5 rounded-lg transition-colors"><Trash2 size={16} /></button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => startEditing(aid)} 
+                      className="p-3 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 rounded-xl transition-all shadow-lg active:scale-95"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button 
+                      onClick={(e) => deleteAid(aid.id, e)} 
+                      className="p-3 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-xl transition-all shadow-lg active:scale-95"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
                 <h3 className="text-2xl font-black text-orange-100 tracking-tighter italic mb-4">{aid.title}</h3>

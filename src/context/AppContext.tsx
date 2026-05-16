@@ -61,7 +61,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return saved ? JSON.parse(saved) : null;
   });
   
-  const [viewHistory, setViewHistory] = useState<AppView[]>(['focus']);
+  const [viewHistory, setViewHistory] = useState<AppView[]>(['dashboard']);
   const currentView = viewHistory[viewHistory.length - 1];
 
   const setView = (view: AppView) => {

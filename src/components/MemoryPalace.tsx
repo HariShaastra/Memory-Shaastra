@@ -216,7 +216,7 @@ export default function MemoryPalace() {
                   </div>
                   <button 
                     onClick={(e) => deletePalace(palace.id, e)}
-                    className="p-3 text-orange-200/20 hover:text-rose-500 rounded-2xl hover:bg-white/5 transition-all opacity-0 group-hover:opacity-100"
+                    className="p-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
                   >
                     <Trash2 size={20} />
                   </button>
@@ -308,7 +308,12 @@ export default function MemoryPalace() {
                     <span className="text-4xl font-black text-orange-900/40 group-hover:text-orange-500/20 transition-all italic font-display">{(idx + 1).toString().padStart(2, '0')}</span>
                     <Box size={20} className="text-orange-500/40 group-hover:text-orange-500 transition-all" />
                   </div>
-                  <button onClick={() => deleteLocation(loc.id)} className="opacity-0 group-hover:opacity-100 p-3 text-orange-200/20 hover:text-rose-500 bg-white/5 rounded-2xl transition-all"><Trash2 size={18} /></button>
+                  <button 
+                    onClick={() => deleteLocation(loc.id)} 
+                    className="p-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
                 <h4 className="text-2xl font-black text-orange-100 tracking-tighter bg-[#1a1614] px-6 py-4 rounded-2xl mb-6 italic truncate border border-[#3f332c]">{loc.name}</h4>
                 <div className="space-y-1.5 px-2">

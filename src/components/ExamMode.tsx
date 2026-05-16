@@ -23,6 +23,184 @@ import { t } from '../utils/translations';
 import { MaanasMascot } from './MaanasMascot';
 import { ExamPlan, ExamSubject, ExamChapter, ExamTopic, ExamSubTopic, RevisionScheduleItem } from '../types';
 
+const RevisionItem: React.FC<{ item: RevisionScheduleItem, i: number, activePlan: ExamPlan, updatePlan: (plan: ExamPlan) => void }> = ({ item, i, activePlan, updatePlan }) => {
+  const [isEditingItem, setIsEditingItem] = useState(false);
+  const [editLabel, setEditLabel] = useState(item.label);
+  const [editDate, setEditDate] = useState(item.date);
+
+  return (
+    <div className="relative z-10 p-6 bg-[#2a221f] rounded-[2.5rem] border border-[#3f332c] group hover:bg-[#2d2522] transition-all shadow-sm">
+      <div className={`absolute left-[-26px] top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-4 border-[#1a1614] transition-all ${item.completed ? 'bg-emerald-500 scale-125' : 'bg-orange-500 hover:scale-110'}`} />
+      
+      {isEditingItem ? (
+        <div className="space-y-4">
+          <input 
+            type="text"
+            value={editLabel}
+            onChange={e => setEditLabel(e.target.value)}
+            className="w-full bg-[#1a1614] border border-orange-500/30 rounded-xl px-4 py-2 text-xs font-black text-orange-100 italic outline-none"
+          />
+          <input 
+            type="date"
+            value={editDate}
+            onChange={e => setEditDate(e.target.value)}
+            className="w-full bg-[#1a1614] border border-orange-500/30 rounded-xl px-4 py-2 text-[10px] font-black text-orange-100 outline-none"
+          />
+          <div className="flex gap-2">
+            <button 
+              onClick={() => {
+                const updated = { ...activePlan };
+                updated.revisionSchedule[i].label = editLabel;
+                updated.revisionSchedule[i].date = editDate;
+                updatePlan(updated);
+                setIsEditingItem(false);
+              }}
+              className="flex-1 bg-orange-600 text-white rounded-lg py-2 text-[10px] font-black uppercase"
+            >
+              Save
+            </button>
+            <button 
+              onClick={() => setIsEditingItem(false)}
+              className="flex-1 text-orange-200/20 py-2 text-[10px] font-black uppercase"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 group/item cursor-pointer" 
+            onClick={() => {
+              const updated = { ...activePlan };
+              updated.revisionSchedule[i].completed = !updated.revisionSchedule[i].completed;
+              updatePlan(updated);
+            }}
+          >
+            <div className={`transition-all ${item.completed ? 'text-emerald-500' : 'text-[#3f332c] group-hover/item:text-orange-500'}`}>
+              <CheckCircle2 size={24} />
+            </div>
+            <div className="space-y-1">
+              <p className={`font-black text-sm uppercase tracking-tight transition-all ${item.completed ? 'text-orange-200/20 line-through italic' : 'text-orange-100'}`}>
+                {item.label}
+              </p>
+              <p className={`text-[10px] font-black uppercase tracking-widest ${item.completed ? 'text-orange-200/10' : 'text-orange-200/30'}`}>
+                {item.date}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <button 
+              onClick={() => setIsEditingItem(true)}
+              className="opacity-0 group-hover:opacity-100 p-2 text-[#3f332c] hover:text-orange-400 transition-all"
+            >
+              <Edit2 size={16} />
+            </button>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                const updated = { ...activePlan, revisionSchedule: activePlan.revisionSchedule.filter(s => s.id !== item.id) };
+                updatePlan(updated);
+              }}
+              className="opacity-0 group-hover:opacity-100 p-2 text-[#3f332c] hover:text-rose-500 transition-all"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const TopicItem: React.FC<{ topic: ExamTopic, tIndex: number, sIndex: number, cIndex: number, activePlan: ExamPlan, updatePlan: (plan: ExamPlan) => void }> = ({ topic, tIndex, sIndex, cIndex, activePlan, updatePlan }) => {
+  const [isEditingTopic, setIsEditingTopic] = useState(false);
+  const [editTopicName, setEditTopicName] = useState(topic.name);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between group/topic">
+        {isEditingTopic ? (
+          <div className="flex flex-1 gap-2">
+            <input 
+              type="text"
+              value={editTopicName}
+              onChange={e => setEditTopicName(e.target.value)}
+              className="flex-1 bg-[#1a1614] border border-orange-500/30 rounded-xl px-4 py-2 text-sm font-black text-orange-100 italic outline-none"
+              autoFocus
+            />
+            <button 
+              onClick={() => {
+                const updated = { ...activePlan };
+                updated.subjects[sIndex].chapters[cIndex].topics[tIndex].name = editTopicName;
+                updatePlan(updated);
+                setIsEditingTopic(false);
+              }}
+              className="p-2 bg-orange-600 text-white rounded-xl"
+            >
+              <CheckCircle2 size={18} />
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-5 flex-1 cursor-pointer"
+              onClick={() => {
+                const updated = { ...activePlan };
+                updated.subjects[sIndex].chapters[cIndex].topics[tIndex].completed = !topic.completed;
+                updatePlan(updated);
+              }}
+            >
+              <div className={`transition-all ${topic.completed ? 'text-emerald-500' : 'text-[#3f332c] group-hover/topic:text-orange-500'}`}>
+                <CheckCircle2 size={22} />
+              </div>
+              <span className={`text-base font-bold transition-all italic tracking-tight uppercase ${topic.completed ? 'text-orange-200/10 line-through' : 'text-orange-100/80 group-hover/topic:text-orange-100'}`}>
+                {topic.name}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setIsEditingTopic(true)}
+                className="opacity-0 group-hover/topic:opacity-100 p-2 text-[#3f332c] hover:text-orange-400 transition-all"
+              >
+                <Edit2 size={16} />
+              </button>
+              <button 
+                onClick={() => {
+                  const updated = { ...activePlan };
+                  updated.subjects[sIndex].chapters[cIndex].topics = updated.subjects[sIndex].chapters[cIndex].topics.filter((_, i) => i !== tIndex);
+                  updatePlan(updated);
+                }}
+                className="opacity-0 group-hover/topic:opacity-100 p-2 text-[#3f332c] hover:text-rose-500 transition-all"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {topic.subTopics.length > 0 && (
+        <div className="ml-8 pl-6 border-l-2 border-[#1a1614] space-y-3">
+          {topic.subTopics.map((sub, stIndex) => (
+            <div key={sub.id} className="flex items-center gap-4 group/sub cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                const updated = { ...activePlan };
+                updated.subjects[sIndex].chapters[cIndex].topics[tIndex].subTopics[stIndex].completed = !sub.completed;
+                updatePlan(updated);
+              }}
+            >
+              <div className={`w-2.5 h-2.5 rounded-full border-2 transition-all ${sub.completed ? 'bg-emerald-500 border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] scale-110' : 'border-[#3f332c] group-hover/sub:border-orange-500 scale-100'}`} />
+              <span className={`text-[11px] font-black uppercase tracking-widest transition-all ${sub.completed ? 'text-orange-200/10 line-through italic' : 'text-orange-200/40 group-hover/sub:text-orange-200/60'}`}>
+                {sub.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const ExamMode: React.FC = () => {
   const { goBack, examPlans, setExamPlans } = useAppContext();
 
@@ -374,16 +552,16 @@ export const ExamMode: React.FC = () => {
                         <Calendar size={14} className="text-orange-500/50" /> {plan.examDate || 'Eternal Wait'}
                       </p>
                     </div>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                    <div className="flex gap-2">
                       <button 
                         onClick={(e) => { e.stopPropagation(); setEditingPlan(plan); setIsCreating(false); }}
-                        className="p-3 text-orange-200/20 hover:text-orange-400 bg-white/5 rounded-2xl transition-all"
+                        className="p-3.5 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
                       >
                         <Edit2 size={18} />
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(plan.id); }}
-                        className="p-3 text-orange-200/20 hover:text-rose-500 bg-white/5 rounded-2xl transition-all"
+                        className="p-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -392,7 +570,7 @@ export const ExamMode: React.FC = () => {
                   
                   <div className="pt-4 border-t border-[#3f332c] space-y-4">
                     <div className="flex items-center justify-between text-[9px] font-black text-orange-200/20 uppercase tracking-[0.2em]">
-                      <span>Scrolls (Subjects)</span>
+                      <span>Subjects</span>
                       <span>{plan.subjects.length}</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -574,40 +752,7 @@ export const ExamMode: React.FC = () => {
           <div className="space-y-6 relative ml-4 px-2">
             <div className="absolute top-0 left-[-16px] w-[2px] h-full bg-[#3f332c] z-0" />
             {activePlan.revisionSchedule.map((item, i) => (
-              <div key={item.id} className="relative z-10 p-6 bg-[#2a221f] rounded-[2.5rem] border border-[#3f332c] group hover:bg-[#2d2522] transition-all shadow-sm">
-                <div className={`absolute left-[-26px] top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-4 border-[#1a1614] transition-all ${item.completed ? 'bg-emerald-500 scale-125' : 'bg-orange-500 hover:scale-110'}`} />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 group/item cursor-pointer" 
-                    onClick={() => {
-                      const updated = { ...activePlan };
-                      updated.revisionSchedule[i].completed = !updated.revisionSchedule[i].completed;
-                      updatePlan(updated);
-                    }}
-                  >
-                    <div className={`transition-all ${item.completed ? 'text-emerald-500' : 'text-[#3f332c] group-hover/item:text-orange-500'}`}>
-                      <CheckCircle2 size={24} />
-                    </div>
-                    <div className="space-y-1">
-                      <p className={`font-black text-sm uppercase tracking-tight transition-all ${item.completed ? 'text-orange-200/20 line-through italic' : 'text-orange-100'}`}>
-                        {item.label}
-                      </p>
-                      <p className={`text-[10px] font-black uppercase tracking-widest ${item.completed ? 'text-orange-200/10' : 'text-orange-200/30'}`}>
-                        {item.date}
-                      </p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const updated = { ...activePlan, revisionSchedule: activePlan.revisionSchedule.filter(s => s.id !== item.id) };
-                      updatePlan(updated);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-2 text-[#3f332c] hover:text-rose-500 transition-all"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
+              <RevisionItem key={item.id} item={item} i={i} activePlan={activePlan} updatePlan={updatePlan} />
             ))}
           </div>
         </div>
@@ -654,47 +799,9 @@ export const ExamMode: React.FC = () => {
                       
                       <div className="p-8 space-y-6">
                         {chapter.topics.length === 0 ? (
-                           <p className="text-[10px] font-black text-orange-200/10 uppercase tracking-[0.2em] italic text-center py-4">Scroll is empty</p>
+                           <p className="text-[10px] font-black text-orange-200/10 uppercase tracking-[0.2em] italic text-center py-4">List is empty</p>
                         ) : chapter.topics.map((topic, tIndex) => (
-                          <div key={topic.id} className="space-y-4">
-                            <div className="flex items-center justify-between group/topic cursor-pointer"
-                              onClick={() => {
-                                const updated = { ...activePlan };
-                                updated.subjects[sIndex].chapters[cIndex].topics[tIndex].completed = !topic.completed;
-                                updatePlan(updated);
-                              }}
-                            >
-                              <div className="flex items-center gap-5 flex-1">
-                                <div className={`transition-all ${topic.completed ? 'text-emerald-500' : 'text-[#3f332c] group-hover/topic:text-orange-500'}`}>
-                                  <CheckCircle2 size={22} />
-                                </div>
-                                <span className={`text-base font-bold transition-all italic tracking-tight uppercase ${topic.completed ? 'text-orange-200/10 line-through' : 'text-orange-100/80 group-hover/topic:text-orange-100'}`}>
-                                  {topic.name}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Subtopics */}
-                            {topic.subTopics.length > 0 && (
-                              <div className="ml-8 pl-6 border-l-2 border-[#1a1614] space-y-3">
-                                {topic.subTopics.map((sub, stIndex) => (
-                                  <div key={sub.id} className="flex items-center gap-4 group/sub cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const updated = { ...activePlan };
-                                      updated.subjects[sIndex].chapters[cIndex].topics[tIndex].subTopics[stIndex].completed = !sub.completed;
-                                      updatePlan(updated);
-                                    }}
-                                  >
-                                    <div className={`w-2.5 h-2.5 rounded-full border-2 transition-all ${sub.completed ? 'bg-emerald-500 border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] scale-110' : 'border-[#3f332c] group-hover/sub:border-orange-500 scale-100'}`} />
-                                    <span className={`text-[11px] font-black uppercase tracking-widest transition-all ${sub.completed ? 'text-orange-200/10 line-through italic' : 'text-orange-200/40 group-hover/sub:text-orange-200/60'}`}>
-                                      {sub.name}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
+                          <TopicItem key={topic.id} topic={topic} tIndex={tIndex} sIndex={sIndex} cIndex={cIndex} activePlan={activePlan} updatePlan={updatePlan} />
                         ))}
                       </div>
                     </div>

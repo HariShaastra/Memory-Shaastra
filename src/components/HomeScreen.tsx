@@ -58,23 +58,106 @@ export const HomeScreen: React.FC = () => {
   return (
     <div className="min-h-full max-w-5xl mx-auto px-6 py-12 flex flex-col items-center justify-center space-y-12">
       
+      {/* App Branding Heading */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center"
+      >
+        <h1 className="text-2xl md:text-3xl font-black text-orange-500 tracking-tighter uppercase italic">
+          Memory <span className="text-orange-100">Shaastra</span>
+        </h1>
+        <div className="h-1 w-12 bg-orange-500 mx-auto mt-2 rounded-full opacity-50" />
+      </motion.div>
+
+      {/* Main Action Buttons - TOP POSITION */}
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
+          <motion.button
+            whileHover={{ scale: 1.03, y: -6 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setView('focus')}
+            className="w-full group bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 p-[2px] rounded-[2.5rem] shadow-2xl shadow-orange-500/40"
+          >
+            <div className="bg-[#1a1614] text-white px-8 py-8 rounded-[2.4rem] flex items-center justify-between border border-white/5 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center gap-6 relative z-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-white/20 to-white/5 rounded-3xl flex items-center justify-center backdrop-blur-xl border border-white/20 shadow-2xl group-hover:scale-110 transition-transform">
+                  <Timer size={40} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
+                </div>
+                <div className="text-left">
+                  <span className="block text-[10px] uppercase font-black tracking-[0.4em] text-orange-400 mb-1">Focus Mode</span>
+                  <span className="text-2xl font-black italic uppercase tracking-tighter leading-none">{t.enterStudyMode}</span>
+                </div>
+              </div>
+              <ChevronRight size={32} className="opacity-40 group-hover:opacity-100 group-hover:translate-x-4 transition-all relative z-10" />
+            </div>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.03, y: -6 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setView('memory-boost')}
+            className="w-full group bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 p-[2px] rounded-[2.5rem] shadow-2xl shadow-indigo-500/40"
+          >
+            <div className="bg-[#1a1614] text-white px-8 py-8 rounded-[2.4rem] flex items-center justify-between border border-white/5 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center gap-6 relative z-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-white/20 to-white/5 rounded-3xl flex items-center justify-center backdrop-blur-xl border border-white/20 shadow-2xl group-hover:scale-110 transition-transform">
+                  <Zap size={40} className="text-white fill-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
+                </div>
+                <div className="text-left">
+                  <span className="block text-[10px] uppercase font-black tracking-[0.4em] text-indigo-400 mb-1">{t.todaysTarget}: {todayTarget} left</span>
+                  <span className="text-2xl font-black italic uppercase tracking-tighter leading-none">Daily Boost</span>
+                </div>
+              </div>
+              <ChevronRight size={32} className="opacity-40 group-hover:opacity-100 group-hover:translate-x-4 transition-all relative z-10" />
+            </div>
+          </motion.button>
+      </div>
+
+      {/* Your Schedule / Next Task Section */}
+      <div className="w-full max-w-4xl bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 flex items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20">
+            <Target size={24} className="text-amber-500" />
+          </div>
+          <div className="text-left">
+            <p className="text-[10px] text-orange-200/40 uppercase font-black tracking-widest leading-none mb-1">Your Schedule</p>
+            <p className="text-lg font-black text-orange-100 uppercase italic">
+              {activePlan ? `${activePlan.title}` : "Define your next goal"}
+            </p>
+          </div>
+        </div>
+        <motion.button
+          whileHover={{ x: 5 }}
+          onClick={() => setView('planner')}
+          className="text-orange-500 text-xs font-black uppercase tracking-widest flex items-center gap-2"
+        >
+          View Full Plan <ChevronRight size={16} />
+        </motion.button>
+      </div>
+
+      {/* Intro Header (Learn Fast) - COMPACT */}
+      <div className="w-full max-w-lg text-center space-y-4 bg-[#1a1614] p-6 rounded-[2.5rem] border border-[#3f332c] relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-5">
+           <Brain size={60} className="text-orange-500" />
+        </div>
+        <div className="space-y-2 relative z-10">
+          <h2 className="text-3xl font-black tracking-tighter italic text-orange-100 uppercase">
+            LEARN <span className="text-orange-500">FAST.</span>
+          </h2>
+          <p className="text-orange-200/70 font-bold text-sm italic">
+            "{dailyQuote}"
+          </p>
+        </div>
+      </div>
+
       {/* User Hello & Profile */}
       <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8 bg-[#2a221f]/50 p-8 rounded-[3rem] border border-[#3f332c]/50">
         <div className="flex items-center gap-6">
-          <div className="relative group">
-            <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-orange-500 to-amber-500 p-1 shadow-xl shadow-orange-500/20">
-              <div className="w-full h-full rounded-[1.8rem] bg-[#1a1614] overflow-hidden flex items-center justify-center border-2 border-[#1a1614]">
-                {user?.photoUrl ? (
-                  <img src={user.photoUrl} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  <img src={`https://api.dicebear.com/7.x/bottts/svg?seed=${user?.name || 'Maanas'}`} alt="Avatar" className="w-full h-full object-cover" />
-                )}
-              </div>
-            </div>
-          </div>
           <div className="text-left space-y-2">
             <h2 className="text-2xl font-black text-orange-100 tracking-tighter">
-              Hello, <span className="text-orange-500">{user?.name || 'Friend'}</span>!
+              {user?.name ? "Welcome back," : "Hello,"} <span className="text-orange-500">{user?.name || "Wandering Soul"}</span>!
             </h2>
             <div className="space-y-1">
               <div className="flex justify-between items-end">
@@ -107,21 +190,6 @@ export const HomeScreen: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Intro Header */}
-      <div className="text-center space-y-6 max-w-2xl bg-[#1a1614] p-10 rounded-[3rem] border border-[#3f332c]">
-        <div className="space-y-4">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter italic text-orange-100 uppercase">
-            LEARN <span className="text-orange-500">FAST.</span>
-          </h1>
-          <p className="text-orange-200/70 font-bold text-lg leading-relaxed italic">
-            "{dailyQuote}"
-          </p>
-        </div>
-        <p className="text-orange-200/40 font-medium leading-relaxed max-w-lg mx-auto text-sm">
-          Memory Shaastra helps you learn fast and never forget. Use our easy tools to remember anything.
-        </p>
       </div>
 
       {/* Center Piece: Maanas Mascot */}
@@ -191,49 +259,27 @@ export const HomeScreen: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Main Actions */}
-      <div className="w-full max-w-4xl flex flex-col gap-4">
+      {/* Secondary Actions */}
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-4">
         <motion.button
-          whileHover={{ scale: 1.01, y: -2 }}
-          whileTap={{ scale: 0.99 }}
-          onClick={() => setView('memory-boost')}
-          className="w-full group bg-gradient-to-r from-orange-600 to-amber-600 p-1 rounded-3xl shadow-2xl shadow-orange-500/20"
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setView('exam-mode')}
+          className="flex items-center justify-center gap-3 p-5 bg-[#2a221f] rounded-[2rem] border border-[#3f332c] shadow-lg hover:bg-[#342a27] transition-all text-orange-100 font-black italic uppercase tracking-tighter"
         >
-          <div className="bg-transparent text-white px-8 py-6 rounded-[22px] flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20">
-                <Zap size={32} className="text-white fill-white" />
-              </div>
-              <div className="text-left">
-                <span className="block text-xs uppercase font-black tracking-[0.2em] text-orange-100 opacity-70 mb-1">{t.todaysTarget}: {todayTarget} left</span>
-                <span className="text-2xl font-black italic uppercase tracking-tight">Start Review</span>
-              </div>
-            </div>
-            <ChevronRight size={32} className="opacity-0 group-hover:opacity-100 transition-opacity translate-x-[-10px] group-hover:translate-x-0 transition-transform" />
-          </div>
+          <Target size={20} className="text-amber-500" />
+          <span>{t.examMode}</span>
         </motion.button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <motion.button
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setView('exam-mode')}
-            className="flex items-center justify-center gap-3 p-5 bg-[#2a221f] rounded-[2rem] border border-[#3f332c] shadow-lg hover:bg-[#342a27] transition-all text-orange-100 font-black italic uppercase tracking-tighter"
-          >
-            <Timer size={20} className="text-amber-500" />
-            <span>{t.enterStudyMode}</span>
-          </motion.button>
-
-          <motion.button
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setView('planner')}
-            className="flex items-center justify-center gap-3 p-5 bg-[#2a221f] rounded-[2rem] border border-[#3f332c] shadow-lg hover:bg-[#342a27] transition-all text-orange-100 font-black italic uppercase tracking-tighter"
-          >
-            <Target size={20} className="text-emerald-500" />
-            <span>{t.viewProgress}</span>
-          </motion.button>
-        </div>
+        <motion.button
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setView('planner')}
+          className="flex items-center justify-center gap-3 p-5 bg-[#2a221f] rounded-[2rem] border border-[#3f332c] shadow-lg hover:bg-[#342a27] transition-all text-orange-100 font-black italic uppercase tracking-tighter"
+        >
+          <Target size={20} className="text-emerald-500" />
+          <span>{t.viewProgress}</span>
+        </motion.button>
       </div>
 
       {/* Secondary Tools Horizontal */}
@@ -241,11 +287,11 @@ export const HomeScreen: React.FC = () => {
         <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-orange-400/40 text-center mb-8">{t.memoryTools}</h3>
         <div className="flex flex-wrap justify-center gap-3">
           {[
-            { id: 'mnemonics', icon: Brain, label: 'Memory Words', view: 'mnemonics', color: 'text-orange-500' },
-            { id: 'palace', icon: Timer, label: 'Room Trick', view: 'palace', color: 'text-amber-500' },
-            { id: 'linking', icon: Zap, label: 'Link Trick', view: 'linking', color: 'text-orange-400' },
-            { id: 'story', icon: Book, label: 'Story Method', view: 'story', color: 'text-orange-600' },
-            { id: 'first-letter', icon: Type, label: 'Letter Trick', view: 'first-letter', color: 'text-amber-600' },
+            { id: 'mnemonics', icon: Brain, label: t.mnemonics, view: 'mnemonics', color: 'text-orange-500' },
+            { id: 'palace', icon: Timer, label: t.palace, view: 'palace', color: 'text-amber-500' },
+            { id: 'linking', icon: Zap, label: t.linking, view: 'linking', color: 'text-orange-400' },
+            { id: 'story', icon: Book, label: t.story, view: 'story', color: 'text-orange-600' },
+            { id: 'first-letter', icon: Type, label: t.firstLetter, view: 'first-letter', color: 'text-amber-600' },
           ].map((tool) => (
             <button
               key={tool.id}

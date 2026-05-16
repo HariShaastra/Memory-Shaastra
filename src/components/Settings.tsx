@@ -30,7 +30,7 @@ export default function Settings() {
         {user && !isEditing && (
           <button 
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 bg-white/5 text-orange-100 px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-all border border-[#3f332c]"
+            className="flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all border border-amber-500/20 shadow-lg active:scale-95"
           >
             <Edit2 size={16} /> {t.edit}
           </button>
@@ -126,9 +126,9 @@ export default function Settings() {
               <p className="text-sm font-black text-orange-100 uppercase italic tracking-tighter">Delete Account</p>
               <p className="text-[10px] text-orange-200/20 font-black uppercase tracking-[0.1em] mt-1">This will remove all your data forever.</p>
             </div>
-            <button className="flex items-center justify-center space-x-3 bg-rose-600/10 border border-rose-500/20 text-rose-500 px-8 py-4 rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all active:scale-95">
-              <Trash2 size={18} />
-              <span>{t.delete}</span>
+            <button className="flex items-center justify-center space-x-3 bg-rose-500 px-10 py-5 rounded-[2.5rem] text-[10px] font-black uppercase tracking-widest text-white transition-all active:scale-95 shadow-xl shadow-rose-500/30">
+              <Trash2 size={20} />
+              <span>{t.delete} Account</span>
             </button>
           </div >
         </section>

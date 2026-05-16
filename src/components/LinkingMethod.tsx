@@ -301,13 +301,13 @@ export default function LinkingMethod() {
                       <div className="flex gap-2">
                          <button 
                           onClick={() => startEditing(chain)}
-                          className="p-3 text-orange-200/20 hover:text-orange-400 bg-white/5 rounded-2xl transition-all opacity-0 group-hover:opacity-100"
+                          className="p-3.5 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
                         >
                           <Edit2 size={18} />
                         </button>
                         <button 
                           onClick={(e) => deleteChain(chain.id, e)}
-                          className="p-3 text-orange-200/20 hover:text-rose-500 bg-white/5 rounded-2xl transition-all opacity-0 group-hover:opacity-100"
+                          className="p-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
                         >
                           <Trash2 size={18} />
                         </button>
