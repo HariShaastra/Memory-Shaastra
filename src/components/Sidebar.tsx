@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { AppView } from '../types';
 import { t } from '../utils/translations';
 import { 
+  Bell,
   LayoutDashboard, 
   Timer, 
   BookOpen, 
@@ -33,9 +34,10 @@ interface NavItemProps {
   currentView: AppView;
   setView: (view: AppView) => void;
   onClose?: () => void;
+  badge?: number;
 }
 
-const NavItem = ({ item, id, currentView, setView, onClose }: NavItemProps) => {
+const NavItem = ({ item, id, currentView, setView, onClose, badge }: NavItemProps) => {
   const Icon = item.icon;
   const isActive = currentView === id;
   return (
@@ -59,7 +61,11 @@ const NavItem = ({ item, id, currentView, setView, onClose }: NavItemProps) => {
       <Icon size={18} className={`transition-transform duration-500 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(234,88,12,0.5)]' : 'group-hover:scale-110'}`} />
       <span className={`text-[10px] font-black uppercase tracking-[0.2em] italic ${isActive ? 'opacity-100' : 'opacity-100'}`}>{item.label}</span>
       
-      {isActive && (
+      {badge && badge > 0 ? (
+        <div className="absolute right-3 px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[8px] font-black shadow-[0_0_8px_rgba(234,88,12,0.5)]">
+          {badge > 9 ? '9+' : badge}
+        </div>
+      ) : isActive && (
         <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(234,88,12,0.8)]" />
       )}
     </button>
@@ -67,11 +73,14 @@ const NavItem = ({ item, id, currentView, setView, onClose }: NavItemProps) => {
 };
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
-  const { currentView, setView, setUser, user } = useApp();
+  const { currentView, setView, setUser, user, notifications } = useApp();
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const mainItems = [
-    { id: 'focus', label: t.focus, icon: Timer },
     { id: 'dashboard', label: t.home, icon: Home },
+    { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
+    { id: 'focus', label: t.focus, icon: Timer },
     { id: 'exam-mode', label: t.examMode, icon: Target },
     { id: 'planner', label: t.planner, icon: Calendar },
     { id: 'memory-boost', label: t.memoryBoost, icon: Zap },
@@ -106,7 +115,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         <div>
           <p className="px-4 text-[10px] uppercase font-black tracking-[0.3em] text-orange-500 mb-4 font-sans italic">Overview</p>
           <div className="space-y-1">
-            {mainItems.map(item => <NavItem key={item.id} item={item} id={item.id} currentView={currentView} setView={setView} onClose={onClose} />)}
+            {mainItems.map(item => <NavItem key={item.id} item={item} id={item.id} currentView={currentView} setView={setView} onClose={onClose} badge={item.badge} />)}
           </div>
         </div>
 

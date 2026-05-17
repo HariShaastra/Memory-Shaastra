@@ -21,13 +21,18 @@ import RevisionScheduler from './components/RevisionScheduler';
 import { StudyPlanner } from './components/StudyPlanner';
 import Settings from './components/Settings';
 import { ExamMode } from './components/ExamMode';
+import NotificationCenter from './components/NotificationCenter';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Menu } from 'lucide-react';
+import { ArrowLeft, Menu, Bell } from 'lucide-react';
 import { t } from './utils/translations';
 
+import { NotificationToast } from './components/NotificationToast';
+
 function AppContent() {
-  const { currentView, goBack } = useApp();
+  const { currentView, goBack, notifications, setView } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   if (currentView === 'auth') return <Auth />;
 
@@ -46,6 +51,7 @@ function AppContent() {
       case 'planner': return <StudyPlanner />;
       case 'exam-mode': return <ExamMode />;
       case 'settings': return <Settings />;
+      case 'notifications': return <NotificationCenter />;
       default: return <HomeScreen />;
     }
   };
@@ -54,6 +60,7 @@ function AppContent() {
 
   return (
     <div className="flex h-screen bg-[#1a1614] text-[#fef3c7] overflow-hidden font-sans relative">
+      <NotificationToast />
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -91,6 +98,17 @@ function AppContent() {
               </button>
             )}
           </div>
+          <button 
+            onClick={() => setView('notifications')}
+            className="relative p-3 text-orange-400 hover:bg-white/5 rounded-2xl border border-white/5 bg-[#2a221f]/50 transition-all group active:scale-95"
+          >
+            <Bell size={20} className={unreadCount > 0 ? 'animate-pulse' : ''} />
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 w-5 h-5 bg-orange-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[#1a1614] shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
         </div>
         
         <AnimatePresence mode="wait">

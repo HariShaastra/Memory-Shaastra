@@ -158,6 +158,16 @@ export interface StudyMaterial {
   createdAt: string;
 }
 
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'motivational' | 'reminder' | 'exam' | 'achievement';
+  timestamp: string;
+  read: boolean;
+  priority: 'low' | 'medium' | 'high';
+}
+
 export type AppView = 
   | 'auth' 
   | 'dashboard' 
@@ -172,4 +182,5 @@ export type AppView =
   | 'memory-boost' 
   | 'settings'
   | 'planner'
-  | 'exam-mode';
+  | 'exam-mode'
+  | 'notifications';

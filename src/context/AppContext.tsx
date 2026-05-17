@@ -14,7 +14,8 @@ import {
   GamificationState,
   Level,
   Badge,
-  StudyMaterial
+  StudyMaterial,
+  AppNotification
 } from '../types';
 
 interface AppContextType {
@@ -51,6 +52,11 @@ interface AppContextType {
   level: Level;
   updateStreak: () => void;
   unlockBadge: (badge: Badge) => void;
+  notifications: AppNotification[];
+  setNotifications: React.Dispatch<React.SetStateAction<AppNotification[]>>;
+  addNotification: (notification: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => void;
+  markAsRead: (id: string) => void;
+  clearAllNotifications: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -192,6 +198,101 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    const saved = localStorage.getItem('ms_notifications');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const addNotification = (n: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => {
+    const newNotification: AppNotification = {
+      ...n,
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: new Date().toISOString(),
+      read: false
+    };
+    setNotifications(prev => [newNotification, ...prev].slice(0, 50));
+  };
+
+  const markAsRead = (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+  };
+
+  // Notification generation logic
+  useEffect(() => {
+    if (!user) return;
+
+    const checkAndGenerate = () => {
+      const today = new Date().toISOString().split('T')[0];
+      const lastCheckDate = localStorage.getItem('ms_last_notif_check');
+      
+      if (lastCheckDate === today) return; // Only check once per day
+
+      const newNotifs: Omit<AppNotification, 'id' | 'timestamp' | 'read'>[] = [];
+
+      // 1. Motivational Nudges for Inactivity
+      const lastActive = gamification.lastActiveDate;
+      if (lastActive) {
+        const daysSinceActive = Math.floor((Date.now() - new Date(lastActive).getTime()) / (1000 * 60 * 60 * 24));
+        if (daysSinceActive >= 2) {
+          newNotifs.push({
+            title: "We miss you!",
+            message: "Consistency is key to mastering any shaastra. Let's study for just 5 minutes today?",
+            type: 'motivational',
+            priority: 'high'
+          });
+        } else if (daysSinceActive === 0) {
+           // Encouragement for regular users
+           if (Math.random() > 0.8) {
+             newNotifs.push({
+               title: "Keep it up!",
+               message: "You're doing great. Your brain is building stronger pathways every day.",
+               type: 'motivational',
+               priority: 'low'
+             });
+           }
+        }
+      }
+
+      // 2. Exam Reminders
+      examPlans.forEach(plan => {
+        const examDate = new Date(plan.examDate);
+        const daysUntilExam = Math.ceil((examDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        
+        if (daysUntilExam > 0 && daysUntilExam <= 7) {
+          newNotifs.push({
+            title: `Countdown: ${daysUntilExam} days to ${plan.title}`,
+            message: "Review your priority topics and use the Focus Mode to polish your memory.",
+            type: 'exam',
+            priority: 'high'
+          });
+        }
+      });
+
+      // 3. Revision Reminders
+      revisions.forEach(rev => {
+        const nextRevDate = new Date(rev.nextRevision).toISOString().split('T')[0];
+        if (nextRevDate === today) {
+          newNotifs.push({
+            title: "Revision Due",
+            message: `Time to review ${rev.chapter} (${rev.subject}). Spaced repetition works magic!`,
+            type: 'reminder',
+            priority: 'medium'
+          });
+        }
+      });
+
+      newNotifs.forEach(n => addNotification(n));
+      localStorage.setItem('ms_last_notif_check', today);
+    };
+
+    const timeout = setTimeout(checkAndGenerate, 3000); // Wait a bit after load
+    return () => clearTimeout(timeout);
+  }, [user, examPlans, revisions, gamification.lastActiveDate]);
+
   useEffect(() => {
     localStorage.setItem('ms_user', JSON.stringify(user));
     if (user && currentView === 'auth') setView('dashboard');
@@ -241,6 +342,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('ms_gamification', JSON.stringify(gamification));
   }, [gamification]);
 
+  useEffect(() => {
+    localStorage.setItem('ms_notifications', JSON.stringify(notifications));
+  }, [notifications]);
+
   return (
     <AppContext.Provider value={{ 
       user, setUser, 
@@ -257,7 +362,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       studyMaterials, setStudyMaterials,
       handleFileUpload,
       isSidebarOpen, setIsSidebarOpen,
-      gamification, addXP, level, updateStreak, unlockBadge
+      gamification, addXP, level, updateStreak, unlockBadge,
+      notifications, setNotifications, addNotification, markAsRead, clearAllNotifications
     }}>
       {children}
     </AppContext.Provider>
