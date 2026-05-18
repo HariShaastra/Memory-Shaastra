@@ -142,13 +142,20 @@ export const HomeScreen: React.FC = () => {
         <div className="absolute top-0 right-0 p-4 opacity-5">
            <Brain size={60} className="text-orange-500" />
         </div>
-        <div className="space-y-2 relative z-10">
+        <div className="space-y-3 relative z-10">
           <h2 className="text-3xl font-black tracking-tighter italic text-orange-100 uppercase">
             LEARN <span className="text-orange-500">FAST.</span>
           </h2>
-          <p className="text-orange-200/70 font-bold text-sm italic">
-            "{dailyQuote}"
-          </p>
+          <div className="space-y-4">
+            <p className="text-orange-200/70 font-bold text-sm italic">
+              "{dailyQuote}"
+            </p>
+            <div className="pt-2 border-t border-orange-500/10">
+              <p className="text-orange-100/60 text-xs font-medium leading-relaxed max-w-xs mx-auto">
+                Memory Shaastra is a smart study tool built for students. It helps you remember everything you learn using easy memory tricks. Whether it's for exams or daily learning, we make it fast and unforgettable.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
