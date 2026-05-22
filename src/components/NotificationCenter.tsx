@@ -9,7 +9,8 @@ import {
   Trophy, 
   Calendar,
   Trash2,
-  ChevronLeft
+  ChevronLeft,
+  HelpCircle
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { AppNotification } from '../types';
@@ -61,6 +62,23 @@ export default function NotificationCenter() {
             Clear All
           </button>
         )}
+      </div>
+
+      {/* Layman Explanation of this Facility */}
+      <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left mb-8">
+        <div className="flex items-center gap-2 text-[#e2b89d]">
+          <HelpCircle size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use Notification Center</span>
+        </div>
+        <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+          <strong>What it is & does:</strong> A micro-reminder dashboard that collects level accomplishments, study alerts, stream progress cues, and streak motivators.
+        </p>
+        <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+          <strong>Steps to use:</strong>
+          <span className="block mt-1">1. Scan your notifications list for pending prompts.</span>
+          <span className="block mt-1">2. Read the short motivation phrases.</span>
+          <span className="block mt-1">3. Click individual dismiss buttons or "Clear All" to purge logs.</span>
+        </div>
       </div>
 
       <div className="space-y-4">

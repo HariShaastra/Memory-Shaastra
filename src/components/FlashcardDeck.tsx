@@ -13,14 +13,16 @@ import {
   LayoutList,
   Tags,
   Search,
-  Filter
+  Filter,
+  HelpCircle
 } from 'lucide-react';
 import { Flashcard } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
+import { MemoryLinker } from './MemoryLinker';
 
 export default function FlashcardDeck() {
-  const { flashcards: cards, setFlashcards: setCards } = useAppContext();
+  const { flashcards: cards, setFlashcards: setCards, rateRecall } = useAppContext();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -160,6 +162,23 @@ export default function FlashcardDeck() {
         </div>
       )}
 
+      {/* Layman Explanation of this Facility */}
+      <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
+        <div className="flex items-center gap-2 text-orange-400">
+          <HelpCircle size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use Flashcards</span>
+        </div>
+        <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+          <strong>What it is & does:</strong> Virtual double-sided flashcards that hide the back explanation until clicked, reinforcing instantaneous fact recall.
+        </p>
+        <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+          <strong>Steps to use:</strong>
+          <span className="block mt-1">1. Click "Add Card" to create a new key-value memory card.</span>
+          <span className="block mt-1">2. Write down your question front-text and back-text answer.</span>
+          <span className="block mt-1">3. Back in "Flip View", tap the card to flip it and click checkmark or cross score.</span>
+        </div>
+      </div>
+
       {isAdding && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-[#2a221f] border border-[#3f332c] rounded-[3rem] p-8 shadow-2xl relative overflow-hidden">
           <div className="space-y-6 relative z-10">
@@ -285,10 +304,49 @@ export default function FlashcardDeck() {
 
               {isFlipped && (
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap justify-center gap-4 mt-16">
-                  <button className="px-10 py-4 bg-rose-500/10 border border-rose-500/20 rounded-[2rem] text-rose-400 text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-lg active:scale-95">Forgotten</button>
-                  <button className="px-10 py-4 bg-amber-500/10 border border-amber-500/20 rounded-[2rem] text-amber-500 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-all shadow-lg active:scale-95">Vague</button>
-                  <button className="px-10 py-4 bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-lg active:scale-95">Engraved</button>
+                  <button 
+                    onClick={() => {
+                      rateRecall(currentCard.id, 'flashcard', 'forgot');
+                      if (currentIndex < filteredCards.length - 1) {
+                        setCurrentIndex(currentIndex + 1);
+                      }
+                      setIsFlipped(false);
+                    }}
+                    className="px-10 py-4 bg-rose-500/10 border border-rose-500/20 rounded-[2rem] text-rose-400 text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-lg active:scale-95"
+                  >
+                    Forgotten
+                  </button>
+                  <button 
+                    onClick={() => {
+                      rateRecall(currentCard.id, 'flashcard', 'partial');
+                      if (currentIndex < filteredCards.length - 1) {
+                        setCurrentIndex(currentIndex + 1);
+                      }
+                      setIsFlipped(false);
+                    }}
+                    className="px-10 py-4 bg-amber-500/10 border border-amber-500/20 rounded-[2rem] text-amber-500 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-all shadow-lg active:scale-95"
+                  >
+                    Vague
+                  </button>
+                  <button 
+                    onClick={() => {
+                      rateRecall(currentCard.id, 'flashcard', 'remembered');
+                      if (currentIndex < filteredCards.length - 1) {
+                        setCurrentIndex(currentIndex + 1);
+                      }
+                      setIsFlipped(false);
+                    }}
+                    className="px-10 py-4 bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-lg active:scale-95"
+                  >
+                    Engraved
+                  </button>
                 </motion.div>
+              )}
+
+              {currentCard && (
+                <div className="w-full max-w-xl mx-auto mt-8">
+                  <MemoryLinker itemId={currentCard.id} itemType="flashcard" />
+                </div>
               )}
             </div>
           )}

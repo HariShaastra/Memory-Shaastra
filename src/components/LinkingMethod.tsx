@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Trash2, Link as LinkIcon, Edit2, Play, ChevronLeft, Sparkles, Layers, Box, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Link as LinkIcon, Edit2, Play, ChevronLeft, Sparkles, Layers, Box, ArrowRight, ArrowLeft, HelpCircle } from 'lucide-react';
 import { LinkChain } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
@@ -200,6 +200,23 @@ export default function LinkingMethod() {
           </button>
         )}
       </header>
+
+      {/* Layman Explanation of this Facility */}
+      <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
+        <div className="flex items-center gap-2 text-orange-400">
+          <HelpCircle size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use Linking Method</span>
+        </div>
+        <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+          <strong>What it is & does:</strong> A association pattern builder where you create a sequential narrative chaining items together so remembering item A instantly triggers item B.
+        </p>
+        <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+          <strong>Steps to use:</strong>
+          <span className="block mt-1">1. Click "Connect New Ideas".</span>
+          <span className="block mt-1">2. Input a list name and type several items separated by commas.</span>
+          <span className="block mt-1">3. Click play to test typing each chained item in exact sequential order!</span>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {isAddingChain ? (

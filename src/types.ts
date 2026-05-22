@@ -168,6 +168,14 @@ export interface AppNotification {
   priority: 'low' | 'medium' | 'high';
 }
 
+export interface MemoryLink {
+  id: string;
+  sourceId: string;
+  sourceType: 'flashcard' | 'mnemonic' | 'palace' | 'link-chain' | 'story' | 'first-letter' | 'material';
+  targetId: string;
+  targetType: 'flashcard' | 'mnemonic' | 'palace' | 'link-chain' | 'story' | 'first-letter' | 'material';
+}
+
 export type AppView = 
   | 'auth' 
   | 'dashboard' 
@@ -183,4 +191,6 @@ export type AppView =
   | 'settings'
   | 'planner'
   | 'exam-mode'
-  | 'notifications';
+  | 'notifications'
+  | 'library'
+  | 'rescue-queue';

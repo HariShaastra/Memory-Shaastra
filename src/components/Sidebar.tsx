@@ -23,7 +23,8 @@ import {
   Target,
   Zap,
   Book,
-  X
+  X,
+  Heart
 } from 'lucide-react';
 import { Logo } from './Logo';
 
@@ -78,10 +79,12 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const mainItems = [
+    { id: 'focus', label: 'Study Timer', icon: Timer },
     { id: 'dashboard', label: t.home, icon: Home },
+    { id: 'rescue-queue', label: 'Active Recall', icon: Heart },
     { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
-    { id: 'focus', label: t.focus, icon: Timer },
     { id: 'exam-mode', label: t.examMode, icon: Target },
+    { id: 'library', label: 'Personal Library', icon: Book },
     { id: 'planner', label: t.planner, icon: Calendar },
     { id: 'memory-boost', label: t.memoryBoost, icon: Zap },
     { id: 'flashcards', label: t.flashcards, icon: BookOpen },

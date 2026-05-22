@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Clock, Target, Coffee, Sparkles, Plus, FileText, Video, Music, File, Trash2, Save, X } from 'lucide-react';
+import { Play, Pause, RotateCcw, Clock, Target, Coffee, Sparkles, Plus, FileText, Video, Music, File, Trash2, Save, X, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../context/AppContext';
 import { MaanasMascot } from './MaanasMascot';
@@ -149,7 +149,24 @@ export default function MonkModeTimer() {
   }
 
   return (
-    <div className="flex flex-col items-center max-w-5xl mx-auto px-6 py-12 gap-12">
+    <div className="flex flex-col items-center max-w-5xl mx-auto px-6 py-12 gap-8">
+      {/* Layman Explanation of this Facility */}
+      <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
+        <div className="flex items-center gap-2 text-orange-400">
+          <HelpCircle size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use Study Timer</span>
+        </div>
+        <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+          <strong>What it is & does:</strong> A distraction-free study clock that runs silent focus intervals to help you work deeply without fatigue and guides your mental rest breaks.
+        </p>
+        <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+          <strong>Steps to use:</strong>
+          <span className="block mt-1">1. Pick "Study" or "Break" mode.</span>
+          <span className="block mt-1">2. Tap the duration numbers to customize your target timer value.</span>
+          <span className="block mt-1">3. Tap the Play triangular button to begin studying silently until the final bell rings.</span>
+        </div>
+      </div>
+
       {/* Timer Section */}
       <div className="w-full bg-[#2a221f] rounded-[5rem] p-16 shadow-2xl border border-[#3f332c] text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-5">

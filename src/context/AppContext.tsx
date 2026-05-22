@@ -15,7 +15,8 @@ import {
   Level,
   Badge,
   StudyMaterial,
-  AppNotification
+  AppNotification,
+  MemoryLink
 } from '../types';
 
 interface AppContextType {
@@ -57,6 +58,12 @@ interface AppContextType {
   addNotification: (notification: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => void;
   markAsRead: (id: string) => void;
   clearAllNotifications: () => void;
+  memoryLinks: MemoryLink[];
+  addMemoryLink: (sourceId: string, sourceType: MemoryLink['sourceType'], targetId: string, targetType: MemoryLink['targetType']) => void;
+  removeMemoryLink: (id: string) => void;
+  rateRecall: (id: string, type: 'flashcard' | 'revision', performance: 'forgot' | 'partial' | 'remembered') => void;
+  optimizeRevisionForExams: () => void;
+  triggerRandomRecallNotification: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -221,6 +228,127 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNotifications([]);
   };
 
+  const [memoryLinks, setMemoryLinks] = useState<MemoryLink[]>(() => {
+    const saved = localStorage.getItem('ms_memory_links');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const addMemoryLink = (sourceId: string, sourceType: MemoryLink['sourceType'], targetId: string, targetType: MemoryLink['targetType']) => {
+    const alreadyConnected = memoryLinks.some(l => 
+      (l.sourceId === sourceId && l.targetId === targetId) ||
+      (l.sourceId === targetId && l.targetId === sourceId)
+    );
+    if (alreadyConnected || sourceId === targetId) return;
+
+    const newLink: MemoryLink = {
+      id: Math.random().toString(36).substr(2, 9),
+      sourceId,
+      sourceType,
+      targetId,
+      targetType
+    };
+    setMemoryLinks(prev => [...prev, newLink]);
+  };
+
+  const removeMemoryLink = (id: string) => {
+    setMemoryLinks(prev => prev.filter(l => l.id !== id));
+  };
+
+  const rateRecall = (id: string, type: 'flashcard' | 'revision', performance: 'forgot' | 'partial' | 'remembered') => {
+    const today = new Date().toISOString();
+    
+    let earnedXP = 15;
+    if (performance === 'partial') earnedXP = 30;
+    if (performance === 'remembered') earnedXP = 60;
+    addXP(earnedXP);
+    updateStreak();
+
+    if (type === 'flashcard') {
+      setFlashcards(prev => prev.map(card => {
+        if (card.id !== id) return card;
+        
+        let interval = card.interval || 1;
+        let easeFactor = card.easeFactor || 2.5;
+        
+        if (performance === 'forgot') {
+          interval = 1;
+          easeFactor = Math.max(1.3, easeFactor - 0.2);
+        } else if (performance === 'partial') {
+          interval = Math.ceil(interval * 1.3);
+        } else {
+          interval = Math.ceil(interval * easeFactor);
+          easeFactor = Math.min(3.5, easeFactor + 0.15);
+        }
+        
+        return {
+          ...card,
+          interval,
+          easeFactor,
+          nextReview: new Date(Date.now() + interval * 86400000).toISOString()
+        };
+      }));
+    } else if (type === 'revision') {
+      setRevisions(prev => prev.map(rev => {
+        if (rev.id !== id) return rev;
+        const currentCompleted = rev.completedDates || [];
+        const completedCount = currentCompleted.length;
+        
+        const baseIntervals = [1, 3, 7, 14, 30, 60, 90];
+        let nextIdx = completedCount;
+        
+        if (performance === 'forgot') {
+          nextIdx = 0;
+        } else if (performance === 'partial') {
+          nextIdx = Math.max(0, completedCount - 1);
+        } else {
+          nextIdx = completedCount + 1;
+        }
+        
+        const nextInterval = baseIntervals[Math.min(nextIdx, baseIntervals.length - 1)];
+        return {
+          ...rev,
+          completedDates: [...currentCompleted, today],
+          nextRevision: new Date(Date.now() + nextInterval * 86400000).toISOString()
+        };
+      }));
+    }
+  };
+
+  const optimizeRevisionForExams = () => {
+    const activePlan = examPlans.find(plan => plan.isActive) || examPlans[0];
+    if (!activePlan?.examDate) return;
+
+    const examDateVal = new Date(activePlan.examDate);
+    const diffDays = Math.ceil((examDateVal.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 0 && diffDays <= 10) {
+      setRevisions(prev => prev.map(rev => {
+        const revDate = new Date(rev.nextRevision);
+        if (revDate > examDateVal) {
+          const optimizedDate = new Date(examDateVal.getTime() - (2 * 86400000));
+          return { ...rev, nextRevision: optimizedDate.toISOString() };
+        }
+        return rev;
+      }));
+
+      setFlashcards(prev => prev.map(card => {
+        const reviewDate = new Date(card.nextReview);
+        if (reviewDate > examDateVal) {
+          const optimizedDate = new Date(examDateVal.getTime() - (1 * 86400000));
+          return { ...card, nextReview: optimizedDate.toISOString() };
+        }
+        return card;
+      }));
+
+      addNotification({
+        title: "Exam Engine Active",
+        message: `High-priority recall triggers activated! Schedule adjusted for ${activePlan.title}.`,
+        type: 'exam',
+        priority: 'high'
+      });
+    }
+  };
+
   // Notification generation logic
   useEffect(() => {
     if (!user) return;
@@ -293,6 +421,68 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timeout);
   }, [user, examPlans, revisions, gamification.lastActiveDate]);
 
+  const triggerRandomRecallNotification = () => {
+    const options: { title: string; message: string; type: 'reminder' | 'exam' | 'motivational' }[] = [];
+
+    flashcards.forEach(f => {
+      options.push({
+        title: "Active Recall Challenge",
+        message: `Can you recall: "${f.question}"? Head to Active Recall block to test yourself!`,
+        type: 'reminder'
+      });
+    });
+
+    mnemonics.forEach(m => {
+      options.push({
+        title: "Active Recall Challenge",
+        message: `What is the trick phrase for: "${m.title}"? Give your brain a speed boost!`,
+        type: 'reminder'
+      });
+    });
+
+    studyMaterials.forEach(sm => {
+      options.push({
+        title: "Active Recall Challenge",
+        message: `Recall summary concepts of downloaded archive: "${sm.title}".`,
+        type: 'reminder'
+      });
+    });
+
+    firstLetterEntries.forEach(fl => {
+      options.push({
+        title: "Active Recall Challenge",
+        message: `What does the acronym word "${fl.word}" abbreviate to? Play back your memory now.`,
+        type: 'reminder'
+      });
+    });
+
+    if (options.length === 0) {
+      options.push({
+        title: "Active Recall Tip",
+        message: "No memory items logged yet! Create flashcards, mnemonics, or library documents to get customized recall prompts.",
+        type: 'motivational'
+      });
+    }
+
+    const randomChoice = options[Math.floor(Math.random() * options.length)];
+    addNotification({
+      title: randomChoice.title,
+      message: randomChoice.message,
+      type: randomChoice.type,
+      priority: 'high'
+    });
+  };
+
+  // Also trigger a random notification on startup to populate it beautifully with random inputs
+  useEffect(() => {
+    if (user && (flashcards.length > 2 || mnemonics.length > 2 || studyMaterials.length > 0)) {
+      const timeoutId = setTimeout(() => {
+        triggerRandomRecallNotification();
+      }, 5000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [user]);
+
   useEffect(() => {
     localStorage.setItem('ms_user', JSON.stringify(user));
     if (user && currentView === 'auth') setView('dashboard');
@@ -346,6 +536,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('ms_notifications', JSON.stringify(notifications));
   }, [notifications]);
 
+  useEffect(() => {
+    localStorage.setItem('ms_memory_links', JSON.stringify(memoryLinks));
+  }, [memoryLinks]);
+
   return (
     <AppContext.Provider value={{ 
       user, setUser, 
@@ -363,7 +557,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       handleFileUpload,
       isSidebarOpen, setIsSidebarOpen,
       gamification, addXP, level, updateStreak, unlockBadge,
-      notifications, setNotifications, addNotification, markAsRead, clearAllNotifications
+      notifications, setNotifications, addNotification, markAsRead, clearAllNotifications,
+      memoryLinks, addMemoryLink, removeMemoryLink, rateRecall, optimizeRevisionForExams,
+      triggerRandomRecallNotification
     }}>
       {children}
     </AppContext.Provider>

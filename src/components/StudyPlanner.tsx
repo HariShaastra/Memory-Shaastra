@@ -10,7 +10,8 @@ import {
   Book, 
   ChevronLeft,
   Edit2,
-  Save
+  Save,
+  HelpCircle
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
@@ -110,6 +111,23 @@ export const StudyPlanner: React.FC = () => {
           </button>
         )}
       </header>
+
+      {/* Layman Explanation of this Facility */}
+      <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
+        <div className="flex items-center gap-2 text-indigo-400">
+          <HelpCircle size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use Study Planner</span>
+        </div>
+        <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+          <strong>What it is & does:</strong> A personal calendar list that logs upcoming exam topics and revision dates to keep your daily schedule disciplined and fully organized.
+        </p>
+        <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+          <strong>Steps to use:</strong>
+          <span className="block mt-1">1. Tap the "Add Task" button.</span>
+          <span className="block mt-1">2. Enter a subject name, target topic, focus date, and estimated duration.</span>
+          <span className="block mt-1">3. Tap "Schedule Task" and complete them sequentially!</span>
+        </div>
+      </div>
 
       {/* Quick Add Form (Inline) */}
       <AnimatePresence>

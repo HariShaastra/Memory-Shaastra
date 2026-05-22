@@ -10,7 +10,8 @@ import {
   Brain,
   Timer,
   Book,
-  Type
+  Type,
+  HelpCircle
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
@@ -70,7 +71,29 @@ export const HomeScreen: React.FC = () => {
         <div className="h-1 w-12 bg-orange-500 mx-auto mt-2 rounded-full opacity-50" />
       </motion.div>
 
-      {/* Main Action Buttons - TOP POSITION */}
+      {/* Intro Header (Learn Fast) - ELONGATED TO MAX-W-4XL AT TOP */}
+      <div className="w-full max-w-4xl text-center space-y-4 bg-[#1a1614] p-8 rounded-[2.5rem] border border-[#3f332c] relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-5">
+           <Brain size={60} className="text-orange-500" />
+        </div>
+        <div className="space-y-3 relative z-10">
+          <h2 className="text-3xl font-black tracking-tighter italic text-orange-100 uppercase">
+            LEARN <span className="text-orange-500">FAST.</span>
+          </h2>
+          <div className="space-y-4">
+            <p className="text-orange-200/70 font-bold text-sm italic">
+              "{dailyQuote}"
+            </p>
+            <div className="pt-2 border-t border-orange-500/10">
+              <p className="text-[#e2b89d] text-xs font-semibold leading-relaxed max-w-2xl mx-auto">
+                Memory Shaastra is a smart study tool built for students. It helps you remember everything you learn using easy memory tricks. Whether it's for exams or daily learning, we make it fast and unforgettable.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Action Buttons - TOP POSITION RIGHT BELOW LEARN FAST */}
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
           <motion.button
             whileHover={{ scale: 1.03, y: -6 }}
@@ -86,7 +109,7 @@ export const HomeScreen: React.FC = () => {
                 </div>
                 <div className="text-left">
                   <span className="block text-[10px] uppercase font-black tracking-[0.4em] text-orange-400 mb-1">Focus Mode</span>
-                  <span className="text-2xl font-black italic uppercase tracking-tighter leading-none">{t.enterStudyMode}</span>
+                  <span className="text-2xl font-black italic uppercase tracking-tighter leading-none">Study Now</span>
                 </div>
               </div>
               <ChevronRight size={32} className="opacity-40 group-hover:opacity-100 group-hover:translate-x-4 transition-all relative z-10" />
@@ -116,46 +139,36 @@ export const HomeScreen: React.FC = () => {
       </div>
 
       {/* Your Schedule / Next Task Section */}
-      <div className="w-full max-w-4xl bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 flex items-center justify-between gap-6">
+      <div className="w-full max-w-4xl bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20">
             <Target size={24} className="text-amber-500" />
           </div>
           <div className="text-left">
-            <p className="text-[10px] text-orange-200/40 uppercase font-black tracking-widest leading-none mb-1">Your Schedule</p>
-            <p className="text-lg font-black text-orange-100 uppercase italic">
-              {activePlan ? `${activePlan.title}` : "Define your next goal"}
+            <p className="text-[10px] text-orange-200/40 uppercase font-black tracking-widest leading-none mb-1">Your Schedule & Focus Task</p>
+            <p className="text-base font-black text-orange-100 uppercase italic">
+              {studyTasks.find(t => !t.completed) 
+                ? `Active Task: ${studyTasks.find(t => !t.completed)?.topic} (${studyTasks.find(t => !t.completed)?.subject}) planned for ${studyTasks.find(t => !t.completed)?.plannedDate}`
+                : activePlan ? `${activePlan.title}` : "All tasks completed! Keep learning."
+              }
             </p>
           </div>
         </div>
-        <motion.button
-          whileHover={{ x: 5 }}
-          onClick={() => setView('planner')}
-          className="text-orange-500 text-xs font-black uppercase tracking-widest flex items-center gap-2"
-        >
-          View Full Plan <ChevronRight size={16} />
-        </motion.button>
-      </div>
-
-      {/* Intro Header (Learn Fast) - COMPACT */}
-      <div className="w-full max-w-lg text-center space-y-4 bg-[#1a1614] p-6 rounded-[2.5rem] border border-[#3f332c] relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-5">
-           <Brain size={60} className="text-orange-500" />
-        </div>
-        <div className="space-y-3 relative z-10">
-          <h2 className="text-3xl font-black tracking-tighter italic text-orange-100 uppercase">
-            LEARN <span className="text-orange-500">FAST.</span>
-          </h2>
-          <div className="space-y-4">
-            <p className="text-orange-200/70 font-bold text-sm italic">
-              "{dailyQuote}"
-            </p>
-            <div className="pt-2 border-t border-orange-500/10">
-              <p className="text-orange-100/60 text-xs font-medium leading-relaxed max-w-xs mx-auto">
-                Memory Shaastra is a smart study tool built for students. It helps you remember everything you learn using easy memory tricks. Whether it's for exams or daily learning, we make it fast and unforgettable.
-              </p>
-            </div>
-          </div>
+        <div className="flex gap-4 items-center shrink-0">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            onClick={() => setView('rescue-queue')}
+            className="bg-orange-600 hover:bg-orange-700 text-white font-black px-6 py-3.5 rounded-2xl text-[9px] uppercase tracking-wider transition-all"
+          >
+            Active Recall
+          </motion.button>
+          <motion.button
+            whileHover={{ x: 4 }}
+            onClick={() => setView('planner')}
+            className="text-orange-200/40 hover:text-orange-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
+          >
+            <span>Planner</span> <ChevronRight size={16} />
+          </motion.button>
         </div>
       </div>
 
@@ -287,6 +300,133 @@ export const HomeScreen: React.FC = () => {
           <Target size={20} className="text-emerald-500" />
           <span>{t.viewProgress}</span>
         </motion.button>
+      </div>
+
+      {/* COMPREHENSIVE LAYMAN'S FACILITY GUIDE */}
+      <div className="w-full max-w-4xl bg-[#2a221f]/50 p-8 rounded-[3rem] border border-[#3f332c]/50 space-y-6 text-left">
+        <div className="flex items-center gap-3 border-b border-[#3f332c]/50 pb-4">
+          <div className="w-10 h-10 bg-orange-500/15 rounded-xl flex items-center justify-center text-orange-400 border border-orange-500/25">
+            <HelpCircle size={20} />
+          </div>
+          <div>
+            <h3 className="text-lg font-black uppercase text-orange-100 italic tracking-tight">Active Learning Facility Directory</h3>
+            <p className="text-orange-200/40 text-[9px] uppercase font-black tracking-widest mt-0.5">Simple layman guide & step-by-step instructions (No AI interference)</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* FACILITY 1 */}
+          <div className="bg-[#1a1614] p-5 rounded-2xl border border-[#3f332c]/65 space-y-2.5">
+            <p className="text-xs font-black uppercase text-orange-400 tracking-wider">⏱️ Study Timer (Focus Mode)</p>
+            <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+              <strong>What it is & does:</strong> A distraction-free study clock that runs silent focus intervals to help you work deeply without fatigue.
+            </p>
+            <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+              <strong>Steps to use:</strong>
+              <span className="block mt-1">1. Pick a subject topic name.</span>
+              <span className="block mt-1">2. Choose your focus time length.</span>
+              <span className="block mt-1">3. Tap "Start Session" and study until the notification bells ring.</span>
+            </div>
+          </div>
+
+          {/* FACILITY 2 */}
+          <div className="bg-[#1a1614] p-5 rounded-2xl border border-[#3f332c]/65 space-y-2.5">
+            <p className="text-xs font-black uppercase text-rose-400 tracking-wider">❤️ Active Recall Gym</p>
+            <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+              <strong>What it is & does:</strong> A test cue card board that loads random questions, flashcards, or documents from your library to prove you still remember them.
+            </p>
+            <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+              <strong>Steps to use:</strong>
+              <span className="block mt-1">1. View the random question.</span>
+              <span className="block mt-1">2. Answer aloud (optional: click microphone to log voice).</span>
+              <span className="block mt-1">3. Reveal solution and click Forgot or Remembered.</span>
+            </div>
+          </div>
+
+          {/* FACILITY 3 */}
+          <div className="bg-[#1a1614] p-5 rounded-2xl border border-[#3f332c]/65 space-y-2.5">
+            <p className="text-xs font-black uppercase text-amber-500 tracking-wider">📚 Your Personal Library</p>
+            <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+              <strong>What it is & does:</strong> A digital organizer divided into books, volumes, and custom subject maps for cataloging study files and spoken logs.
+            </p>
+            <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+              <strong>Steps to use:</strong>
+              <span className="block mt-1">1. Create grouping topics.</span>
+              <span className="block mt-1">2. Tap "Catalog Document" to write study notes.</span>
+              <span className="block mt-1">3. Tap any item to read, edit group paths, or delete.</span>
+            </div>
+          </div>
+
+          {/* FACILITY 4 */}
+          <div className="bg-[#1a1614] p-5 rounded-2xl border border-[#3f332c]/65 space-y-2.5">
+            <p className="text-xs font-black uppercase text-indigo-400 tracking-wider">🗂️ Study Planner</p>
+            <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+              <strong>What it is & does:</strong> A daily calendar log that maps out exact topics and future dates for your regular topic reviews.
+            </p>
+            <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+              <strong>Steps to use:</strong>
+              <span className="block mt-1">1. Enter subject details and pick a study date.</span>
+              <span className="block mt-1">2. Tap "Schedule Task".</span>
+              <span className="block mt-1">3. Complete each scheduled item to gain valuable level XP.</span>
+            </div>
+          </div>
+
+          {/* FACILITY 5 */}
+          <div className="bg-[#1a1614] p-5 rounded-2xl border border-[#3f332c]/65 space-y-2.5">
+            <p className="text-xs font-black uppercase text-emerald-400 tracking-wider">🎯 Exam Planner Mode</p>
+            <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+              <strong>What it is & does:</strong> A spacing scheduler that spaces out revision blocks dynamically so you finish preparing perfectly before exam day.
+            </p>
+            <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+              <strong>Steps to use:</strong>
+              <span className="block mt-1">1. Enter your exam name, subject, and exam date.</span>
+              <span className="block mt-1">2. Tap "Create Exam Plan".</span>
+              <span className="block mt-1">3. Follow the automatically calculated revision milestones.</span>
+            </div>
+          </div>
+
+          {/* FACILITY 6 */}
+          <div className="bg-[#1a1614] p-5 rounded-2xl border border-[#3f332c]/65 space-y-2.5">
+            <p className="text-xs font-black uppercase text-amber-600 tracking-wider">🔮 Memory Boost Hub</p>
+            <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+              <strong>What it is & does:</strong> A collection of classical association tricks (Memory Palace, Story, Linking, Initials) for memorizing checklists.
+            </p>
+            <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+              <strong>Steps to use:</strong>
+              <span className="block mt-1">1. Select your preferred method at the bottom of the home screen.</span>
+              <span className="block mt-1">2. Add sequence items.</span>
+              <span className="block mt-1">3. Read the visual maps to link items.</span>
+            </div>
+          </div>
+
+          {/* FACILITY 7 */}
+          <div className="bg-[#1a1614] p-5 rounded-2xl border border-[#3f332c]/65 space-y-2.5">
+            <p className="text-xs font-black uppercase text-sky-400 tracking-wider">⚡ Flashcard Decks</p>
+            <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+              <strong>What it is & does:</strong> Virtual double-sided flashcards that hide the explanation until clicked, reinforcing instantaneous recall.
+            </p>
+            <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+              <strong>Steps to use:</strong>
+              <span className="block mt-1">1. Click "Add New Card" to save a query.</span>
+              <span className="block mt-1">2. Input front text and back explanation.</span>
+              <span className="block mt-1">3. Click cards to instantly flip and verify.</span>
+            </div>
+          </div>
+
+          {/* FACILITY 8 */}
+          <div className="bg-[#1a1614] p-5 rounded-2xl border border-[#3f332c]/65 space-y-2.5">
+            <p className="text-xs font-black uppercase text-violet-400 tracking-wider">🧠 Memory Tricks (Mnemonics)</p>
+            <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+              <strong>What it is & does:</strong> A creator for storing silly phrase association codes to hook complex list sequences permanently in head space.
+            </p>
+            <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+              <strong>Steps to use:</strong>
+              <span className="block mt-1">1. Enter your subject and a silly formula phrase.</span>
+              <span className="block mt-1">2. Click Save.</span>
+              <span className="block mt-1">3. Tap "Practice" to hide and type the formula until perfect.</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Secondary Tools Horizontal */}

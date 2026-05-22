@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Trash2, PenTool, Edit2, Play, ChevronLeft, Sparkles, Brain } from 'lucide-react';
+import { Plus, Trash2, PenTool, Edit2, Play, ChevronLeft, Sparkles, Brain, HelpCircle } from 'lucide-react';
 import { Mnemonic } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
 import { MaanasMascot } from './MaanasMascot';
+import { MemoryLinker } from './MemoryLinker';
 
 export default function Mnemonics() {
   const { mnemonics, setMnemonics, goBack, addXP } = useAppContext();
@@ -181,6 +182,23 @@ export default function Mnemonics() {
         </button>
       </header>
 
+      {/* Layman Explanation of this Facility */}
+      <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
+        <div className="flex items-center gap-2 text-orange-400">
+          <HelpCircle size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use Memory Tricks (Mnemonics)</span>
+        </div>
+        <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+          <strong>What it is & does:</strong> A silly phrase association database that helps you link random lists or formulas to an unforgettable sequence of imagery.
+        </p>
+        <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+          <strong>Steps to use:</strong>
+          <span className="block mt-1">1. Click "Add New Trick".</span>
+          <span className="block mt-1">2. Input your custom topic title and enter a weird, funny phrase to anchor memory.</span>
+          <span className="block mt-1">3. Back in list, click Play to test typing out the phrase from memory!</span>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Mascot Tip */}
         <div className="lg:col-span-1">
@@ -260,41 +278,44 @@ export default function Mnemonics() {
                 <motion.div 
                   layout
                   key={item.id} 
-                  className="bg-[#2a221f] border border-[#3f332c] rounded-[3rem] p-10 hover:bg-[#2d2522] transition-all group shadow-sm flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden"
+                  className="bg-[#2a221f] border border-[#3f332c] rounded-[3rem] p-10 hover:bg-[#2d2522] transition-all group shadow-sm flex flex-col gap-6 relative overflow-hidden"
                 >
-                  <div className="flex items-center gap-8 flex-1 w-full relative z-10">
-                    <div className="w-16 h-16 rounded-3xl bg-[#1a1614] text-orange-500 flex items-center justify-center shrink-0 border border-[#3f332c] group-hover:bg-orange-600 group-hover:text-white transition-all">
-                      <PenTool size={28} />
+                  <div className="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
+                    <div className="flex items-center gap-8 flex-1 w-full relative z-10">
+                      <div className="w-16 h-16 rounded-3xl bg-[#1a1614] text-orange-500 flex items-center justify-center shrink-0 border border-[#3f332c] group-hover:bg-orange-600 group-hover:text-white transition-all">
+                        <PenTool size={28} />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-black text-2xl text-orange-100 tracking-tighter italic mb-1">{item.title}</h3>
+                        <p className="text-orange-400 font-black text-xl italic drop-shadow-sm">"{item.phrase}"</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="font-black text-2xl text-orange-100 tracking-tighter italic mb-1">{item.title}</h3>
-                      <p className="text-orange-400 font-black text-xl italic drop-shadow-sm">"{item.phrase}"</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 shrink-0 relative z-10">
-                    <button 
-                      onClick={() => startPractice(item)}
-                      className="flex items-center gap-3 bg-orange-600 text-white px-10 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
-                    >
-                      <Play size={18} fill="currentColor" />
-                      <span>Practice</span>
-                    </button>
-                    <div className="flex gap-2">
-                       <button 
-                        onClick={() => startEditing(item)}
-                        className="p-4 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
-                      >
-                        <Edit2 size={18} />
-                      </button>
+                    
+                    <div className="flex items-center gap-4 shrink-0 relative z-10 w-full md:w-auto justify-end">
                       <button 
-                        onClick={() => deleteMnemonic(item.id)}
-                        className="p-4 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
+                        onClick={() => startPractice(item)}
+                        className="flex items-center gap-3 bg-orange-600 text-white px-10 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
                       >
-                        <Trash2 size={18} />
+                        <Play size={18} fill="currentColor" />
+                        <span>Practice</span>
                       </button>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => startEditing(item)}
+                          className="p-4 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button 
+                          onClick={() => deleteMnemonic(item.id)}
+                          className="p-4 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
                   </div>
+                  <MemoryLinker itemId={item.id} itemType="mnemonic" className="relative z-10 border-t border-[#3f332c] pt-4" />
                 </motion.div>
               ))
             )}

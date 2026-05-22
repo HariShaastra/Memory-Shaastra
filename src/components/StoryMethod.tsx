@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Trash2, BookOpen, Edit2, Play, ChevronLeft, Sparkles, Box, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, BookOpen, Edit2, Play, ChevronLeft, Sparkles, Box, ArrowRight, ArrowLeft, HelpCircle } from 'lucide-react';
 import { LinkChain } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
@@ -171,6 +171,23 @@ export default function StoryMethod() {
           </button>
         )}
       </header>
+
+      {/* Layman Explanation of this Facility */}
+      <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
+        <div className="flex items-center gap-2 text-orange-400">
+          <HelpCircle size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use Story Method</span>
+        </div>
+        <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+          <strong>What it is & does:</strong> A creative association trick where you weave several unrelated key terms into a funny fictional story so your mind easily follows the sequence.
+        </p>
+        <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+          <strong>Steps to use:</strong>
+          <span className="block mt-1">1. Click "Add New Story".</span>
+          <span className="block mt-1">2. Input a list name, type multiple items separated by commas, and write down an exaggerated, fun story.</span>
+          <span className="block mt-1">3. Back in main list, click Play to test typing out each keyword sequence.</span>
+        </div>
+      </div>
 
       {isAddingStory ? (
         <div className="max-w-2xl mx-auto">

@@ -16,7 +16,8 @@ import {
   Edit2,
   Save,
   X,
-  List
+  List,
+  HelpCircle
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
@@ -526,6 +527,23 @@ export const ExamMode: React.FC = () => {
           </button>
         </header>
 
+        {/* Layman Explanation of this Facility */}
+        <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
+          <div className="flex items-center gap-2 text-orange-400">
+            <HelpCircle size={16} />
+            <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use Study & Exam Planner Center</span>
+          </div>
+          <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+            <strong>What it is & does:</strong> A dynamic milestone scheduler that spaces out revision blocks so you finish preparing perfectly before exam day.
+          </p>
+          <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+            <strong>Steps to use:</strong>
+            <span className="block mt-1">1. Click "Add New Plan".</span>
+            <span className="block mt-1">2. Input your custom exam subjects, chapters, topics, and date.</span>
+            <span className="block mt-1">3. Back on this dashboard, select your exam plan card to follow automatically spaced daily revisions.</span>
+          </div>
+        </div>
+
         {examPlans.length === 0 ? (
           <div className="text-center py-24 bg-[#2a221f]/30 rounded-[5rem] border-2 border-dashed border-[#3f332c] flex flex-col items-center relative overflow-hidden">
             <div className="absolute inset-0 bg-orange-600/5 blur-[100px] pointer-events-none" />
@@ -678,6 +696,23 @@ export const ExamMode: React.FC = () => {
           </button>
         </div>
       </header>
+
+      {/* Layman Explanation of this Facility */}
+      <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
+        <div className="flex items-center gap-2 text-amber-500">
+          <HelpCircle size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use Study & Exam Planner Center</span>
+        </div>
+        <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+          <strong>What it is & does:</strong> A dynamic milestone scheduler that spaces out revision blocks so you finish preparing perfectly before exam day.
+        </p>
+        <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+          <strong>Steps to use:</strong>
+          <span className="block mt-1">1. Click "Add New Plan".</span>
+          <span className="block mt-1">2. Input your custom exam subjects, chapters, topics, and date.</span>
+          <span className="block mt-1">3. Back on this dashboard, select your exam plan card to follow automatically spaced daily revisions.</span>
+        </div>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

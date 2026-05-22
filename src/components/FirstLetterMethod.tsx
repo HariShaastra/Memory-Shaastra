@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Trash2, Type, Edit2, Play, ChevronLeft, Sparkles, Box, ArrowRight, ArrowLeft, Zap } from 'lucide-react';
+import { Plus, Trash2, Type, Edit2, Play, ChevronLeft, Sparkles, Box, ArrowRight, ArrowLeft, Zap, HelpCircle } from 'lucide-react';
 import { FirstLetterAid } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
@@ -172,6 +172,23 @@ export default function FirstLetterMethod() {
           </button>
         )}
       </header>
+
+      {/* Layman Explanation of this Facility */}
+      <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
+        <div className="flex items-center gap-2 text-orange-400">
+          <HelpCircle size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use First-Letter Method</span>
+        </div>
+        <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+          <strong>What it is & does:</strong> An abbreviation trick that automatically takes the first letter of each items list and creates a memorable acronym sentence.
+        </p>
+        <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+          <strong>Steps to use:</strong>
+          <span className="block mt-1">1. Click "New Mnemonic Aid".</span>
+          <span className="block mt-1">2. Name your topic and list items separated by commas.</span>
+          <span className="block mt-1">3. System auto-generates a silly acronym; click Play to rehearse and study.</span>
+        </div>
+      </div>
 
       {isAddingAid ? (
         <div className="max-w-2xl mx-auto">

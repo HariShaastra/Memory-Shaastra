@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Trash2, Map, Edit2, Play, ChevronLeft, Sparkles, Home, Box, ArrowRight, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Map, Edit2, Play, ChevronLeft, Sparkles, Home, Box, ArrowRight, ArrowLeft, ChevronRight, HelpCircle } from 'lucide-react';
 import { MemoryPalace as PalaceType, PalaceLocation } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
@@ -171,6 +171,23 @@ export default function MemoryPalace() {
           </button>
         )}
       </header>
+
+      {/* Layman Explanation of this Facility */}
+      <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
+        <div className="flex items-center gap-2 text-orange-400">
+          <HelpCircle size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use Memory Palace</span>
+        </div>
+        <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+          <strong>What it is & does:</strong> A spatial association system that maps facts or checklists onto physical landmarks (like furniture) in a room you know well.
+        </p>
+        <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+          <strong>Steps to use:</strong>
+          <span className="block mt-1">1. Click "Add New Room" and write a familiar physical space name.</span>
+          <span className="block mt-1">2. Tap onto your room, click "Add Location Pin" to place facts on physical objects.</span>
+          <span className="block mt-1">3. Tap "Begin Practice Tour" to cycle visual anchors.</span>
+        </div>
+      </div>
 
       {!activePalaceId ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

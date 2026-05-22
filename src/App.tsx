@@ -22,6 +22,8 @@ import { StudyPlanner } from './components/StudyPlanner';
 import Settings from './components/Settings';
 import { ExamMode } from './components/ExamMode';
 import NotificationCenter from './components/NotificationCenter';
+import Library from './components/Library';
+import RescueQueue from './components/RescueQueue';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Menu, Bell } from 'lucide-react';
 import { t } from './utils/translations';
@@ -52,6 +54,8 @@ function AppContent() {
       case 'exam-mode': return <ExamMode />;
       case 'settings': return <Settings />;
       case 'notifications': return <NotificationCenter />;
+      case 'library': return <Library />;
+      case 'rescue-queue': return <RescueQueue />;
       default: return <HomeScreen />;
     }
   };

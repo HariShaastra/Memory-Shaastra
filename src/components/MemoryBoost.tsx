@@ -5,7 +5,8 @@ import {
   Zap, 
   Trophy,
   Timer,
-  RefreshCw
+  RefreshCw,
+  HelpCircle
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
@@ -77,6 +78,20 @@ export const MemoryBoost: React.FC = () => {
           <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">30-Second Cognitive Surge</p>
         </div>
       </header>
+
+      {/* Layman Explanation of this Facility */}
+      <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
+        <div className="flex items-center gap-2 text-orange-400">
+          <HelpCircle size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use Inner Blaze Game</span>
+        </div>
+        <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
+          <strong>What it is & does:</strong> A 30-second reflex recall training game that flashes sequence numbers to rev up your working memory focus before a big study slot.
+        </p>
+        <p className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
+          <strong>Steps to use:</strong> 1. Click "Unleash Surge". 2. Pay close attention to the flashed number before it disappears. 3. Quick-type the exact matching number digits and repeat to level up!
+        </p>
+      </div>
 
       <div className="bg-[#2a221f] p-10 rounded-[4rem] shadow-2xl border border-[#3f332c] min-h-[550px] flex flex-col items-center justify-center text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-5 pointer-events-none">
