@@ -112,7 +112,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   
   const [theme, setThemeState] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('ms_theme');
-    return (saved === 'light' || saved === 'dark') ? saved : 'dark';
+    return (saved === 'light' || saved === 'dark') ? saved : 'light';
   });
 
   const setTheme = (t: 'dark' | 'light') => {

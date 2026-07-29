@@ -29,7 +29,7 @@ import { t } from './utils/translations';
 import { CalendarView } from './components/CalendarView';
 
 function AppContent() {
-  const { currentView, goBack, setView } = useApp();
+  const { currentView, goBack, setView, theme } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
   if (currentView === 'auth') return <Auth />;
@@ -85,11 +85,15 @@ function AppContent() {
       
       <main className="flex-1 overflow-y-auto relative bg-[#1a1614] border-l border-[#3f332c] w-full">
         {/* TOP RIBBON */}
-        <div className="sticky top-0 z-20 px-3 sm:px-6 py-3 bg-[#fffaf5] text-slate-900 border-b border-orange-200 shadow-md flex items-center justify-between gap-2 max-w-full min-w-0 overflow-hidden">
+        <div className={`sticky top-0 z-20 px-3 sm:px-6 py-3 border-b shadow-md flex items-center justify-between gap-2 max-w-full min-w-0 overflow-hidden transition-colors duration-300 ${
+          theme === 'dark' ? 'bg-[#2a221f] text-orange-100 border-[#3f332c]' : 'bg-[#fffaf5] text-slate-900 border-orange-200'
+        }`}>
           <div className="flex items-center space-x-1.5 sm:space-x-3 shrink min-w-0">
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 text-slate-800 hover:bg-orange-100 rounded-xl border border-orange-300 active:scale-95 transition-all shrink-0"
+              className={`lg:hidden p-2 rounded-xl border active:scale-95 transition-all shrink-0 ${
+                theme === 'dark' ? 'text-orange-100 hover:bg-[#3f332c] border-[#3f332c]' : 'text-slate-800 hover:bg-orange-100 border-orange-300'
+              }`}
               aria-label="Toggle Sidebar"
             >
               <Menu size={18} />
@@ -98,10 +102,14 @@ function AppContent() {
             {/* Title Button in Top Ribbon leading to Home */}
             <button
               onClick={() => setView('dashboard')}
-              className="flex items-center space-x-1.5 bg-orange-100/80 hover:bg-orange-200/80 px-2.5 sm:px-3.5 py-1.5 rounded-2xl border border-orange-300 text-slate-900 transition-all active:scale-95 group shadow-sm shrink min-w-0"
+              className={`flex items-center space-x-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-2xl border transition-all active:scale-95 group shadow-sm shrink min-w-0 ${
+                theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] border-[#3f332c] text-orange-100' : 'bg-orange-100/80 hover:bg-orange-200/80 border-orange-300 text-slate-900'
+              }`}
             >
               <Logo size={20} className="group-hover:scale-110 transition-transform shrink-0" />
-              <span className="font-black text-xs sm:text-base tracking-tight text-slate-900 group-hover:text-orange-700 transition-colors truncate">
+              <span className={`font-black text-xs sm:text-base tracking-tight transition-colors truncate ${
+                theme === 'dark' ? 'text-orange-100 group-hover:text-orange-400' : 'text-slate-900 group-hover:text-orange-700'
+              }`}>
                 Memory Shaastra
               </span>
             </button>
@@ -109,7 +117,9 @@ function AppContent() {
             {showBackButton && (
               <button 
                 onClick={goBack}
-                className="flex items-center space-x-1 text-slate-700 hover:text-slate-900 transition-colors font-bold uppercase tracking-wider text-[10px] bg-white/80 hover:bg-white py-1.5 px-2.5 rounded-xl border border-orange-200 shadow-sm active:scale-95 shrink-0"
+                className={`flex items-center space-x-1 transition-colors font-bold uppercase tracking-wider text-[10px] py-1.5 px-2.5 rounded-xl border shadow-sm active:scale-95 shrink-0 ${
+                  theme === 'dark' ? 'text-orange-200 hover:text-white bg-[#1a1614] hover:bg-[#3f332c] border-[#3f332c]' : 'text-slate-700 hover:text-slate-900 bg-white/80 hover:bg-white border-orange-200'
+                }`}
               >
                 <ArrowLeft size={14} />
                 <span className="hidden md:inline">{t.back}</span>
@@ -120,7 +130,9 @@ function AppContent() {
           <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
             <button
               onClick={() => setView('auth')}
-              className="px-2.5 sm:px-3 py-1.5 bg-white hover:bg-orange-50 text-slate-800 border border-orange-300 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm"
+              className={`px-2.5 sm:px-3 py-1.5 border rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm ${
+                theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-100 border-[#3f332c]' : 'bg-white hover:bg-orange-50 text-slate-800 border-orange-300'
+              }`}
               title="Google / Email Account Sign In"
             >
               <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
