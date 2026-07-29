@@ -1,34 +1,42 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Plus, 
   Trash2, 
   CheckCircle2, 
   Circle, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   Clock, 
   Book, 
-  ChevronLeft,
-  Edit2,
-  Save,
-  HelpCircle
+  Edit2, 
+  Play, 
+  Sparkles,
+  HelpCircle,
+  Brain,
+  Search
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { t } from '../utils/translations';
 import { StudyTask } from '../types';
 
 export const StudyPlanner: React.FC = () => {
-  const { goBack, studyTasks, setStudyTasks } = useAppContext();
+  const { 
+    studyTasks, 
+    setStudyTasks, 
+    scheduledRevisions, 
+    toggleScheduledRevision,
+    startStudyNow 
+  } = useAppContext();
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'daily' | 'weekly' | 'completed'>('daily');
+  const [filter, setFilter] = useState<'daily' | 'all' | 'revisions' | 'completed'>('daily');
+  const [searchQuery, setSearchQuery] = useState('');
   
   const [newTask, setNewTask] = useState<Partial<StudyTask>>({
     subject: '',
     topic: '',
     plannedDate: new Date().toISOString().split('T')[0],
-    estimatedTime: '',
+    estimatedTime: '25 mins',
     completed: false
   });
 
@@ -48,7 +56,7 @@ export const StudyPlanner: React.FC = () => {
         subject: newTask.subject!,
         topic: newTask.topic!,
         plannedDate: newTask.plannedDate!,
-        estimatedTime: newTask.estimatedTime!,
+        estimatedTime: newTask.estimatedTime || '25 mins',
         completed: false
       };
       setStudyTasks(prev => [...prev, task]);
@@ -63,7 +71,7 @@ export const StudyPlanner: React.FC = () => {
       subject: '',
       topic: '',
       plannedDate: new Date().toISOString().split('T')[0],
-      estimatedTime: '',
+      estimatedTime: '25 mins',
       completed: false
     });
     setEditingId(null);
@@ -83,209 +91,287 @@ export const StudyPlanner: React.FC = () => {
     setStudyTasks(prev => prev.filter(t => t.id !== id));
   };
 
-  const filteredTasks = studyTasks.filter(task => {
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const filteredCustomTasks = studyTasks.filter(task => {
+    const matchesSearch = searchQuery.trim() === '' || 
+      task.topic.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      task.subject.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (!matchesSearch) return false;
+
     if (filter === 'completed') return task.completed;
-    if (filter === 'daily') {
-      const today = new Date().toISOString().split('T')[0];
-      return !task.completed && (task.plannedDate === today || !task.plannedDate);
-    }
-    return !task.completed; // Weekly/All
+    if (filter === 'daily') return !task.completed && (task.plannedDate === todayStr || !task.plannedDate);
+    if (filter === 'revisions') return false;
+    return !task.completed;
+  });
+
+  const activeRevisions = scheduledRevisions.filter(rev => {
+    const matchesSearch = searchQuery.trim() === '' || 
+      rev.itemTitle.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    if (filter === 'completed') return rev.completed;
+    if (filter === 'daily') return !rev.completed && rev.dueDate <= todayStr;
+    if (filter === 'revisions') return !rev.completed;
+    return !rev.completed;
   });
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12 space-y-8">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="flex items-center gap-4">
-           <div>
-            <h2 className="text-3xl font-black tracking-tight italic font-display text-orange-100 uppercase">{t.planner}</h2>
-            <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">List your tasks</p>
-           </div>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      {/* Header */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-[#2a221f] p-6 rounded-3xl border border-[#3f332c]">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#fef3c7]">Study Schedule</h1>
+          <p className="text-xs text-orange-200/60 mt-1">Organized study roadmap with search & direct Focus Timer integration</p>
         </div>
+
         {!isAdding && (
           <button 
             onClick={() => { resetForm(); setIsAdding(true); }}
-            className="flex items-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-[10px] hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 w-full md:w-auto justify-center active:scale-95"
+            className="flex items-center space-x-2 bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-2xl font-bold text-xs shadow-lg transition-all active:scale-95"
           >
             <Plus size={18} />
-            <span>Add Task</span>
+            <span>Add Study Activity</span>
           </button>
         )}
       </header>
 
-      {/* Layman Explanation of this Facility */}
-      <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
-        <div className="flex items-center gap-2 text-indigo-400">
-          <HelpCircle size={16} />
-          <span className="text-[10px] font-black uppercase tracking-widest leading-none">How to Use Study Planner</span>
-        </div>
-        <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
-          <strong>What it is & does:</strong> A personal calendar list that logs upcoming exam topics and revision dates to keep your daily schedule disciplined and fully organized.
-        </p>
-        <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
-          <strong>Steps to use:</strong>
-          <span className="block mt-1">1. Tap the "Add Task" button.</span>
-          <span className="block mt-1">2. Enter a subject name, target topic, focus date, and estimated duration.</span>
-          <span className="block mt-1">3. Tap "Schedule Task" and complete them sequentially!</span>
+      {/* Guide Banner */}
+      <div className="bg-[#2a221f]/60 p-5 rounded-2xl border border-[#3f332c] flex items-start space-x-3 text-xs text-orange-100/90">
+        <HelpCircle size={18} className="text-orange-400 shrink-0 mt-0.5" />
+        <div>
+          <strong className="text-orange-300 font-bold">How "Study Schedule" Works:</strong>
+          <p className="text-orange-200/70 mt-0.5">
+            Create tasks with planned dates and focus durations. Use the <strong>Search Facility</strong> below to instantly filter activities by subject or topic. Click <strong>"Study Now"</strong> on any task to enter Monk Mode focus timer.
+          </p>
         </div>
       </div>
 
-      {/* Quick Add Form (Inline) */}
+      {/* Search & Filter Bar */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-[#2a221f] p-4 rounded-3xl border border-[#3f332c]">
+        {/* Search Input Facility */}
+        <div className="relative flex-1">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-400/60" />
+          <input 
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search activities in Study Schedule by topic or subject..."
+            className="w-full bg-[#1a1614] border border-[#3f332c] text-xs py-3 pl-12 pr-4 rounded-2xl text-[#fef3c7] focus:outline-none focus:border-orange-500 font-medium"
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-orange-200/40 hover:text-white"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex flex-wrap gap-1.5 bg-[#1a1614] p-1.5 rounded-2xl border border-[#3f332c] text-xs font-bold">
+          <button
+            onClick={() => setFilter('daily')}
+            className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'daily' ? 'bg-orange-600 text-white shadow-md' : 'text-orange-200/60'}`}
+          >
+            Today's Schedule
+          </button>
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'all' ? 'bg-orange-600 text-white shadow-md' : 'text-orange-200/60'}`}
+          >
+            All Activities
+          </button>
+          <button
+            onClick={() => setFilter('revisions')}
+            className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'revisions' ? 'bg-orange-600 text-white shadow-md' : 'text-orange-200/60'}`}
+          >
+            Revisions ({scheduledRevisions.filter(r => !r.completed).length})
+          </button>
+          <button
+            onClick={() => setFilter('completed')}
+            className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'completed' ? 'bg-orange-600 text-white shadow-md' : 'text-orange-200/60'}`}
+          >
+            Completed
+          </button>
+        </div>
+      </div>
+
+      {/* Add / Edit Form */}
       <AnimatePresence>
         {isAdding && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-[#2a221f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl space-y-6"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-[#2a221f] rounded-3xl p-6 border border-orange-500/30 space-y-4 shadow-xl"
           >
+            <h3 className="font-bold text-orange-300 text-sm">{editingId ? 'Edit Activity' : 'Add New Study Activity'}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-[0.2em] text-orange-200/40 font-black ml-2">Topic</label>
-                <input 
-                  type="text"
-                  value={newTask.topic}
-                  onChange={e => setNewTask(prev => ({ ...prev, topic: e.target.value }))}
-                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
-                  placeholder="e.g. Chemical Reactions"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-[0.2em] text-orange-200/40 font-black ml-2">Subject</label>
-                <input 
-                  type="text"
-                  value={newTask.subject}
-                  onChange={e => setNewTask(prev => ({ ...prev, subject: e.target.value }))}
-                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
-                  placeholder="e.g. Science"
-                />
-              </div>
+              <input 
+                type="text"
+                value={newTask.topic}
+                onChange={e => setNewTask(prev => ({ ...prev, topic: e.target.value }))}
+                className="bg-[#1a1614] border border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-[#fef3c7] focus:outline-none focus:border-orange-500"
+                placeholder="Topic Name (e.g. Chemical Bonds)"
+              />
+              <input 
+                type="text"
+                value={newTask.subject}
+                onChange={e => setNewTask(prev => ({ ...prev, subject: e.target.value }))}
+                className="bg-[#1a1614] border border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-[#fef3c7] focus:outline-none focus:border-orange-500"
+                placeholder="Subject (e.g. Science)"
+              />
             </div>
             
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 space-y-1">
-                <label className="text-[10px] uppercase tracking-[0.2em] text-orange-200/40 font-black ml-2">Date</label>
-                <input 
-                  type="date"
-                  value={newTask.plannedDate}
-                  onChange={e => setNewTask(prev => ({ ...prev, plannedDate: e.target.value }))}
-                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
-                />
-              </div>
-              <div className="flex-1 space-y-1">
-                <label className="text-[10px] uppercase tracking-[0.2em] text-orange-200/40 font-black ml-2">Time</label>
-                <input 
-                  type="text"
-                  value={newTask.estimatedTime}
-                  onChange={e => setNewTask(prev => ({ ...prev, estimatedTime: e.target.value }))}
-                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
-                  placeholder="e.g. 45 mins"
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input 
+                type="date"
+                value={newTask.plannedDate}
+                onChange={e => setNewTask(prev => ({ ...prev, plannedDate: e.target.value }))}
+                className="bg-[#1a1614] border border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-[#fef3c7] focus:outline-none focus:border-orange-500"
+              />
+              <input 
+                type="text"
+                value={newTask.estimatedTime}
+                onChange={e => setNewTask(prev => ({ ...prev, estimatedTime: e.target.value }))}
+                className="bg-[#1a1614] border border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-[#fef3c7] focus:outline-none focus:border-orange-500"
+                placeholder="Focus Duration (e.g. 25 mins)"
+              />
             </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end space-x-3 pt-2">
               <button 
                 onClick={() => { setIsAdding(false); resetForm(); }}
-                className="px-6 py-2 text-[10px] font-black uppercase tracking-widest text-orange-200/30 hover:text-orange-200/60"
+                className="px-4 py-2 text-xs font-bold text-orange-200/50 hover:text-white"
               >
                 Cancel
               </button>
               <button 
                 onClick={addTask}
-                className="px-10 py-4 bg-orange-600 text-white rounded-[1.5rem] font-black text-xs uppercase shadow-xl shadow-orange-600/20 active:scale-95"
+                className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold shadow-lg"
               >
-                {editingId ? 'Save' : 'Add'}
+                {editingId ? 'Save Changes' : 'Schedule Activity'}
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Filters */}
-      <div className="flex gap-2 p-1.5 bg-[#2a221f] rounded-2xl w-fit border border-[#3f332c]/50">
-        {(['daily', 'weekly', 'completed'] as const).map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-              filter === f 
-                ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/20' 
-                : 'text-orange-200/40 hover:text-orange-100'
+      {/* Task & Revision List */}
+      <div className="space-y-4">
+        {filteredCustomTasks.map(task => (
+          <div 
+            key={task.id}
+            className={`p-5 rounded-3xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+              task.completed 
+                ? 'bg-[#1a1614]/40 border-emerald-500/30 opacity-70' 
+                : 'bg-[#2a221f] border-[#3f332c] hover:border-orange-500/50'
             }`}
           >
-            {f === 'daily' ? 'Today' : f === 'weekly' ? 'All' : 'Done'}
-          </button>
-        ))}
-      </div>
-
-      {/* Task List */}
-      <div className="space-y-4">
-        <AnimatePresence mode="popLayout">
-          {filteredTasks.length > 0 ? (
-            filteredTasks.map(task => (
-              <motion.div
-                key={task.id}
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className={`group flex items-center gap-5 p-6 bg-[#2a221f] rounded-[2rem] border border-[#3f332c] transition-all hover:bg-[#2d2522] ${
-                  task.completed ? 'opacity-40 grayscale' : ''
-                }`}
+            <div className="flex items-start space-x-4">
+              <button 
+                onClick={() => toggleTask(task.id)}
+                className="mt-1 shrink-0 text-orange-400 hover:text-emerald-400"
               >
-                <button 
-                  onClick={() => toggleTask(task.id)}
-                  className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
-                    task.completed 
-                      ? 'bg-emerald-500 border-emerald-500 text-white' 
-                      : 'border-orange-500/20 text-transparent hover:border-orange-500'
-                  }`}
-                >
-                  {task.completed && <CheckCircle2 size={16} />}
-                </button>
-                
-                <div className="flex-1 min-w-0">
-                  <h3 className={`font-black text-lg italic tracking-tight text-orange-100 ${task.completed ? 'line-through opacity-50' : ''}`}>
-                    {task.topic}
-                  </h3>
-                  <div className="flex flex-wrap gap-x-6 gap-y-1 mt-1">
-                    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-orange-200/40">
-                      <Book size={10} className="text-orange-500" /> {task.subject}
-                    </span>
-                    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-orange-200/40">
-                      <Calendar size={10} className="text-amber-500" /> {task.plannedDate}
-                    </span>
-                    {task.estimatedTime && (
-                      <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-orange-200/40">
-                        <Clock size={10} className="text-orange-400" /> {task.estimatedTime}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                {task.completed ? <CheckCircle2 size={22} className="text-emerald-400" /> : <Circle size={22} />}
+              </button>
 
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => startEdit(task)}
-                    className="p-3.5 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 rounded-xl transition-all shadow-lg active:scale-95"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                  <button 
-                    onClick={() => deleteTask(task.id)}
-                    className="p-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-xl transition-all shadow-lg active:scale-95"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+              <div className="space-y-1">
+                <h3 className={`font-bold text-base ${task.completed ? 'line-through text-orange-200/50' : 'text-[#fef3c7]'}`}>
+                  {task.topic}
+                </h3>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-orange-200/60 font-medium">
+                  <span className="flex items-center space-x-1"><Book size={12} className="text-orange-400" /><span>{task.subject}</span></span>
+                  <span className="flex items-center space-x-1"><CalendarIcon size={12} className="text-amber-400" /><span>{task.plannedDate}</span></span>
+                  <span className="flex items-center space-x-1"><Clock size={12} className="text-sky-400" /><span>{task.estimatedTime}</span></span>
                 </div>
-              </motion.div>
-            ))
-          ) : (
-            <div className="text-center py-20 bg-[#2a221f]/30 rounded-[3rem] border-2 border-dashed border-[#3f332c]">
-              <p className="text-orange-200/20 font-black uppercase tracking-widest text-xs">No tasks here.</p>
+              </div>
             </div>
-          )}
-        </AnimatePresence>
+
+            <div className="flex items-center space-x-3 shrink-0 self-end md:self-center">
+              <button
+                onClick={() => {
+                  const minutes = parseInt(task.estimatedTime) || 25;
+                  startStudyNow(task.topic, minutes, task.subject);
+                }}
+                className="flex items-center space-x-2 py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-95"
+              >
+                <Play size={14} fill="currentColor" />
+                <span>Study Now</span>
+              </button>
+
+              <button 
+                onClick={() => startEdit(task)} 
+                className="p-2 bg-white/5 hover:bg-white/10 text-amber-300 rounded-xl"
+              >
+                <Edit2 size={16} />
+              </button>
+              <button 
+                onClick={() => deleteTask(task.id)} 
+                className="p-2 bg-white/5 hover:bg-white/10 text-rose-400 rounded-xl"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        ))}
+
+        {/* Spaced Calendar Revisions */}
+        {activeRevisions.map(rev => (
+          <div 
+            key={rev.id}
+            className={`p-5 rounded-3xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+              rev.completed 
+                ? 'bg-[#1a1614]/40 border-emerald-500/30 opacity-70' 
+                : 'bg-[#2a221f] border-orange-500/40 hover:border-orange-500'
+            }`}
+          >
+            <div className="flex items-start space-x-4">
+              <button 
+                onClick={() => toggleScheduledRevision(rev.id)}
+                className="mt-1 shrink-0 text-orange-400 hover:text-emerald-400"
+              >
+                {rev.completed ? <CheckCircle2 size={22} className="text-emerald-400" /> : <Circle size={22} />}
+              </button>
+
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-orange-600/20 text-orange-400 rounded-md border border-orange-500/30">
+                    {rev.intervalDays}d Revision
+                  </span>
+                  <h3 className={`font-bold text-base ${rev.completed ? 'line-through text-orange-200/50' : 'text-[#fef3c7]'}`}>
+                    {rev.itemTitle}
+                  </h3>
+                </div>
+                <p className="text-xs text-orange-200/60 font-medium">
+                  Due Date: <strong className="text-amber-300">{rev.dueDate}</strong>
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => startStudyNow(rev.itemTitle, 20)}
+              className="flex items-center space-x-2 py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-95 shrink-0 self-end md:self-center"
+            >
+              <Play size={14} fill="currentColor" />
+              <span>Revise Now</span>
+            </button>
+          </div>
+        ))}
+
+        {filteredCustomTasks.length === 0 && activeRevisions.length === 0 && (
+          <div className="text-center py-12 bg-[#2a221f]/50 rounded-3xl border border-[#3f332c] text-xs text-orange-200/40 space-y-2">
+            <Brain size={32} className="mx-auto text-orange-200/20" />
+            <p>No study activities or revisions found.</p>
+            {searchQuery && <p className="text-orange-400 font-bold">Try clearing your search query above.</p>}
+          </div>
+        )}
       </div>
+
     </div>
   );
 };

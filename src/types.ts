@@ -39,6 +39,7 @@ export interface Flashcard {
   nextReview: string;
   interval: number;
   easeFactor: number;
+  repetitions?: number;
   attachments?: FileAttachment[];
 }
 
@@ -176,6 +177,28 @@ export interface MemoryLink {
   targetType: 'flashcard' | 'mnemonic' | 'palace' | 'link-chain' | 'story' | 'first-letter' | 'material';
 }
 
+export interface ActivityEvent {
+  id: string;
+  title: string;
+  type: 'flashcard' | 'mnemonic' | 'palace' | 'link-chain' | 'story' | 'first-letter' | 'material' | 'study-task';
+  itemId?: string;
+  createdAt: string; // ISO string
+  description?: string;
+}
+
+export interface ScheduledRevisionTask {
+  id: string;
+  activityId: string;
+  itemTitle: string;
+  itemType: 'flashcard' | 'mnemonic' | 'palace' | 'link-chain' | 'story' | 'first-letter' | 'material' | 'study-task';
+  itemId?: string;
+  dueDate: string; // YYYY-MM-DD
+  intervalDays: number;
+  completed: boolean;
+  completedAt?: string;
+  durationMinutes?: number;
+}
+
 export type AppView = 
   | 'auth' 
   | 'dashboard' 
@@ -186,11 +209,62 @@ export type AppView =
   | 'linking' 
   | 'story'
   | 'first-letter' 
-  | 'scheduler' 
-  | 'memory-boost' 
+  | 'calendar' 
   | 'settings'
   | 'planner'
   | 'exam-mode'
-  | 'notifications'
   | 'library'
-  | 'rescue-queue';
+  | 'advice'
+  | 'ai-tester'
+  | 'simplifier'
+  | 'memory-dna'
+  | 'wellbeing';
+
+export interface QuestionPaperSpec {
+  types: Array<'mcq' | 'fill-blank' | 'short' | 'long' | 'case' | 'true-false'>;
+  difficulty: 'easy' | 'moderate' | 'tough' | 'competitive';
+  subject: string;
+  topic: string;
+  questionCount: number;
+}
+
+export interface GeneratedQuestion {
+  id: string;
+  type: 'mcq' | 'fill-blank' | 'short' | 'long' | 'case' | 'true-false';
+  difficulty: 'easy' | 'moderate' | 'tough' | 'competitive';
+  question: string;
+  options?: string[];
+  correctAnswer: string;
+  explanation: string;
+}
+
+export interface TestEvaluation {
+  score: number;
+  maxScore: number;
+  percentage: number;
+  strictness: 'easy' | 'moderate' | 'tough' | 'competitive';
+  strengths: string[];
+  weaknesses: string[];
+  detailedFeedback: Array<{
+    questionNum: number;
+    userAnswer: string;
+    expectedAnswer: string;
+    isCorrect: boolean;
+    marksAwarded: number;
+    maxMarks: number;
+    feedback: string;
+  }>;
+}
+
+export interface LearnerAdvice {
+  swot: {
+    strengths: string[];
+    weaknesses: string[];
+    opportunities: string[];
+    threats: string[];
+  };
+  whatNeedsToBeDone: string[];
+  howToExecute: string[];
+  generatedAt: string;
+}
+

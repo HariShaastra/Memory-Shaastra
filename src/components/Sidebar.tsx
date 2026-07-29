@@ -4,29 +4,24 @@ import { useApp } from '../context/AppContext';
 import { AppView } from '../types';
 import { t } from '../utils/translations';
 import { 
-  Bell,
-  LayoutDashboard, 
   Timer, 
   BookOpen, 
   Calendar, 
-  Gamepad2, 
   Settings,
-  PenTool,
-  Map,
-  Link as LinkIcon,
   Type,
   LogOut,
   LogIn,
   Quote,
   Home,
-  Link,
+  Link as LinkIcon,
   Target,
-  Zap,
   Book,
   X,
-  Heart
+  Heart,
+  Brain
 } from 'lucide-react';
 import { Logo } from './Logo';
+import { auth, signOut } from '../firebase';
 
 interface NavItemProps {
   key?: string | number;
@@ -35,10 +30,9 @@ interface NavItemProps {
   currentView: AppView;
   setView: (view: AppView) => void;
   onClose?: () => void;
-  badge?: number;
 }
 
-const NavItem = ({ item, id, currentView, setView, onClose, badge }: NavItemProps) => {
+const NavItem = ({ item, id, currentView, setView, onClose }: NavItemProps) => {
   const Icon = item.icon;
   const isActive = currentView === id;
   return (
@@ -47,7 +41,7 @@ const NavItem = ({ item, id, currentView, setView, onClose, badge }: NavItemProp
         setView(id as AppView);
         if (onClose) onClose();
       }}
-      className={`w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all duration-300 relative group overflow-hidden ${
+      className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl transition-all duration-300 relative group overflow-hidden ${
         isActive 
           ? 'bg-orange-600/20 text-orange-500 border border-orange-500/30 shadow-[0_0_25px_rgba(234,88,12,0.15)]' 
           : 'text-orange-100/80 hover:text-white hover:bg-[#2a221f]'
@@ -59,39 +53,36 @@ const NavItem = ({ item, id, currentView, setView, onClose, badge }: NavItemProp
           className="absolute left-1.5 w-1 h-6 bg-orange-600 rounded-full"
         />
       )}
-      <Icon size={18} className={`transition-transform duration-500 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(234,88,12,0.5)]' : 'group-hover:scale-110'}`} />
-      <span className={`text-[10px] font-black uppercase tracking-[0.2em] italic ${isActive ? 'opacity-100' : 'opacity-100'}`}>{item.label}</span>
+      <Icon size={18} className={`transition-transform duration-500 shrink-0 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(234,88,12,0.5)]' : 'group-hover:scale-110'}`} />
+      <span className={`text-[10px] font-black uppercase tracking-[0.15em] italic truncate ${isActive ? 'opacity-100' : 'opacity-100'}`}>{item.label}</span>
       
-      {badge && badge > 0 ? (
-        <div className="absolute right-3 px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[8px] font-black shadow-[0_0_8px_rgba(234,88,12,0.5)]">
-          {badge > 9 ? '9+' : badge}
-        </div>
-      ) : isActive && (
-        <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(234,88,12,0.8)]" />
+      {isActive && (
+        <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(234,88,12,0.8)] shrink-0" />
       )}
     </button>
   );
 };
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
-  const { currentView, setView, setUser, user, notifications } = useApp();
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { currentView, setView, setUser, user } = useApp();
 
   const mainItems = [
-    { id: 'focus', label: 'Study Timer', icon: Timer },
     { id: 'dashboard', label: t.home, icon: Home },
+    { id: 'focus', label: 'Study Timer', icon: Timer },
     { id: 'rescue-queue', label: 'Active Recall', icon: Heart },
-    { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
-    { id: 'exam-mode', label: t.examMode, icon: Target },
+    { id: 'calendar', label: 'Calendar', icon: Calendar },
+    { id: 'exam-mode', label: 'Exam Planning', icon: Target },
     { id: 'library', label: 'Personal Library', icon: Book },
-    { id: 'planner', label: t.planner, icon: Calendar },
-    { id: 'memory-boost', label: t.memoryBoost, icon: Zap },
-    { id: 'flashcards', label: t.flashcards, icon: BookOpen },
-    { id: 'scheduler', label: t.scheduler, icon: Calendar },
+    { id: 'planner', label: 'Study Schedule', icon: Calendar },
+    { id: 'memory-boost', label: 'Memory Boost', icon: Brain },
+  ];
+
+  const aiStrategyItems = [
+    { id: 'advice', label: 'Learner Advice', icon: Brain },
   ];
 
   const toolItems = [
+    { id: 'flashcards', label: t.flashcards, icon: BookOpen },
     { id: 'mnemonics', label: t.mnemonics, icon: Quote },
     { id: 'palace', label: t.palace, icon: Home },
     { id: 'linking', label: t.linking, icon: LinkIcon },
@@ -114,16 +105,26 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         </button>
       </div>
       
-      <div className="flex-1 px-4 space-y-8 mt-4 overflow-y-auto pb-8 scrollbar-hide">
+      <div className="flex-1 px-4 space-y-6 mt-2 overflow-y-auto pb-8 scrollbar-hide">
         <div>
-          <p className="px-4 text-[10px] uppercase font-black tracking-[0.3em] text-orange-500 mb-4 font-sans italic">Overview</p>
+          <p className="px-4 text-[10px] uppercase font-black tracking-[0.3em] text-orange-500 mb-3 font-sans italic">Overview</p>
           <div className="space-y-1">
-            {mainItems.map(item => <NavItem key={item.id} item={item} id={item.id} currentView={currentView} setView={setView} onClose={onClose} badge={item.badge} />)}
+            {mainItems.map(item => <NavItem key={item.id} item={item} id={item.id} currentView={currentView} setView={setView} onClose={onClose} />)}
           </div>
         </div>
 
         <div>
-          <p className="px-4 text-[10px] uppercase tracking-[0.3em] text-orange-500 mb-4 font-sans italic">Tools</p>
+          <p className="px-4 text-[10px] uppercase font-black tracking-[0.3em] text-amber-400 mb-3 font-sans italic flex items-center gap-1.5">
+            <Brain size={12} />
+            <span>Learner Guidance</span>
+          </p>
+          <div className="space-y-1">
+            {aiStrategyItems.map(item => <NavItem key={item.id} item={item} id={item.id} currentView={currentView} setView={setView} onClose={onClose} />)}
+          </div>
+        </div>
+
+        <div>
+          <p className="px-4 text-[10px] uppercase tracking-[0.3em] text-orange-500 mb-3 font-sans italic">Memory Techniques</p>
           <div className="space-y-1">
             {toolItems.map(item => <NavItem key={item.id} item={item} id={item.id} currentView={currentView} setView={setView} onClose={onClose} />)}
           </div>
@@ -134,7 +135,15 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         {bottomItems.map(item => <NavItem key={item.id} item={item} id={item.id} currentView={currentView} setView={setView} onClose={onClose} />)}
         {user ? (
           <button 
-            onClick={() => { setUser(null); if (onClose) onClose(); }}
+            onClick={async () => { 
+              try {
+                await signOut(auth);
+              } catch (e) {
+                console.warn('SignOut error:', e);
+              }
+              setUser(null); 
+              if (onClose) onClose(); 
+            }}
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-rose-400 hover:bg-rose-500/10 transition-all font-bold"
           >
             <LogOut size={20} />

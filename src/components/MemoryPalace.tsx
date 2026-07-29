@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Trash2, Map, Edit2, Play, ChevronLeft, Sparkles, Home, Box, ArrowRight, ArrowLeft, ChevronRight, HelpCircle } from 'lucide-react';
+import { Plus, Trash2, Map, Edit2, Play, ChevronLeft, Home, Box, ArrowRight, ArrowLeft, ChevronRight, HelpCircle, Search, X } from 'lucide-react';
 import { MemoryPalace as PalaceType, PalaceLocation } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
 import { MaanasMascot } from './MaanasMascot';
+import { MemoryLinker } from './MemoryLinker';
 
 export default function MemoryPalace() {
-  const { memoryPalaces, setMemoryPalaces, goBack, addXP } = useAppContext();
+  const { memoryPalaces, setMemoryPalaces, goBack } = useAppContext();
 
   const [isAddingPalace, setIsAddingPalace] = useState(false);
   const [activePalaceId, setActivePalaceId] = useState<string | null>(null);
   const [newPalaceName, setNewPalaceName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   
   const [isAddingLocation, setIsAddingLocation] = useState(false);
   const [newLocName, setNewLocName] = useState('');
@@ -34,7 +36,6 @@ export default function MemoryPalace() {
     setMemoryPalaces([palace, ...memoryPalaces]);
     setNewPalaceName('');
     setIsAddingPalace(false);
-    addXP(50);
   };
 
   const addLocation = () => {
@@ -50,7 +51,6 @@ export default function MemoryPalace() {
     setNewLocName('');
     setNewLocConcept('');
     setIsAddingLocation(false);
-    addXP(10);
   };
 
   const deletePalace = (id: string, e: React.MouseEvent) => {
@@ -137,10 +137,10 @@ export default function MemoryPalace() {
               </button>
             ) : (
               <button 
-                onClick={() => { setPracticeMode(false); addXP(100); }}
+                onClick={() => { setPracticeMode(false); }}
                 className="flex-1 py-5 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/30 active:scale-95"
               >
-                Done <Sparkles size={16} />
+                Done
               </button>
             )}
           </div>
@@ -189,6 +189,28 @@ export default function MemoryPalace() {
         </div>
       </div>
 
+      {/* Search Bar for Memory Palaces */}
+      {!activePalaceId && (
+        <div className="relative max-w-md">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-400/60" />
+          <input 
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search Memory Palaces & locations..."
+            className="w-full bg-[#1a1614] border border-[#3f332c] text-xs py-3 pl-12 pr-10 rounded-2xl text-orange-100 placeholder:text-orange-200/30 focus:outline-none focus:border-orange-500 font-bold"
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-orange-200/40 hover:text-white"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      )}
+
       {!activePalaceId ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <AnimatePresence>
@@ -218,7 +240,7 @@ export default function MemoryPalace() {
             )}
           </AnimatePresence>
 
-          {memoryPalaces.map(palace => (
+          {memoryPalaces.filter(p => !searchQuery.trim() || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.locations.some(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()) || l.concept.toLowerCase().includes(searchQuery.toLowerCase()))).map(palace => (
             <motion.div 
               layout
               key={palace.id}
@@ -277,6 +299,8 @@ export default function MemoryPalace() {
               </button>
             </div>
           </div>
+
+          <MemoryLinker itemId={activePalace.id} itemType="palace" className="bg-[#2a221f] p-6 rounded-3xl border border-[#3f332c]" />
 
           <AnimatePresence>
             {isAddingLocation && (

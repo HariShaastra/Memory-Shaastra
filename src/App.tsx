@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Sidebar from './components/Sidebar';
@@ -21,20 +16,21 @@ import RevisionScheduler from './components/RevisionScheduler';
 import { StudyPlanner } from './components/StudyPlanner';
 import Settings from './components/Settings';
 import { ExamMode } from './components/ExamMode';
-import NotificationCenter from './components/NotificationCenter';
 import Library from './components/Library';
 import RescueQueue from './components/RescueQueue';
+import LearnerAdviceView from './components/LearnerAdvice';
+import AiTester from './components/AiTester';
+import ConceptSimplifier from './components/ConceptSimplifier';
+import MemoryDna from './components/MemoryDna';
+import StudyWellbeingCoach from './components/StudyWellbeingCoach';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Menu, Bell } from 'lucide-react';
+import { ArrowLeft, Menu, Sparkles } from 'lucide-react';
 import { t } from './utils/translations';
-
-import { NotificationToast } from './components/NotificationToast';
+import { CalendarView } from './components/CalendarView';
 
 function AppContent() {
-  const { currentView, goBack, notifications, setView } = useApp();
+  const { currentView, goBack, setView } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   if (currentView === 'auth') return <Auth />;
 
@@ -48,14 +44,19 @@ function AppContent() {
       case 'linking': return <LinkingMethod />;
       case 'story': return <StoryMethod />;
       case 'first-letter': return <FirstLetterMethod />;
+      case 'calendar': return <CalendarView />;
       case 'scheduler': return <RevisionScheduler />;
       case 'memory-boost': return <MemoryBoost />;
       case 'planner': return <StudyPlanner />;
       case 'exam-mode': return <ExamMode />;
       case 'settings': return <Settings />;
-      case 'notifications': return <NotificationCenter />;
       case 'library': return <Library />;
       case 'rescue-queue': return <RescueQueue />;
+      case 'advice': return <LearnerAdviceView />;
+      case 'ai-tester': return <AiTester />;
+      case 'simplifier': return <ConceptSimplifier />;
+      case 'memory-dna': return <MemoryDna />;
+      case 'wellbeing': return <StudyWellbeingCoach />;
       default: return <HomeScreen />;
     }
   };
@@ -64,7 +65,6 @@ function AppContent() {
 
   return (
     <div className="flex h-screen bg-[#1a1614] text-[#fef3c7] overflow-hidden font-sans relative">
-      <NotificationToast />
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -84,35 +84,61 @@ function AppContent() {
       </div>
       
       <main className="flex-1 overflow-y-auto relative bg-[#1a1614] border-l border-[#3f332c] w-full">
-        <div className="sticky top-0 z-20 p-4 bg-[#1a1614]/80 backdrop-blur-md flex items-center justify-between border-b border-[#3f332c]/30">
-          <div className="flex items-center space-x-4">
+        {/* TOP RIBBON */}
+        <div className="sticky top-0 z-20 px-3 sm:px-6 py-3 bg-[#fffaf5] text-slate-900 border-b border-orange-200 shadow-md flex items-center justify-between gap-2 max-w-full min-w-0 overflow-hidden">
+          <div className="flex items-center space-x-1.5 sm:space-x-3 shrink min-w-0">
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 text-orange-400 hover:bg-white/5 rounded-full border border-white/5"
+              className="lg:hidden p-2 text-slate-800 hover:bg-orange-100 rounded-xl border border-orange-300 active:scale-95 transition-all shrink-0"
+              aria-label="Toggle Sidebar"
             >
-              <Menu size={20} />
+              <Menu size={18} />
             </button>
+
+            {/* Title Button in Top Ribbon leading to Home */}
+            <button
+              onClick={() => setView('dashboard')}
+              className="flex items-center space-x-1.5 bg-orange-100/80 hover:bg-orange-200/80 px-2.5 sm:px-3.5 py-1.5 rounded-2xl border border-orange-300 text-slate-900 transition-all active:scale-95 group shadow-sm shrink min-w-0"
+            >
+              <Logo size={20} className="group-hover:scale-110 transition-transform shrink-0" />
+              <span className="font-black text-xs sm:text-base tracking-tight text-slate-900 group-hover:text-orange-700 transition-colors truncate">
+                Memory Shaastra
+              </span>
+            </button>
+
             {showBackButton && (
               <button 
                 onClick={goBack}
-                className="flex items-center space-x-2 text-orange-400/70 hover:text-orange-300 transition-colors font-bold uppercase tracking-widest text-[10px] bg-white/5 py-2 px-4 rounded-full border border-white/5"
+                className="flex items-center space-x-1 text-slate-700 hover:text-slate-900 transition-colors font-bold uppercase tracking-wider text-[10px] bg-white/80 hover:bg-white py-1.5 px-2.5 rounded-xl border border-orange-200 shadow-sm active:scale-95 shrink-0"
               >
-                <ArrowLeft size={16} />
-                <span>{t.back}</span>
+                <ArrowLeft size={14} />
+                <span className="hidden md:inline">{t.back}</span>
               </button>
             )}
           </div>
-          <button 
-            onClick={() => setView('notifications')}
-            className="relative p-3 text-orange-400 hover:bg-white/5 rounded-2xl border border-white/5 bg-[#2a221f]/50 transition-all group active:scale-95"
-          >
-            <Bell size={20} className={unreadCount > 0 ? 'animate-pulse' : ''} />
-            {unreadCount > 0 && (
-              <span className="absolute top-2 right-2 w-5 h-5 bg-orange-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[#1a1614] shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
+
+          <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+            <button
+              onClick={() => setView('auth')}
+              className="px-2.5 sm:px-3 py-1.5 bg-white hover:bg-orange-50 text-slate-800 border border-orange-300 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm"
+              title="Google / Email Account Sign In"
+            >
+              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span className="hidden sm:inline font-black text-[11px]">Sign In / Sync</span>
+            </button>
+
+            <button
+              onClick={() => setView('focus')}
+              className="px-2.5 sm:px-3.5 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5 active:scale-95 whitespace-nowrap"
+            >
+              <span>Focus Session</span>
+            </button>
+          </div>
         </div>
         
         <AnimatePresence mode="wait">
@@ -122,7 +148,7 @@ function AppContent() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="min-h-[calc(100vh-64px)] w-full"
+            className="min-h-[calc(100vh-68px)] w-full"
           >
             {renderView()}
           </motion.div>

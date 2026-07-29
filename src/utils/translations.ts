@@ -80,7 +80,7 @@ export const t = {
   startBoost: "Quick Review",
   enterStudyMode: "Study Now",
   viewProgress: "My Progress",
-  xpPoints: "XP Points",
+  xpPoints: "Points",
   streakDays: "Days in a row",
   daysToGo: "days left",
   todaysTarget: "Today Goal",

@@ -6,16 +6,16 @@ import {
   Trophy,
   Timer,
   RefreshCw,
-  HelpCircle
+  HelpCircle,
+  Brain
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
-import { MaanasMascot } from './MaanasMascot';
 
 type GameState = 'idle' | 'playing' | 'result';
 
 export const MemoryBoost: React.FC = () => {
-  const { goBack, addXP, updateStreak } = useAppContext();
+  const { goBack, updateStreak } = useAppContext();
 
   const [gameState, setGameState] = useState<GameState>('idle');
   const [score, setScore] = useState(0);
@@ -62,9 +62,7 @@ export const MemoryBoost: React.FC = () => {
 
   const handleComplete = () => {
     setGameState('result');
-    const earnedXP = 50 + Math.floor(score / 2);
-    addXP(earnedXP);
-    updateStreak();
+    if (updateStreak) updateStreak();
   };
 
   return (
@@ -108,12 +106,11 @@ export const MemoryBoost: React.FC = () => {
               exit={{ opacity: 0, scale: 0.95 }}
               className="space-y-10 flex flex-col items-center relative z-10"
             >
-              <div className="relative">
-                <div className="absolute inset-0 bg-orange-600/20 blur-[50px] rounded-full" />
-                <MaanasMascot size={200} expression="encouraging" />
+              <div className="p-6 bg-orange-600/20 rounded-full border border-orange-500/30 text-orange-400">
+                <Brain size={64} />
               </div>
               <div>
-                <h2 className="text-3xl font-black text-orange-100 italic uppercase italic tracking-tight leading-tight">Ignite your Focus?</h2>
+                <h2 className="text-3xl font-black text-orange-100 italic uppercase tracking-tight leading-tight">Ignite your Focus?</h2>
                 <p className="text-orange-200/40 mt-3 max-w-xs mx-auto text-xs font-bold uppercase tracking-widest leading-relaxed italic">Capture the vanishing runes. Your brain is a furnace; let it burn bright.</p>
               </div>
               <button 
@@ -190,21 +187,16 @@ export const MemoryBoost: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-10 flex flex-col items-center relative z-10"
             >
-              <div className="relative">
-                <div className={`absolute inset-0 ${score > 50 ? 'bg-orange-600/20' : 'bg-orange-600/10'} blur-[60px] rounded-full`} />
-                <MaanasMascot size={220} expression={score > 50 ? 'proud' : 'happy'} />
+              <div className="p-6 bg-orange-600/20 rounded-full border border-orange-500/30 text-amber-400">
+                <Trophy size={64} />
               </div>
               <div>
                 <h2 className="text-4xl font-black text-orange-100 italic uppercase tracking-tighter drop-shadow-sm">Radiant Mind!</h2>
                 <p className="text-orange-200/40 mt-2 font-bold uppercase tracking-[0.2em] text-[10px] italic">Your mental sanctum is illuminated.</p>
                 <div className="flex gap-6 justify-center mt-8">
                   <div className="bg-[#1a1614] px-8 py-3 rounded-2xl border border-[#3f332c] flex flex-col items-center shadow-inner">
-                    <span className="text-[10px] uppercase font-black tracking-widest text-orange-200/20 italic">Mastery</span>
-                    <span className="text-3xl font-black text-orange-500 italic italic">{score}</span>
-                  </div>
-                  <div className="bg-[#1a1614] px-8 py-3 rounded-2xl border border-[#3f332c] flex flex-col items-center shadow-inner">
-                    <span className="text-[10px] uppercase font-black tracking-widest text-orange-200/20 italic">Harvested XP</span>
-                    <span className="text-3xl font-black text-orange-500 italic">+{50 + Math.floor(score / 2)}</span>
+                    <span className="text-[10px] uppercase font-black tracking-widest text-orange-200/50 italic">Recall Score</span>
+                    <span className="text-3xl font-black text-orange-500 italic">{score}</span>
                   </div>
                 </div>
               </div>

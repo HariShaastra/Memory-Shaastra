@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Link, Link2, X, Search, Radio, Brain, BookOpen, Layers, Star, Plus, FileText, Bookmark } from 'lucide-react';
+import { Link, Link2, X, Search, Radio, Brain, BookOpen, Layers, Type, Plus, FileText, Bookmark } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { MemoryLink } from '../types';
 
@@ -179,7 +179,7 @@ export const MemoryLinker: React.FC<MemoryLinkerProps> = ({ itemId, itemType, cl
                   { id: 'palace', label: 'Palace', icon: Bookmark },
                   { id: 'link-chain', label: 'Link method', icon: Link },
                   { id: 'story', label: 'Story Method', icon: Radio },
-                  { id: 'first-letter', label: 'First-Letter', icon: Star },
+                  { id: 'first-letter', label: 'First-Letter', icon: Type },
                   { id: 'material', label: 'Library', icon: BookOpen },
                 ].map(tab => {
                   const Icon = tab.icon;

@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Trash2, Link as LinkIcon, Edit2, Play, ChevronLeft, Sparkles, Layers, Box, ArrowRight, ArrowLeft, HelpCircle } from 'lucide-react';
+import { Plus, Trash2, Link as LinkIcon, Edit2, Play, ChevronLeft, Layers, Box, ArrowRight, ArrowLeft, HelpCircle, Search, X, Brain } from 'lucide-react';
 import { LinkChain } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
 import { MaanasMascot } from './MaanasMascot';
+import { MemoryLinker } from './MemoryLinker';
 
 export default function LinkingMethod() {
-  const { linkChains, setLinkChains, goBack, addXP } = useAppContext();
+  const { linkChains, setLinkChains, goBack } = useAppContext();
 
   const [isAddingChain, setIsAddingChain] = useState(false);
   const [activeChainId, setActiveChainId] = useState<string | null>(null);
   const [newChainTitle, setNewChainTitle] = useState('');
   const [newItems, setNewItems] = useState('');
   const [newStory, setNewStory] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Practice State
   const [practiceMode, setPracticeMode] = useState(false);
@@ -33,7 +35,6 @@ export default function LinkingMethod() {
     };
     setLinkChains([chain, ...linkChains]);
     resetForm();
-    addXP(40);
   };
 
   const startEditing = (chain: LinkChain) => {
@@ -84,7 +85,6 @@ export default function LinkingMethod() {
     const correctValue = activeChain.items[currentIdx].toLowerCase().trim();
     if (userGuess.toLowerCase().trim() === correctValue) {
       setFeedback('correct');
-      addXP(20);
     } else {
       setFeedback('wrong');
     }
@@ -98,7 +98,6 @@ export default function LinkingMethod() {
       setFeedback(null);
     } else {
       setPracticeMode(false);
-      addXP(50);
     }
   };
 
@@ -119,7 +118,9 @@ export default function LinkingMethod() {
         </header>
 
         <div className="bg-[#2a221f] p-12 rounded-[4rem] shadow-2xl shadow-orange-900/10 border border-[#3f332c] min-h-[550px] flex flex-col items-center justify-center text-center">
-          <MaanasMascot size={180} expression={feedback === 'correct' ? 'proud' : feedback === 'wrong' ? 'focused' : 'encouraging'} />
+          <div className="p-5 bg-orange-600/20 rounded-full text-orange-400 border border-orange-500/30">
+            <Brain size={48} />
+          </div>
           
           <div className="mt-12 space-y-8 w-full max-w-md">
             <div className="space-y-4">
@@ -142,7 +143,7 @@ export default function LinkingMethod() {
                 {feedback === 'correct' ? (
                   <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
                     <p className="text-emerald-400 font-black text-xl flex items-center justify-center gap-2 italic uppercase">
-                      <Sparkles /> Correct!
+                      <Brain /> Correct!
                     </p>
                     <button 
                       onClick={nextStep}
@@ -200,6 +201,28 @@ export default function LinkingMethod() {
           </button>
         )}
       </header>
+
+      {/* Search Bar for Linking Method */}
+      {!isAddingChain && !practiceMode && (
+        <div className="relative max-w-md">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-400/60" />
+          <input 
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search link chains & items..."
+            className="w-full bg-[#1a1614] border border-[#3f332c] text-xs py-3 pl-12 pr-10 rounded-2xl text-orange-100 placeholder:text-orange-200/30 focus:outline-none focus:border-orange-500 font-bold"
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-orange-200/40 hover:text-white"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Layman Explanation of this Facility */}
       <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
@@ -292,14 +315,16 @@ export default function LinkingMethod() {
             </div>
 
             <div className="lg:col-span-2 grid grid-cols-1 gap-6">
-              {linkChains.length === 0 ? (
+              {linkChains.filter(c => !searchQuery.trim() || c.title.toLowerCase().includes(searchQuery.toLowerCase()) || c.items.some(i => i.toLowerCase().includes(searchQuery.toLowerCase()))).length === 0 ? (
                 <div className="text-center py-24 bg-[#2a221f]/30 border-2 border-dashed border-[#3f332c] rounded-[5rem] flex flex-col items-center col-span-2">
                   <Layers size={48} className="text-[#3f332c] mb-6" />
-                  <p className="text-orange-200/20 font-black italic uppercase tracking-[0.3em] text-xs">No concept links found.</p>
+                  <p className="text-orange-200/20 font-black italic uppercase tracking-[0.3em] text-xs">
+                    {searchQuery ? `No chains found for "${searchQuery}"` : 'No concept links found.'}
+                  </p>
                   <button onClick={() => setIsAddingChain(true)} className="mt-4 text-orange-500 font-black uppercase tracking-widest text-[10px] hover:underline">Create your first chain</button>
                 </div>
               ) : (
-                linkChains.map((chain) => (
+                linkChains.filter(c => !searchQuery.trim() || c.title.toLowerCase().includes(searchQuery.toLowerCase()) || c.items.some(i => i.toLowerCase().includes(searchQuery.toLowerCase()))).map((chain) => (
                   <motion.div 
                     layout
                     key={chain.id}
@@ -353,6 +378,8 @@ export default function LinkingMethod() {
                         <span>Practice</span>
                       </button>
                     </div>
+
+                    <MemoryLinker itemId={chain.id} itemType="link-chain" className="relative z-10 pt-2" />
                   </motion.div>
                 ))
               )}

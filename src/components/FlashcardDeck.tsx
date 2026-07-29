@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Plus, 
@@ -14,12 +14,14 @@ import {
   Tags,
   Search,
   Filter,
-  HelpCircle
+  HelpCircle,
+  Eye
 } from 'lucide-react';
 import { Flashcard } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
 import { MemoryLinker } from './MemoryLinker';
+import { triggerCompletionCelebration } from '../utils/confetti';
 
 export default function FlashcardDeck() {
   const { flashcards: cards, setFlashcards: setCards, rateRecall } = useAppContext();
@@ -30,16 +32,91 @@ export default function FlashcardDeck() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'flip' | 'grid' | 'list'>('flip');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [newQ, setNewQ] = useState('');
   const [newA, setNewA] = useState('');
   const [newSubject, setNewSubject] = useState('');
 
+  // Quick inline flip viewer for grid/list cards
+  const [previewCard, setPreviewCard] = useState<Flashcard | null>(null);
+  const [isPreviewFlipped, setIsPreviewFlipped] = useState(false);
+
   const subjects = ['all', ...Array.from(new Set(cards.map(c => c.subject).filter(Boolean))) as string[]];
-  const filteredCards = selectedSubject === 'all' 
-    ? cards 
-    : cards.filter(c => c.subject === selectedSubject);
+  const filteredCards = cards.filter(c => {
+    const matchesSubject = selectedSubject === 'all' || c.subject === selectedSubject;
+    const matchesSearch = !searchQuery.trim() || 
+      c.question.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      c.answer.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (c.subject && c.subject.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesSubject && matchesSearch;
+  });
 
   const currentCard = filteredCards[currentIndex];
+
+  const rateAndNext = (score: 1 | 2 | 3 | 4) => {
+    if (!currentCard) return;
+    rateRecall(currentCard.id, 'flashcard', score);
+    triggerCompletionCelebration();
+    if (currentIndex < filteredCards.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+    setIsFlipped(false);
+  };
+
+  const openInFlipView = (cardId: string) => {
+    const idx = filteredCards.findIndex(c => c.id === cardId);
+    if (idx !== -1) {
+      setCurrentIndex(idx);
+    }
+    setViewMode('flip');
+    setIsFlipped(false);
+  };
+
+  useEffect(() => {
+    if (viewMode !== 'flip' || !currentCard || isAdding) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        return;
+      }
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setIsFlipped(prev => !prev);
+      } else if (e.code === 'Escape') {
+        e.preventDefault();
+        setViewMode('grid');
+      } else if (e.code === 'ArrowRight') {
+        if (currentIndex < filteredCards.length - 1) {
+          setCurrentIndex(prev => prev + 1);
+          setIsFlipped(false);
+        }
+      } else if (e.code === 'ArrowLeft') {
+        if (currentIndex > 0) {
+          setCurrentIndex(prev => prev - 1);
+          setIsFlipped(false);
+        }
+      } else if (isFlipped) {
+        if (e.key === '1') {
+          e.preventDefault();
+          rateAndNext(1);
+        } else if (e.key === '2') {
+          e.preventDefault();
+          rateAndNext(2);
+        } else if (e.key === '3') {
+          e.preventDefault();
+          rateAndNext(3);
+        } else if (e.key === '4') {
+          e.preventDefault();
+          rateAndNext(4);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewMode, currentCard, isFlipped, currentIndex, filteredCards, isAdding]);
 
   const addCard = () => {
     if (!newQ || !newA) return;
@@ -142,25 +219,46 @@ export default function FlashcardDeck() {
         </div>
       </header>
 
-      {/* Category Filter */}
-      {subjects.length > 1 && (
-        <div className="flex items-center gap-4 overflow-x-auto pb-4 no-scrollbar">
-          <Filter size={16} className="text-orange-200/20 flex-shrink-0" />
-          {subjects.map(subject => (
-            <button
-              key={subject}
-              onClick={() => { setSelectedSubject(subject); setCurrentIndex(0); }}
-              className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border ${
-                selectedSubject === subject 
-                  ? 'bg-orange-500/10 border-orange-500 text-orange-500 shadow-lg' 
-                  : 'bg-[#1a1614] border-[#3f332c] text-orange-200/20 hover:border-orange-200/20'
-              }`}
+      {/* Search Bar & Category Filter */}
+      <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-400/60" />
+          <input 
+            type="text"
+            value={searchQuery}
+            onChange={e => { setSearchQuery(e.target.value); setCurrentIndex(0); }}
+            placeholder="Search flashcards by question, answer, subject..."
+            className="w-full bg-[#1a1614] border border-[#3f332c] text-xs py-3 pl-12 pr-10 rounded-2xl text-orange-100 placeholder:text-orange-200/30 focus:outline-none focus:border-orange-500 font-bold"
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-orange-200/40 hover:text-white"
             >
-              {subject === 'all' ? 'All Cards' : subject}
+              <X size={14} />
             </button>
-          ))}
+          )}
         </div>
-      )}
+
+        {subjects.length > 1 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+            <Filter size={16} className="text-orange-200/20 flex-shrink-0 ml-2" />
+            {subjects.map(subject => (
+              <button
+                key={subject}
+                onClick={() => { setSelectedSubject(subject); setCurrentIndex(0); }}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border ${
+                  selectedSubject === subject 
+                    ? 'bg-orange-500/10 border-orange-500 text-orange-500 shadow-lg' 
+                    : 'bg-[#1a1614] border-[#3f332c] text-orange-200/20 hover:border-orange-200/20'
+                }`}
+              >
+                {subject === 'all' ? 'All Cards' : subject}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Layman Explanation of this Facility */}
       <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
@@ -302,43 +400,43 @@ export default function FlashcardDeck() {
                 </button>
               </div>
 
+              <div className="text-center text-[10px] text-orange-200/30 uppercase font-black tracking-widest mt-4">
+                💡 Keyboard shortcuts: <kbd className="bg-[#1a1614] px-2 py-1 rounded text-orange-400 border border-[#3f332c] mx-1 font-mono">Space</kbd> to Flip • <kbd className="bg-[#1a1614] px-2 py-1 rounded text-orange-400 border border-[#3f332c] mx-1 font-mono">1 - 4</kbd> to Rate • <kbd className="bg-[#1a1614] px-2 py-1 rounded text-orange-400 border border-[#3f332c] mx-1 font-mono">← / →</kbd> to Navigate
+              </div>
+
               {isFlipped && (
-                <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap justify-center gap-4 mt-16">
+                <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap justify-center gap-4 mt-12">
                   <button 
-                    onClick={() => {
-                      rateRecall(currentCard.id, 'flashcard', 'forgot');
-                      if (currentIndex < filteredCards.length - 1) {
-                        setCurrentIndex(currentIndex + 1);
-                      }
-                      setIsFlipped(false);
-                    }}
-                    className="px-10 py-4 bg-rose-500/10 border border-rose-500/20 rounded-[2rem] text-rose-400 text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-lg active:scale-95"
+                    onClick={() => rateAndNext(1)}
+                    className="flex items-center gap-2 px-8 py-4 bg-rose-500/10 border border-rose-500/20 rounded-[2rem] text-rose-400 text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-lg active:scale-95"
+                    title="Press 1 key"
                   >
-                    Forgotten
+                    <span className="font-mono text-[9px] bg-rose-500/20 px-1.5 py-0.5 rounded text-rose-300">1</span>
+                    <span>Again</span>
                   </button>
                   <button 
-                    onClick={() => {
-                      rateRecall(currentCard.id, 'flashcard', 'partial');
-                      if (currentIndex < filteredCards.length - 1) {
-                        setCurrentIndex(currentIndex + 1);
-                      }
-                      setIsFlipped(false);
-                    }}
-                    className="px-10 py-4 bg-amber-500/10 border border-amber-500/20 rounded-[2rem] text-amber-500 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-all shadow-lg active:scale-95"
+                    onClick={() => rateAndNext(2)}
+                    className="flex items-center gap-2 px-8 py-4 bg-amber-500/10 border border-amber-500/20 rounded-[2rem] text-amber-500 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-all shadow-lg active:scale-95"
+                    title="Press 2 key"
                   >
-                    Vague
+                    <span className="font-mono text-[9px] bg-amber-500/20 px-1.5 py-0.5 rounded text-amber-300">2</span>
+                    <span>Hard</span>
                   </button>
                   <button 
-                    onClick={() => {
-                      rateRecall(currentCard.id, 'flashcard', 'remembered');
-                      if (currentIndex < filteredCards.length - 1) {
-                        setCurrentIndex(currentIndex + 1);
-                      }
-                      setIsFlipped(false);
-                    }}
-                    className="px-10 py-4 bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-lg active:scale-95"
+                    onClick={() => rateAndNext(3)}
+                    className="flex items-center gap-2 px-8 py-4 bg-sky-500/10 border border-sky-500/20 rounded-[2rem] text-sky-400 text-[10px] font-black uppercase tracking-widest hover:bg-sky-500 hover:text-white transition-all shadow-lg active:scale-95"
+                    title="Press 3 key"
                   >
-                    Engraved
+                    <span className="font-mono text-[9px] bg-sky-500/20 px-1.5 py-0.5 rounded text-sky-300">3</span>
+                    <span>Good</span>
+                  </button>
+                  <button 
+                    onClick={() => rateAndNext(4)}
+                    className="flex items-center gap-2 px-8 py-4 bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-lg active:scale-95"
+                    title="Press 4 key"
+                  >
+                    <span className="font-mono text-[9px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300">4</span>
+                    <span>Easy</span>
                   </button>
                 </motion.div>
               )}
@@ -371,14 +469,22 @@ export default function FlashcardDeck() {
                   
                   <div className="flex gap-2 mt-8">
                     <button 
+                      onClick={() => openInFlipView(card.id)}
+                      className="flex-1 bg-orange-500/10 hover:bg-orange-600 text-orange-400 hover:text-white border border-orange-500/20 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5"
+                      title="View in Flip View"
+                    >
+                      <RotateCcw size={14} />
+                      <span>Flip View</span>
+                    </button>
+                    <button 
                       onClick={() => startEdit(card)}
-                      className="flex-1 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                      className="bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
                     >
                       Edit
                     </button>
                     <button 
                       onClick={() => deleteCard(card.id)}
-                      className="flex-1 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                      className="bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
                     >
                       Delete
                     </button>
@@ -407,14 +513,24 @@ export default function FlashcardDeck() {
                   
                   <div className="flex gap-2">
                     <button 
+                      onClick={() => openInFlipView(card.id)}
+                      className="px-4 py-3 bg-orange-600/20 text-orange-400 hover:bg-orange-600 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1 border border-orange-500/30"
+                      title="View in Flip View"
+                    >
+                      <RotateCcw size={14} />
+                      <span>Flip View</span>
+                    </button>
+                    <button 
                       onClick={() => startEdit(card)}
                       className="p-3 bg-amber-500 text-white rounded-xl shadow-lg shadow-amber-500/20 hover:scale-110 transition-all border border-white/10"
+                      title="Edit Card"
                     >
                       <Edit2 size={16} />
                     </button>
                     <button 
                       onClick={() => deleteCard(card.id)}
                       className="p-3 bg-rose-600 text-white rounded-xl shadow-lg shadow-rose-600/20 hover:scale-110 transition-all border border-white/10"
+                      title="Delete Card"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -440,6 +556,7 @@ export default function FlashcardDeck() {
            </button>
         </div>
       )}
+
     </div>
   );
 }

@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Trash2, PenTool, Edit2, Play, ChevronLeft, Sparkles, Brain, HelpCircle } from 'lucide-react';
+import { Plus, Trash2, PenTool, Edit2, Play, ChevronLeft, Brain, HelpCircle, Search, X } from 'lucide-react';
 import { Mnemonic } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
-import { MaanasMascot } from './MaanasMascot';
 import { MemoryLinker } from './MemoryLinker';
 
 export default function Mnemonics() {
-  const { mnemonics, setMnemonics, goBack, addXP } = useAppContext();
+  const { mnemonics, setMnemonics, goBack } = useAppContext();
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newPhrase, setNewPhrase] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Practice Mode State
   const [practiceMode, setPracticeMode] = useState(false);
@@ -31,7 +31,6 @@ export default function Mnemonics() {
     };
     setMnemonics([item, ...mnemonics]);
     resetForm();
-    addXP(20);
   };
 
   const startEditing = (item: Mnemonic) => {
@@ -72,8 +71,13 @@ export default function Mnemonics() {
     if (!currentMnemonic) return;
     const isCorrect = userTestValue.trim().toLowerCase() === currentMnemonic.phrase.trim().toLowerCase();
     setFeedback(isCorrect ? 'correct' : 'wrong');
-    if (isCorrect) addXP(30);
   };
+
+  const filteredMnemonics = mnemonics.filter(m => 
+    searchQuery.trim() === '' || 
+    m.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    m.phrase.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (practiceMode && currentMnemonic) {
     return (
@@ -90,7 +94,9 @@ export default function Mnemonics() {
           <AnimatePresence mode="wait">
             {step === 'memorize' ? (
               <motion.div key="memorize" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-10">
-                <MaanasMascot size={180} expression="encouraging" />
+                <div className="p-5 bg-orange-600/20 rounded-full text-orange-400 border border-orange-500/30 mx-auto w-fit">
+                  <Brain size={48} />
+                </div>
                 <div className="space-y-4">
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500 mb-2 block">Read and Memorize</span>
                   <p className="text-4xl font-black text-orange-50 leading-tight italic tracking-tighter">"{currentMnemonic.phrase}"</p>
@@ -99,52 +105,40 @@ export default function Mnemonics() {
                   onClick={() => setStep('test')}
                   className="px-12 py-5 bg-orange-600 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl shadow-orange-600/20 active:scale-95"
                 >
-                  I've got it!
+                  Test Myself
                 </button>
               </motion.div>
             ) : (
-              <motion.div key="test" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 w-full max-w-sm">
-                <MaanasMascot size={180} expression={feedback === 'correct' ? 'proud' : feedback === 'wrong' ? 'sad' : 'focused'} />
-                <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">Recall the phrase</h3>
-                  <textarea 
-                    autoFocus
-                    value={userTestValue}
-                    onChange={(e) => setUserTestValue(e.target.value)}
-                    className="w-full bg-[#1a1614] border border-[#3f332c] rounded-[2.5rem] py-10 px-8 text-2xl font-black text-center text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 transition-all resize-none italic"
-                    placeholder="Type it here..."
-                  />
+              <motion.div key="test" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8 w-full max-w-md">
+                <div className="p-4 bg-orange-600/20 rounded-full text-orange-400 border border-orange-500/30 mx-auto w-fit">
+                  <Brain size={40} />
                 </div>
-                {feedback === 'correct' ? (
-                  <div className="space-y-6">
-                    <p className="text-emerald-400 font-black text-xl flex items-center justify-center gap-2 italic uppercase tracking-tighter">
-                      <Sparkles /> Correct! +30 XP
-                    </p>
-                    <button 
-                      onClick={() => setPracticeMode(false)}
-                      className="w-full py-5 bg-emerald-500 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs active:scale-95 shadow-xl shadow-emerald-500/20"
-                    >
-                      Awesome!
-                    </button>
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500 block">Type the exact phrase</span>
+                  <h3 className="text-xl font-bold text-orange-100">{currentMnemonic.title}</h3>
+                </div>
+
+                <input 
+                  type="text"
+                  value={userTestValue}
+                  onChange={(e) => setUserTestValue(e.target.value)}
+                  placeholder="Type mnemonic phrase..."
+                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 text-center text-lg font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500"
+                />
+
+                {feedback && (
+                  <div className={`p-4 rounded-2xl font-bold text-sm ${feedback === 'correct' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
+                    {feedback === 'correct' ? '✨ Perfect Recall!' : `Incorrect. Right phrase: "${currentMnemonic.phrase}"`}
                   </div>
-                ) : feedback === 'wrong' ? (
-                  <div className="space-y-6">
-                    <p className="text-rose-400 font-bold italic tracking-tight">Not quite. Let's try again!</p>
-                    <div className="flex gap-3 justify-center">
-                      <button 
-                        onClick={() => { setStep('memorize'); setFeedback(null); setUserTestValue(''); }}
-                        className="flex-1 py-4 bg-white/5 text-orange-200/40 rounded-2xl font-black uppercase tracking-widest text-[10px]"
-                      >
-                        See Phrase
-                      </button>
-                      <button 
-                        onClick={() => { setFeedback(null); setUserTestValue(''); }}
-                        className="flex-1 py-4 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px]"
-                      >
-                        Try Again
-                      </button>
-                    </div>
-                  </div>
+                )}
+
+                {feedback ? (
+                  <button 
+                    onClick={() => setStep('memorize')}
+                    className="w-full py-5 bg-orange-600 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs active:scale-95 shadow-xl shadow-orange-600/20"
+                  >
+                    Try Again
+                  </button>
                 ) : (
                   <button 
                     onClick={handleTest}
@@ -173,16 +167,35 @@ export default function Mnemonics() {
             <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Words to Remember</p>
            </div>
         </div>
-        <button 
-          onClick={() => { resetForm(); setIsAdding(true); }}
-          className="flex items-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 w-full md:w-auto justify-center active:scale-95"
-        >
-          <Plus size={18} />
-          <span>Add New Trick</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <button 
+            onClick={() => { resetForm(); setIsAdding(true); }}
+            className="flex items-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
+          >
+            <Plus size={18} />
+            <span>Add New Trick</span>
+          </button>
+        </div>
       </header>
 
-      {/* Layman Explanation of this Facility */}
+      {/* Search Bar for Mnemonics */}
+      <div className="relative w-full bg-[#2a221f] p-2 rounded-2xl border border-[#3f332c] flex items-center">
+        <Search size={18} className="ml-4 text-orange-400/60 shrink-0" />
+        <input 
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search mnemonic tricks by name or phrase..."
+          className="w-full bg-transparent border-none text-xs py-3 px-4 text-[#fef3c7] focus:outline-none font-medium placeholder:text-orange-200/30"
+        />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery('')} className="mr-4 text-xs text-orange-200/40 hover:text-white">
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Layman Explanation */}
       <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
         <div className="flex items-center gap-2 text-orange-400">
           <HelpCircle size={16} />
@@ -191,21 +204,17 @@ export default function Mnemonics() {
         <p className="text-xs text-orange-100/90 font-medium leading-relaxed">
           <strong>What it is & does:</strong> A silly phrase association database that helps you link random lists or formulas to an unforgettable sequence of imagery.
         </p>
-        <div className="text-[10px] text-orange-200/40 leading-relaxed font-bold">
-          <strong>Steps to use:</strong>
-          <span className="block mt-1">1. Click "Add New Trick".</span>
-          <span className="block mt-1">2. Input your custom topic title and enter a weird, funny phrase to anchor memory.</span>
-          <span className="block mt-1">3. Back in list, click Play to test typing out the phrase from memory!</span>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Mascot Tip */}
+        {/* Left Column: Memory Tip */}
         <div className="lg:col-span-1">
           <div className="bg-[#2a221f] p-10 rounded-[4rem] border border-[#3f332c] flex flex-col items-center text-center sticky top-24 shadow-2xl shadow-orange-900/5">
-            <MaanasMascot size={150} expression="encouraging" />
-            <div className="mt-8 space-y-4">
-              <h3 className="font-black text-orange-500 uppercase tracking-widest text-[10px]">Helper Tip</h3>
+            <div className="p-4 bg-amber-500/20 text-amber-400 rounded-2xl border border-amber-500/30">
+              <Brain size={36} />
+            </div>
+            <div className="mt-6 space-y-4">
+              <h3 className="font-black text-orange-500 uppercase tracking-widest text-[10px]">Memory Tip</h3>
               <p className="text-orange-100/70 font-bold italic text-lg leading-relaxed">"Make phrases funny or weird. It helps you remember."</p>
             </div>
           </div>
@@ -267,14 +276,16 @@ export default function Mnemonics() {
           </AnimatePresence>
 
           <div className="grid grid-cols-1 gap-6">
-            {mnemonics.length === 0 ? (
+            {filteredMnemonics.length === 0 ? (
               <div className="text-center py-24 bg-[#2a221f]/30 border-2 border-dashed border-[#3f332c] rounded-[4rem] flex flex-col items-center">
                 <Brain size={48} className="text-[#3f332c] mb-4" />
-                <p className="text-orange-200/20 font-black italic uppercase tracking-widest text-xs">Nothing here. Add a phrase!</p>
+                <p className="text-orange-200/20 font-black italic uppercase tracking-widest text-xs">
+                  {searchQuery ? `No mnemonics found for "${searchQuery}"` : 'Nothing here. Add a phrase!'}
+                </p>
                 <button onClick={() => setIsAdding(true)} className="mt-4 text-orange-500 font-black uppercase tracking-widest text-[10px] hover:underline">Start Now</button>
               </div>
             ) : (
-              mnemonics.map((item) => (
+              filteredMnemonics.map((item) => (
                 <motion.div 
                   layout
                   key={item.id} 

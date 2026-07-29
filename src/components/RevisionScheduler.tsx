@@ -7,7 +7,7 @@ import { t } from '../utils/translations';
 import { MaanasMascot } from './MaanasMascot';
 
 export default function RevisionScheduler() {
-  const { revisions, setRevisions, goBack, addXP } = useAppContext();
+  const { revisions, setRevisions, goBack } = useAppContext();
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -43,7 +43,6 @@ export default function RevisionScheduler() {
         nextRevision: nextRevisionDate ? new Date(nextRevisionDate).toISOString() : new Date(Date.now() + 86400000).toISOString()
       };
       setRevisions([rev, ...revisions]);
-      addXP(50);
     }
     
     setNewSubject('');
@@ -74,8 +73,6 @@ export default function RevisionScheduler() {
         const completedCount = rev.completedDates.length;
         const nextInterval = intervals[Math.min(completedCount, intervals.length - 1)];
         const nextDate = new Date(Date.now() + nextInterval * 86400000).toISOString();
-        
-        addXP(75);
         
         return {
           ...rev,
@@ -230,7 +227,7 @@ export default function RevisionScheduler() {
                     onClick={() => markDone(rev.id)}
                     className="flex-1 md:flex-none flex items-center justify-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
                   >
-                    <Sparkles size={16} className="text-amber-400" />
+                    <CheckCircle2 size={16} className="text-amber-400" />
                     <span>Recall Complete</span>
                   </button>
 

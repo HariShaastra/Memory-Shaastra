@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Clock, Target, Coffee, Sparkles, Plus, FileText, Video, Music, File, Trash2, Save, X, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../context/AppContext';
-import { MaanasMascot } from './MaanasMascot';
 import { t } from '../utils/translations';
 import { StudyMaterial } from '../types';
 
@@ -16,13 +15,12 @@ const STUDY_QUOTES = [
 ];
 
 export default function MonkModeTimer() {
-  const { addXP, updateStreak, studyMaterials, setStudyMaterials, handleFileUpload } = useAppContext();
+  const { updateStreak, studyMaterials, setStudyMaterials, handleFileUpload } = useAppContext();
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState<'study' | 'break'>('study');
   const [sessionCompleted, setSessionCompleted] = useState(false);
-  const [earnedXP, setEarnedXP] = useState(0);
   const [quoteIdx, setQuoteIdx] = useState(0);
   const [isEditingTime, setIsEditingTime] = useState(false);
   const [editedMins, setEditedMins] = useState('25');
@@ -64,10 +62,7 @@ export default function MonkModeTimer() {
   const handleComplete = () => {
     setIsActive(false);
     setSessionCompleted(true);
-    const xp = mode === 'study' ? minutes * 10 || 250 : 50;
-    setEarnedXP(xp);
-    addXP(xp);
-    updateStreak();
+    if (updateStreak) updateStreak();
   };
 
   const toggleTimer = () => setIsActive(!isActive);
@@ -125,16 +120,15 @@ export default function MonkModeTimer() {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center min-h-[500px]">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="space-y-10 flex flex-col items-center">
-          <MaanasMascot size={220} expression="proud" />
           <div>
             <h2 className="text-5xl font-black italic uppercase tracking-tighter text-orange-100 drop-shadow-sm">Session Done!</h2>
-            <p className="text-orange-200/40 mt-4 font-bold uppercase tracking-[0.2em] text-[10px] max-w-sm italic">Great work! You studied for {earnedXP / 10} minutes.</p>
+            <p className="text-orange-200/60 mt-4 font-bold uppercase tracking-[0.2em] text-xs max-w-sm italic">Great focus! Memory retention enhanced.</p>
           </div>
           <div className="bg-[#1a1614] px-10 py-5 rounded-[2.5rem] border border-[#3f332c] shadow-inner">
-            <span className="text-[10px] uppercase font-black tracking-[0.3em] text-orange-200/20 block mb-2 italic">Points Earned</span>
-            <div className="flex items-center gap-3 text-orange-500 font-black text-3xl italic">
-              <Sparkles size={28} />
-              <span>+{earnedXP} XP</span>
+            <span className="text-[10px] uppercase font-black tracking-[0.3em] text-orange-200/50 block mb-2 italic">Focus Completed</span>
+            <div className="flex items-center gap-3 text-orange-500 font-black text-2xl italic">
+              <Clock size={28} />
+              <span>{minutes} Minute Session</span>
             </div>
           </div>
           <button 
@@ -191,8 +185,6 @@ export default function MonkModeTimer() {
         </div>
 
         <div className="relative mb-16 flex flex-col items-center z-10">
-          <MaanasMascot size={180} expression={isActive ? 'focused' : 'encouraging'} />
-          
           {isEditingTime ? (
             <div className="mt-10 mb-6 flex items-center justify-center gap-4">
               <input 

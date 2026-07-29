@@ -47,3 +47,246 @@
     font-family: 'Georgia', serif;
   }
 }
+
+/* Stunning Warm Light-Mode Overrides */
+html.light body {
+  background-color: #FAF7F2 !important;
+  color: #2D201A !important;
+}
+
+/* Background overrides */
+html.light .bg-\[\#1a1614\],
+html.light .bg-warm-dark {
+  background-color: #FAF7F2 !important;
+}
+
+html.light .bg-\[\#1a1614\]\/95 { background-color: rgba(250, 247, 242, 0.95) !important; }
+html.light .bg-\[\#1a1614\]\/90 { background-color: rgba(250, 247, 242, 0.90) !important; }
+html.light .bg-\[\#1a1614\]\/80 { background-color: rgba(250, 247, 242, 0.80) !important; }
+html.light .bg-\[\#1a1614\]\/70 { background-color: rgba(250, 247, 242, 0.70) !important; }
+html.light .bg-\[\#1a1614\]\/60 { background-color: rgba(250, 247, 242, 0.60) !important; }
+html.light .bg-\[\#1a1614\]\/50 { background-color: rgba(250, 247, 242, 0.50) !important; }
+html.light .bg-\[\#1a1614\]\/40 { background-color: rgba(250, 247, 242, 0.40) !important; }
+html.light .bg-\[\#1a1614\]\/30 { background-color: rgba(250, 247, 242, 0.30) !important; }
+html.light .bg-\[\#1a1614\]\/20 { background-color: rgba(250, 247, 242, 0.20) !important; }
+html.light .bg-\[\#1a1614\]\/10 { background-color: rgba(250, 247, 242, 0.10) !important; }
+
+html.light .bg-\[\#2a221f\],
+html.light .bg-warm-card {
+  background-color: #ffffff !important;
+  box-shadow: 0 10px 30px -10px rgba(60, 42, 33, 0.06), 0 1px 3px rgba(60, 42, 33, 0.02) !important;
+}
+
+html.light .bg-\[\#2a221f\]\/95 { background-color: rgba(255, 255, 255, 0.95) !important; }
+html.light .bg-\[\#2a221f\]\/90 { background-color: rgba(255, 255, 255, 0.90) !important; }
+html.light .bg-\[\#2a221f\]\/80 { background-color: rgba(255, 255, 255, 0.80) !important; }
+html.light .bg-\[\#2a221f\]\/70 { background-color: rgba(255, 255, 255, 0.70) !important; }
+html.light .bg-\[\#2a221f\]\/60 { background-color: rgba(255, 255, 255, 0.60) !important; }
+html.light .bg-\[\#2a221f\]\/50 { background-color: rgba(255, 255, 255, 0.50) !important; }
+html.light .bg-\[\#2a221f\]\/40 { background-color: rgba(255, 255, 255, 0.40) !important; }
+html.light .bg-\[\#2a221f\]\/30 { background-color: rgba(255, 255, 255, 0.30) !important; }
+html.light .bg-\[\#2a221f\]\/20 { background-color: rgba(255, 255, 255, 0.20) !important; }
+html.light .bg-\[\#2a221f\]\/10 { background-color: rgba(255, 255, 255, 0.10) !important; }
+
+/* Border overrides */
+html.light .border-\[\#3f332c\],
+html.light .border-warm {
+  border-color: #e5dfd4 !important;
+}
+
+html.light .border-\[\#3f332c\]\/90 { border-color: rgba(60, 42, 33, 0.30) !important; }
+html.light .border-\[\#3f332c\]\/80 { border-color: rgba(60, 42, 33, 0.26) !important; }
+html.light .border-\[\#3f332c\]\/70 { border-color: rgba(60, 42, 33, 0.22) !important; }
+html.light .border-\[\#3f332c\]\/60 { border-color: rgba(60, 42, 33, 0.18) !important; }
+html.light .border-\[\#3f332c\]\/50 { border-color: rgba(60, 42, 33, 0.15) !important; }
+html.light .border-\[\#3f332c\]\/40 { border-color: rgba(60, 42, 33, 0.12) !important; }
+html.light .border-\[\#3f332c\]\/30 { border-color: rgba(60, 42, 33, 0.08) !important; }
+html.light .border-\[\#3f332c\]\/20 { border-color: rgba(60, 42, 33, 0.05) !important; }
+html.light .border-\[\#3f332c\]\/10 { border-color: rgba(60, 42, 33, 0.03) !important; }
+
+html.light .border-white\/5 {
+  border-color: rgba(60, 42, 33, 0.08) !important;
+}
+
+html.light .bg-white\/5 {
+  background-color: rgba(60, 42, 33, 0.04) !important;
+}
+
+/* Text overrides: mapping light/neon colors to elegant dark, high-contrast colors */
+html.light .text-orange-50,
+html.light .text-orange-100,
+html.light .text-orange-200,
+html.light .text-orange-300,
+html.light .text-amber-50,
+html.light .text-amber-100,
+html.light .text-amber-200,
+html.light .text-amber-300,
+html.light .text-yellow-50,
+html.light .text-yellow-100,
+html.light .text-yellow-200,
+html.light .text-yellow-300,
+html.light .text-indigo-100,
+html.light .text-indigo-200,
+html.light .text-indigo-300,
+html.light .text-violet-100,
+html.light .text-violet-200,
+html.light .text-violet-300,
+html.light .text-rose-100,
+html.light .text-rose-200,
+html.light .text-rose-300,
+html.light .text-emerald-100,
+html.light .text-emerald-200,
+html.light .text-emerald-300,
+html.light .text-\[\#fef3c7\] {
+  color: #2D201A !important;
+}
+
+/* Map specific text-opacity utility classes (e.g. text-orange-200/60 on buttons) to rich, completely legible colors matching the photo */
+html.light .text-orange-200\/60,
+html.light .text-orange-200\/70,
+html.light .text-orange-200\/80,
+html.light .text-orange-100\/60,
+html.light .text-orange-100\/70,
+html.light .text-orange-100\/80,
+html.light .text-orange-300\/60,
+html.light .text-orange-300\/70,
+html.light .text-orange-300\/80,
+html.light .text-amber-200\/60,
+html.light .text-amber-200\/70,
+html.light .text-amber-200\/80,
+html.light .text-orange-400\/60,
+html.light .text-orange-400\/80 {
+  color: #b45309 !important; /* Beautiful rich, dark warm-amber matching the photo perfectly */
+  opacity: 1 !important;
+}
+
+html.light .text-orange-200\/40,
+html.light .text-orange-300\/40,
+html.light .text-amber-200\/40 {
+  color: #615047 !important;
+  opacity: 1 !important;
+}
+
+html.light .text-orange-200\/30,
+html.light .text-orange-300\/30,
+html.light .text-amber-200\/30 {
+  color: #7d685c !important;
+  opacity: 1 !important;
+}
+
+html.light .text-orange-200\/20,
+html.light .text-orange-300\/20,
+html.light .text-amber-200\/20 {
+  color: #8c786c !important;
+  opacity: 1 !important;
+}
+
+html.light .text-orange-100\/90,
+html.light .text-amber-100\/90,
+html.light .text-orange-200\/90 {
+  color: #2D201A !important;
+  opacity: 1 !important;
+}
+
+html.light .text-orange-100\/95,
+html.light .text-amber-100\/95,
+html.light .text-orange-200\/95 {
+  color: #2D201A !important;
+  opacity: 1 !important;
+}
+
+html.light .text-orange-100\/80 {
+  color: #4E3C33 !important; /* Elegant deep-brown for sidebar inactive links */
+  opacity: 1 !important;
+}
+
+html.light .text-\[\#e2b89d\] {
+  color: #5C4033 !important; /* Beautiful readable dark warm-brown */
+}
+
+/* Normal solid accent colors */
+html.light .text-orange-400,
+html.light .text-amber-400 {
+  color: #7c2d12 !important;
+}
+
+html.light .text-orange-500,
+html.light .text-amber-500,
+html.light .text-highlight {
+  color: #b45309 !important;
+}
+
+html.light .text-indigo-400,
+html.light .text-indigo-500 {
+  color: #3730a3 !important;
+}
+
+html.light .text-rose-400,
+html.light .text-rose-500 {
+  color: #be123c !important;
+}
+
+html.light .text-emerald-400,
+html.light .text-emerald-500 {
+  color: #047857 !important;
+}
+
+html.light .text-sky-400,
+html.light .text-sky-500 {
+  color: #0369a1 !important;
+}
+
+html.light .text-violet-400,
+html.light .text-violet-500 {
+  color: #6d28d9 !important;
+}
+
+/* Master text-white mapping with exclusions so text stays white inside solid color buttons/elements */
+html.light .text-white:not([class*="bg-orange"] *):not([class*="bg-rose"] *):not([class*="bg-amber"] *):not([class*="bg-emerald"] *):not([class*="bg-sky"] *):not([class*="bg-indigo"] *):not([class*="bg-violet"] *) {
+  color: #2D201A !important;
+}
+
+html.light .fill-white {
+  fill: #2D201A !important;
+}
+
+/* Sidebar and general interactive elements hovers */
+html.light .hover\:bg-\[\#2a221f\]:hover {
+  background-color: #F0EAE1 !important; /* Beautiful cream-beige hover bg */
+}
+
+html.light .hover\:text-white:hover {
+  color: #ea580c !important; /* Vibrant orange on hover */
+}
+
+/* Prevent text hiding inside button group hovers */
+html.light .hover\:text-white:hover,
+html.light .group-hover\:text-white:hover,
+html.light .group-hover\:text-orange-100:hover,
+html.light .hover\:text-orange-100:hover,
+html.light .group-hover\:text-\[\#fef3c7\]:hover,
+html.light .hover\:text-\[\#fef3c7\]:hover {
+  color: #2D201A !important;
+}
+
+/* Micro pill-glow / alerts in light-mode */
+html.light .bg-rose-500\/10 { background-color: rgba(244, 63, 94, 0.08) !important; }
+html.light .bg-amber-500\/10 { background-color: rgba(245, 158, 11, 0.08) !important; }
+html.light .bg-sky-500\/10 { background-color: rgba(14, 165, 233, 0.08) !important; }
+html.light .bg-emerald-500\/10 { background-color: rgba(16, 185, 129, 0.08) !important; }
+html.light .bg-indigo-500\/10 { background-color: rgba(99, 102, 241, 0.08) !important; }
+html.light .bg-violet-500\/10 { background-color: rgba(139, 92, 246, 0.08) !important; }
+html.light .bg-orange-500\/10 { background-color: rgba(249, 115, 22, 0.08) !important; }
+html.light .bg-orange-500\/15 { background-color: rgba(249, 115, 22, 0.12) !important; }
+html.light .bg-orange-500\/20 { background-color: rgba(249, 115, 22, 0.15) !important; }
+html.light .bg-orange-600\/20 { background-color: rgba(234, 88, 12, 0.15) !important; }
+html.light .bg-rose-500\/20 { background-color: rgba(244, 63, 94, 0.15) !important; }
+html.light .bg-amber-500\/20 { background-color: rgba(245, 158, 11, 0.15) !important; }
+html.light .bg-sky-500\/20 { background-color: rgba(14, 165, 233, 0.15) !important; }
+html.light .bg-emerald-500\/20 { background-color: rgba(16, 185, 129, 0.15) !important; }
+
+/* Keep solid backgrounds of primary buttons vibrant */
+html.light .bg-orange-600 { background-color: #ea580c !important; }
+html.light .hover\:bg-orange-700:hover { background-color: #c2410c !important; }
+html.light .bg-\[rgba\(42\,34\,31\,0\.8\)\] { background-color: rgba(255, 255, 255, 0.9) !important; }
+

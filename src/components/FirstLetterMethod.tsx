@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Trash2, Type, Edit2, Play, ChevronLeft, Sparkles, Box, ArrowRight, ArrowLeft, Zap, HelpCircle } from 'lucide-react';
+import { Plus, Trash2, Type, Edit2, Play, ChevronLeft, Box, ArrowRight, ArrowLeft, HelpCircle, Search, X, Brain } from 'lucide-react';
 import { FirstLetterAid } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
-import { MaanasMascot } from './MaanasMascot';
+import { MemoryLinker } from './MemoryLinker';
 
 const WORD_BANK: Record<string, string[]> = {
   a: ['Amazing', 'Active', 'Alpha', 'Ancient'],
@@ -36,7 +36,7 @@ const WORD_BANK: Record<string, string[]> = {
 };
 
 export default function FirstLetterMethod() {
-  const { firstLetterEntries, setFirstLetterEntries, goBack, addXP } = useAppContext();
+  const { firstLetterEntries, setFirstLetterEntries, goBack } = useAppContext();
 
   const [isAddingAid, setIsAddingAid] = useState(false);
   const [activeAidId, setActiveAidId] = useState<string | null>(null);
@@ -45,6 +45,7 @@ export default function FirstLetterMethod() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [itemsText, setItemsText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Practice State
   const [practiceMode, setPracticeMode] = useState(false);
@@ -77,7 +78,6 @@ export default function FirstLetterMethod() {
         mnemonic: ''
       };
       setFirstLetterEntries([newAid, ...firstLetterEntries]);
-      addXP(40);
     }
     resetForm();
   };
@@ -122,7 +122,9 @@ export default function FirstLetterMethod() {
         </header>
 
         <div className="bg-[#2a221f] p-12 rounded-[3.5rem] shadow-2xl shadow-orange-900/10 border border-[#3f332c] min-h-[500px] flex flex-col items-center justify-center text-center">
-          <MaanasMascot size={180} expression={showMnemonic ? 'encouraging' : 'happy'} />
+          <div className="p-5 bg-orange-600/20 rounded-full text-orange-400 border border-orange-500/30">
+            <Brain size={48} />
+          </div>
           
           <div className="mt-12 space-y-8 w-full">
             <div className="space-y-4">
@@ -138,7 +140,7 @@ export default function FirstLetterMethod() {
 
             <div className="pt-8 space-y-4">
               <button 
-                onClick={() => { setPracticeMode(false); addXP(60); }}
+                onClick={() => { setPracticeMode(false); }}
                 className="w-full max-w-sm py-6 bg-orange-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95 transition-all"
               >
                 Done
@@ -172,6 +174,28 @@ export default function FirstLetterMethod() {
           </button>
         )}
       </header>
+
+      {/* Search Bar for First Letter Method */}
+      {!isAddingAid && !practiceMode && (
+        <div className="relative max-w-md">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-400/60" />
+          <input 
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search first letter aids..."
+            className="w-full bg-[#1a1614] border border-[#3f332c] text-xs py-3 pl-12 pr-10 rounded-2xl text-orange-100 placeholder:text-orange-200/30 focus:outline-none focus:border-orange-500 font-bold"
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-orange-200/40 hover:text-white"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Layman Explanation of this Facility */}
       <div className="w-full bg-[#2a221f]/50 p-6 rounded-[2.5rem] border border-[#3f332c]/50 space-y-2 text-left">
@@ -258,7 +282,15 @@ export default function FirstLetterMethod() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {firstLetterEntries.map((aid) => (
+          {firstLetterEntries.filter(aid => !searchQuery.trim() || aid.title.toLowerCase().includes(searchQuery.toLowerCase()) || aid.items.some(i => i.toLowerCase().includes(searchQuery.toLowerCase()))).length === 0 ? (
+            <div className="col-span-full text-center py-20 bg-[#2a221f]/30 border-2 border-dashed border-[#3f332c] rounded-[3rem]">
+              <Type size={40} className="text-[#3f332c] mx-auto mb-3" />
+              <p className="text-orange-200/40 font-bold text-xs uppercase tracking-widest">
+                {searchQuery ? `No aids found matching "${searchQuery}"` : 'No first-letter aids created yet.'}
+              </p>
+            </div>
+          ) : (
+            firstLetterEntries.filter(aid => !searchQuery.trim() || aid.title.toLowerCase().includes(searchQuery.toLowerCase()) || aid.items.some(i => i.toLowerCase().includes(searchQuery.toLowerCase()))).map((aid) => (
             <motion.div 
               layout
               key={aid.id}
@@ -308,21 +340,10 @@ export default function FirstLetterMethod() {
               >
                 <Play size={14} fill="currentColor" /> Practice
               </button>
-            </motion.div>
-          ))}
 
-          {firstLetterEntries.length === 0 && !isAddingAid && (
-            <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-20 bg-[#2a221f] rounded-[3rem] border-2 border-dashed border-[#3f332c]">
-              <Zap size={48} className="text-[#3f332c] mx-auto mb-4" />
-              <p className="text-orange-200/20 font-bold uppercase tracking-widest italic text-sm">No mnemonic aids created</p>
-              <button 
-                onClick={() => setIsAddingAid(true)}
-                className="mt-4 text-orange-500 font-black uppercase tracking-widest text-xs hover:underline"
-              >
-                Create your first one
-              </button>
-            </div>
-          )}
+              <MemoryLinker itemId={aid.id} itemType="first-letter" className="mt-3" />
+            </motion.div>
+          )))}
         </div>
       )}
     </div>
