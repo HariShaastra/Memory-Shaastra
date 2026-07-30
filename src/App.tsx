@@ -24,13 +24,14 @@ import ConceptSimplifier from './components/ConceptSimplifier';
 import MemoryDna from './components/MemoryDna';
 import StudyWellbeingCoach from './components/StudyWellbeingCoach';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Menu, Sparkles } from 'lucide-react';
+import { ArrowLeft, Menu, Sparkles, LogOut, User as UserIcon, Play } from 'lucide-react';
 import { t } from './utils/translations';
 import { CalendarView } from './components/CalendarView';
 
 function AppContent() {
-  const { currentView, goBack, setView, theme } = useApp();
+  const { currentView, goBack, setView, theme, user, signOutUser, startStudyNow } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false);
 
   if (currentView === 'auth') return <Auth />;
 
@@ -85,13 +86,13 @@ function AppContent() {
       
       <main className="flex-1 overflow-y-auto relative bg-[#1a1614] border-l border-[#3f332c] w-full">
         {/* TOP RIBBON */}
-        <div className={`sticky top-0 z-20 px-3 sm:px-6 py-3 border-b shadow-md flex items-center justify-between gap-2 max-w-full min-w-0 overflow-hidden transition-colors duration-300 ${
+        <div className={`sticky top-0 z-20 px-2 sm:px-6 py-2 sm:py-2.5 border-b shadow-md flex items-center justify-between gap-1 sm:gap-2 max-w-full min-w-0 overflow-x-hidden transition-colors duration-300 ${
           theme === 'dark' ? 'bg-[#2a221f] text-orange-100 border-[#3f332c]' : 'bg-[#fffaf5] text-slate-900 border-orange-200'
         }`}>
-          <div className="flex items-center space-x-1.5 sm:space-x-3 shrink min-w-0">
+          <div className="flex items-center space-x-1 sm:space-x-2 min-w-0 shrink">
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className={`lg:hidden p-2 rounded-xl border active:scale-95 transition-all shrink-0 ${
+              className={`lg:hidden p-1.5 rounded-xl border active:scale-95 transition-all shrink-0 ${
                 theme === 'dark' ? 'text-orange-100 hover:bg-[#3f332c] border-[#3f332c]' : 'text-slate-800 hover:bg-orange-100 border-orange-300'
               }`}
               aria-label="Toggle Sidebar"
@@ -102,12 +103,12 @@ function AppContent() {
             {/* Title Button in Top Ribbon leading to Home */}
             <button
               onClick={() => setView('dashboard')}
-              className={`flex items-center space-x-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-2xl border transition-all active:scale-95 group shadow-sm shrink min-w-0 ${
+              className={`flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-2xl border transition-all active:scale-95 group shadow-sm min-w-0 shrink ${
                 theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] border-[#3f332c] text-orange-100' : 'bg-orange-100/80 hover:bg-orange-200/80 border-orange-300 text-slate-900'
               }`}
             >
-              <Logo size={20} className="group-hover:scale-110 transition-transform shrink-0" />
-              <span className={`font-black text-xs sm:text-base tracking-tight transition-colors truncate ${
+              <Logo size={18} className="group-hover:scale-110 transition-transform shrink-0" />
+              <span className={`font-black text-xs sm:text-sm tracking-tight transition-colors truncate ${
                 theme === 'dark' ? 'text-orange-100 group-hover:text-orange-400' : 'text-slate-900 group-hover:text-orange-700'
               }`}>
                 Memory Shaastra
@@ -117,39 +118,85 @@ function AppContent() {
             {showBackButton && (
               <button 
                 onClick={goBack}
-                className={`flex items-center space-x-1 transition-colors font-bold uppercase tracking-wider text-[10px] py-1.5 px-2.5 rounded-xl border shadow-sm active:scale-95 shrink-0 ${
+                className={`flex items-center space-x-1 transition-colors font-bold uppercase tracking-wider text-[10px] py-1 sm:py-1.5 px-2 rounded-xl border shadow-sm active:scale-95 shrink-0 ${
                   theme === 'dark' ? 'text-orange-200 hover:text-white bg-[#1a1614] hover:bg-[#3f332c] border-[#3f332c]' : 'text-slate-700 hover:text-slate-900 bg-white/80 hover:bg-white border-orange-200'
                 }`}
               >
                 <ArrowLeft size={14} />
-                <span className="hidden md:inline">{t.back}</span>
+                <span className="hidden sm:inline">{t.back}</span>
               </button>
             )}
           </div>
 
-          <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+          <div className="flex items-center space-x-1 sm:space-x-2 shrink-0 relative">
+            {/* Study Now Focus Sprint Button */}
             <button
-              onClick={() => setView('auth')}
-              className={`px-2.5 sm:px-3 py-1.5 border rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm ${
-                theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-100 border-[#3f332c]' : 'bg-white hover:bg-orange-50 text-slate-800 border-orange-300'
-              }`}
-              title="Google / Email Account Sign In"
+              onClick={() => startStudyNow('Active Focus Study', 25)}
+              className="px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1 sm:space-x-1.5 active:scale-95 whitespace-nowrap shrink-0"
+              title="Start Study Now Focus Sprint"
             >
-              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-              </svg>
-              <span className="hidden sm:inline font-black text-[11px]">Sign In / Sync</span>
+              <Play size={12} className="fill-current shrink-0" />
+              <span className="text-[10px] sm:text-xs">Study Now</span>
             </button>
 
-            <button
-              onClick={() => setView('focus')}
-              className="px-2.5 sm:px-3.5 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5 active:scale-95 whitespace-nowrap"
-            >
-              <span>Focus Session</span>
-            </button>
+            {/* Normal Sign In / Account Button WITHOUT profile picture */}
+            {user && (user.email || user.name) ? (
+              <div className="relative shrink-0">
+                <button
+                  onClick={() => setIsProfileMenuOpen(prev => !prev)}
+                  className={`px-2 sm:px-2.5 py-1 sm:py-1.5 border rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm shrink-0 ${
+                    theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-100 border-[#3f332c]' : 'bg-white hover:bg-orange-50 text-slate-800 border-orange-300'
+                  }`}
+                  title="Account Profile & Sign Out"
+                >
+                  <UserIcon size={16} className="text-orange-500 shrink-0" />
+                  <span className="hidden md:inline font-bold text-[11px] max-w-[90px] truncate">
+                    {user.name || user.email.split('@')[0]}
+                  </span>
+                </button>
+
+                {/* Profile Dropdown */}
+                {isProfileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-[#2a221f] border border-[#3f332c] rounded-2xl shadow-2xl p-3 z-50 text-left space-y-2">
+                    <div className="px-2 py-1.5 border-b border-[#3f332c]">
+                      <p className="text-xs font-black text-orange-100 truncate">{user.name || 'Learner'}</p>
+                      <p className="text-[10px] text-orange-200/50 truncate">{user.email}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        setView('settings');
+                      }}
+                      className="w-full text-left px-2 py-1.5 text-xs font-bold text-orange-200/80 hover:text-white hover:bg-[#3f332c] rounded-xl transition-colors flex items-center space-x-2"
+                    >
+                      <UserIcon size={14} />
+                      <span>Account Settings</span>
+                    </button>
+                    <button
+                      onClick={async () => {
+                        setIsProfileMenuOpen(false);
+                        await signOutUser();
+                      }}
+                      className="w-full text-left px-2 py-1.5 text-xs font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl transition-colors flex items-center space-x-2"
+                    >
+                      <LogOut size={14} />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => setView('auth')}
+                className={`px-2 sm:px-2.5 py-1 sm:py-1.5 border rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm shrink-0 ${
+                  theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-100 border-[#3f332c]' : 'bg-white hover:bg-orange-50 text-slate-800 border-orange-300'
+                }`}
+                title="Sign In"
+              >
+                <UserIcon size={16} className="text-orange-500 shrink-0" />
+                <span className="font-black text-[11px]">Sign In</span>
+              </button>
+            )}
           </div>
         </div>
         

@@ -8,16 +8,32 @@ import { MaanasMascot } from './MaanasMascot';
 import { MemoryLinker } from './MemoryLinker';
 
 export default function MemoryPalace() {
-  const { memoryPalaces, setMemoryPalaces, goBack } = useAppContext();
+  const { memoryPalaces, setMemoryPalaces, goBack, allSubjects } = useAppContext();
+
+  const palaceFormRef = React.useRef<HTMLDivElement>(null);
+  const locFormRef = React.useRef<HTMLDivElement>(null);
 
   const [isAddingPalace, setIsAddingPalace] = useState(false);
   const [activePalaceId, setActivePalaceId] = useState<string | null>(null);
   const [newPalaceName, setNewPalaceName] = useState('');
+  const [newSubject, setNewSubject] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   
   const [isAddingLocation, setIsAddingLocation] = useState(false);
   const [newLocName, setNewLocName] = useState('');
   const [newLocConcept, setNewLocConcept] = useState('');
+
+  const scrollToPalaceForm = () => {
+    setTimeout(() => {
+      palaceFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
+
+  const scrollToLocForm = () => {
+    setTimeout(() => {
+      locFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
 
   // Practice State
   const [practiceMode, setPracticeMode] = useState(false);
@@ -31,10 +47,12 @@ export default function MemoryPalace() {
     const palace: PalaceType = {
       id: Date.now().toString(),
       name: newPalaceName,
+      subject: newSubject || undefined,
       locations: []
     };
     setMemoryPalaces([palace, ...memoryPalaces]);
     setNewPalaceName('');
+    setNewSubject('');
     setIsAddingPalace(false);
   };
 
@@ -163,7 +181,7 @@ export default function MemoryPalace() {
         </div>
         {!activePalaceId && (
           <button 
-            onClick={() => setIsAddingPalace(true)}
+            onClick={() => { setIsAddingPalace(true); scrollToPalaceForm(); }}
             className="flex items-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 w-full md:w-auto justify-center active:scale-95"
           >
             <Plus size={18} />
@@ -216,25 +234,46 @@ export default function MemoryPalace() {
           <AnimatePresence>
             {isAddingPalace && (
               <motion.div 
+                ref={palaceFormRef}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="bg-[#2a221f] p-10 rounded-[4rem] border-2 border-dashed border-[#3f332c] flex flex-col items-center justify-center space-y-8 shadow-2xl shadow-orange-900/5"
               >
-                <Home size={48} className="text-[#3f332c]" />
-                <div className="w-full space-y-2">
-                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest text-center">Give it a name</p>
-                  <input 
-                    autoFocus
-                    type="text"
-                    placeholder="e.g. My Bedroom"
-                    value={newPalaceName}
-                    onChange={(e) => setNewPalaceName(e.target.value)}
-                    className="w-full text-center bg-[#1a1614] border border-[#3f332c] rounded-2xl py-5 px-6 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic text-xl"
-                  />
+                <Home size={40} className="text-[#3f332c]" />
+                <div className="w-full space-y-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest text-center">Room / Palace Name</p>
+                    <input 
+                      autoFocus
+                      type="text"
+                      placeholder="e.g. My Bedroom"
+                      value={newPalaceName}
+                      onChange={(e) => setNewPalaceName(e.target.value)}
+                      className="w-full text-center bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic text-base"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest text-center">Link Subject</p>
+                    <input 
+                      type="text"
+                      list="palace-subjects-list"
+                      placeholder="Select or type subject"
+                      value={newSubject}
+                      onChange={(e) => setNewSubject(e.target.value)}
+                      className="w-full text-center bg-[#1a1614] border border-[#3f332c] rounded-2xl py-3 px-4 text-xs font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                    <datalist id="palace-subjects-list">
+                      {allSubjects.map(sub => (
+                        <option key={sub} value={sub} />
+                      ))}
+                    </datalist>
+                  </div>
                 </div>
-                <div className="flex gap-4">
-                  <button onClick={() => setIsAddingPalace(false)} className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-[#3f332c] hover:text-orange-200/40">Cancel</button>
-                  <button onClick={addPalace} className="px-10 py-4 bg-orange-600 text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95">Save</button>
+
+                <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
+                  <button onClick={() => setIsAddingPalace(false)} className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-[#3f332c] hover:text-orange-200/40">Cancel</button>
+                  <button onClick={addPalace} className="px-6 py-3 bg-orange-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95">Save Room</button>
                 </div>
               </motion.div>
             )}
@@ -245,26 +284,26 @@ export default function MemoryPalace() {
               layout
               key={palace.id}
               onClick={() => setActivePalaceId(palace.id)}
-              className="bg-[#2a221f] p-10 rounded-[4rem] border border-[#3f332c] shadow-sm hover:bg-[#342a27] transition-all cursor-pointer group relative overflow-hidden flex flex-col justify-between min-h-[300px]"
+              className="bg-[#2a221f] p-6 sm:p-10 rounded-3xl sm:rounded-[4rem] border border-[#3f332c] shadow-sm hover:bg-[#342a27] transition-all cursor-pointer group relative overflow-hidden flex flex-col justify-between min-h-[220px] sm:min-h-[300px]"
             >
               <div className="absolute top-0 left-0 w-2 h-full bg-orange-500 opacity-0 group-hover:opacity-100 transition-all" />
               <div>
-                <div className="flex justify-between items-start mb-8">
-                  <div className="w-16 h-16 bg-[#1a1614] text-orange-500 rounded-3xl flex items-center justify-center border border-[#3f332c] group-hover:bg-orange-600 group-hover:text-white transition-all shadow-inner">
-                    <Home size={32} />
+                <div className="flex justify-between items-start mb-6 sm:mb-8">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#1a1614] text-orange-500 rounded-2xl sm:rounded-3xl flex items-center justify-center border border-[#3f332c] group-hover:bg-orange-600 group-hover:text-white transition-all shadow-inner">
+                    <Home size={24} className="sm:w-8 sm:h-8" />
                   </div>
                   <button 
                     onClick={(e) => deletePalace(palace.id, e)}
-                    className="p-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
+                    className="p-3 sm:p-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-xl sm:rounded-2xl transition-all shadow-lg active:scale-95"
                   >
-                    <Trash2 size={20} />
+                    <Trash2 size={16} className="sm:w-5 sm:h-5" />
                   </button>
                 </div>
-                <h3 className="text-2xl font-black text-orange-100 tracking-tighter italic mb-2 drop-shadow-sm">{palace.name}</h3>
+                <h3 className="text-xl sm:text-2xl font-black text-orange-100 tracking-tight italic mb-2 drop-shadow-sm break-words">{palace.name}</h3>
                 <p className="text-orange-200/40 font-black uppercase text-[10px] tracking-[0.2em]">{palace.locations.length} Steps</p>
               </div>
               
-              <div className="flex items-center gap-2 mt-8 text-orange-500 font-black text-[10px] uppercase tracking-widest">
+              <div className="flex items-center gap-2 mt-6 text-orange-500 font-black text-[10px] uppercase tracking-widest">
                 <span>Open</span>
                 <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </div>
@@ -273,29 +312,29 @@ export default function MemoryPalace() {
         </div>
       ) : (
         <div className="space-y-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8 bg-[#2a221f] p-10 rounded-[4rem] border border-[#3f332c] shadow-xl">
-            <div className="flex items-center gap-8">
-              <div className="w-20 h-20 bg-orange-600 text-white rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-orange-600/30 ring-4 ring-orange-600/10">
-                <Home size={40} />
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8 bg-[#2a221f] p-6 sm:p-10 rounded-3xl sm:rounded-[4rem] border border-[#3f332c] shadow-xl">
+            <div className="flex items-center gap-4 sm:gap-8 min-w-0 w-full md:w-auto">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 bg-orange-600 text-white rounded-2xl sm:rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-orange-600/30 ring-4 ring-orange-600/10 shrink-0">
+                <Home size={28} className="sm:w-10 sm:h-10" />
               </div>
-              <div>
-                <h3 className="text-3xl font-black text-orange-100 tracking-tighter italic mb-1 uppercase">{activePalace.name}</h3>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-xl sm:text-3xl font-black text-orange-100 tracking-tight italic mb-1 uppercase truncate">{activePalace.name}</h3>
                 <button onClick={() => setActivePalaceId(null)} className="text-orange-500 font-black text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1">Change Room <ArrowRight size={10} /></button>
               </div>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-2 sm:gap-4 w-full md:w-auto justify-end">
               <button 
-                onClick={() => setIsAddingLocation(true)}
-                className="flex items-center gap-3 bg-white/5 text-orange-100 px-8 py-5 rounded-[2rem] font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-all border border-[#3f332c]"
+                onClick={() => { setIsAddingLocation(true); scrollToLocForm(); }}
+                className="flex items-center justify-center gap-2 bg-white/5 text-orange-100 px-4 sm:px-8 py-3 sm:py-5 rounded-xl sm:rounded-[2rem] font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-all border border-[#3f332c] flex-1 md:flex-initial"
               >
-                <Plus size={18} /> New Step
+                <Plus size={16} /> New Step
               </button>
               <button 
                 disabled={activePalace.locations.length === 0}
                 onClick={startPractice}
-                className="flex items-center gap-3 bg-orange-600 text-white px-12 py-5 rounded-[2rem] font-black uppercase text-[10px] tracking-widest hover:bg-orange-700 shadow-xl shadow-orange-600/20 disabled:hidden transition-all active:scale-95"
+                className="flex items-center justify-center gap-2 bg-orange-600 text-white px-6 sm:px-12 py-3 sm:py-5 rounded-xl sm:rounded-[2rem] font-black uppercase text-[10px] tracking-widest hover:bg-orange-700 shadow-xl shadow-orange-600/20 disabled:hidden transition-all active:scale-95 flex-1 md:flex-initial"
               >
-                <Play size={18} fill="currentColor" /> Practice
+                <Play size={16} fill="currentColor" /> Practice
               </button>
             </div>
           </div>
@@ -305,6 +344,7 @@ export default function MemoryPalace() {
           <AnimatePresence>
             {isAddingLocation && (
               <motion.div 
+                ref={locFormRef}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-[#2a221f] p-10 rounded-[3.5rem] border border-[#3f332c] flex flex-col md:flex-row gap-8 items-end shadow-2xl"
@@ -370,7 +410,7 @@ export default function MemoryPalace() {
               <Map size={64} className="text-[#3f332c] mb-6" />
               <p className="text-orange-200/20 font-black italic uppercase tracking-[0.3em] text-xs">Room is empty.</p>
               <button 
-                onClick={() => setIsAddingLocation(true)}
+                onClick={() => { setIsAddingLocation(true); scrollToLocForm(); }}
                 className="mt-6 text-orange-500 font-black uppercase tracking-widest text-[10px] hover:underline"
               >
                 Add Your First Step

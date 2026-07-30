@@ -13,13 +13,20 @@ import {
   HelpCircle,
   TrendingUp,
   X,
-  Search
+  Search,
+  Play
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { ExamPlan, ExamSubject, ExamChapter, ExamTopic, ExamSubTopic } from '../types';
 
 export const ExamMode: React.FC = () => {
-  const { examPlans, setExamPlans } = useAppContext();
+  const { 
+    examPlans, 
+    setExamPlans, 
+    autoCreateSM2ScheduleForSubject, 
+    startStudyNow, 
+    setPersonalization 
+  } = useAppContext();
 
   const [activePlanId, setActivePlanId] = useState<string | null>(examPlans[0]?.id || null);
   const [isCreating, setIsCreating] = useState(false);
@@ -74,6 +81,20 @@ export const ExamMode: React.FC = () => {
       setExamPlans(examPlans.map(p => p.id === editingPlan.id ? editingPlan : p));
     }
     
+    // Automatically trigger SM-2 Study Schedule creation for all subjects in the plan
+    editingPlan.subjects.forEach(sub => {
+      if (sub.name) {
+        autoCreateSM2ScheduleForSubject(sub.name, editingPlan.examDate);
+      }
+    });
+
+    // Sync personalization settings with target exam name and target exam date
+    setPersonalization(prev => ({
+      ...prev,
+      targetExamName: editingPlan.title,
+      targetExamDate: editingPlan.examDate
+    }));
+
     setEditingPlan(null);
     setIsCreating(false);
     setActivePlanId(editingPlan.id);
@@ -307,7 +328,16 @@ export const ExamMode: React.FC = () => {
                     <BookOpen size={18} />
                     <span>{subject.name}</span>
                   </h3>
-                  <span className="text-xs text-orange-200/50 font-bold">{subject.chapters.length} Chapters</span>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => startStudyNow(`Study Session: ${subject.name}`, 30, subject.name)}
+                      className="flex items-center space-x-1 px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
+                    >
+                      <Play size={10} className="fill-current" />
+                      <span>Study Now</span>
+                    </button>
+                    <span className="text-xs text-orange-200/50 font-bold">{subject.chapters.length} Chapters</span>
+                  </div>
                 </div>
 
                 <div className="space-y-4">

@@ -7,6 +7,7 @@ export interface FileAttachment {
 }
 
 export interface User {
+  id?: string;
   email: string;
   name: string;
   photoUrl?: string;
@@ -35,6 +36,7 @@ export interface Flashcard {
   answer: string;
   subject?: string;
   chapter?: string;
+  libraryMaterialId?: string;
   difficulty: 'easy' | 'medium' | 'hard';
   nextReview: string;
   interval: number;
@@ -47,6 +49,8 @@ export interface Mnemonic {
   id: string;
   title: string;
   phrase: string;
+  subject?: string;
+  libraryMaterialId?: string;
   attachments?: FileAttachment[];
 }
 
@@ -61,6 +65,8 @@ export interface MemoryPalace {
   id: string;
   name: string;
   locations: PalaceLocation[];
+  subject?: string;
+  libraryMaterialId?: string;
 }
 
 export interface LinkChain {
@@ -68,6 +74,8 @@ export interface LinkChain {
   title: string;
   items: string[];
   story: string;
+  subject?: string;
+  libraryMaterialId?: string;
   attachments?: FileAttachment[];
 }
 
@@ -77,6 +85,8 @@ export interface FirstLetterAid {
   description: string;
   items: string[];
   mnemonic: string;
+  subject?: string;
+  libraryMaterialId?: string;
   attachments?: FileAttachment[];
 }
 
@@ -155,6 +165,7 @@ export interface StudyMaterial {
   id: string;
   title: string;
   content: string;
+  subject?: string;
   attachments: FileAttachment[];
   createdAt: string;
 }
@@ -172,9 +183,9 @@ export interface AppNotification {
 export interface MemoryLink {
   id: string;
   sourceId: string;
-  sourceType: 'flashcard' | 'mnemonic' | 'palace' | 'link-chain' | 'story' | 'first-letter' | 'material';
+  sourceType: 'flashcard' | 'mnemonic' | 'palace' | 'link-chain' | 'story' | 'first-letter' | 'material' | 'subject';
   targetId: string;
-  targetType: 'flashcard' | 'mnemonic' | 'palace' | 'link-chain' | 'story' | 'first-letter' | 'material';
+  targetType: 'flashcard' | 'mnemonic' | 'palace' | 'link-chain' | 'story' | 'first-letter' | 'material' | 'subject';
 }
 
 export interface ActivityEvent {

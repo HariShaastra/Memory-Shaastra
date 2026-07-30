@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth, onAuthStateChanged } from '../firebase';
 import { 
   User, 
   AppView, 
@@ -67,6 +68,11 @@ interface AppContextType {
   theme: 'dark' | 'light';
   setTheme: (theme: 'dark' | 'light') => void;
   
+  // Subjects & Auto Schedule
+  allSubjects: string[];
+  autoCreateSM2ScheduleForSubject: (subjectName: string, examDate?: string) => void;
+  signOutUser: () => Promise<void>;
+
   // Calendar & Spaced Revision
   activityEvents: ActivityEvent[];
   scheduledRevisions: ScheduledRevisionTask[];
@@ -107,8 +113,46 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('ms_user');
-    return saved ? JSON.parse(saved) : { name: 'Learner', email: 'learner@example.com' };
+    return saved ? JSON.parse(saved) : null;
   });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      if (fbUser) {
+        const uData: User = {
+          id: fbUser.uid,
+          email: fbUser.email || '',
+          name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Learner',
+          photoUrl: fbUser.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${fbUser.uid}`
+        };
+        setUser(uData);
+        localStorage.setItem('ms_user', JSON.stringify(uData));
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Inactivity auto sign-out timer (60 minutes)
+  useEffect(() => {
+    if (!user) return;
+    let timeoutId: any;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        signOutUser();
+      }, 3600000);
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    events.forEach(evt => window.addEventListener(evt, resetTimer));
+    resetTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(evt => window.removeEventListener(evt, resetTimer));
+    };
+  }, [user]);
   
   const [theme, setThemeState] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('ms_theme');
@@ -447,6 +491,85 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setScheduledRevisions(prev => prev.filter(task => task.id !== id));
   };
 
+  // Helper for all subjects across Exam Plans, Tasks, Flashcards, Materials
+  const allSubjects = React.useMemo(() => {
+    const set = new Set<string>([
+      'Economics & Policy',
+      'Cognitive Psychology',
+      'General Science',
+      'Memory Science'
+    ]);
+
+    examPlans.forEach(plan => {
+      plan.subjects?.forEach(sub => {
+        if (sub.name) set.add(sub.name);
+      });
+    });
+
+    studyTasks.forEach(t => {
+      if (t.subject) set.add(t.subject);
+    });
+
+    flashcards.forEach(f => {
+      if (f.subject) set.add(f.subject);
+    });
+
+    studyMaterials.forEach(m => {
+      if (m.subject) set.add(m.subject);
+    });
+
+    if (personalization.focusSubject) set.add(personalization.focusSubject);
+
+    return Array.from(set).filter(Boolean);
+  }, [examPlans, studyTasks, flashcards, studyMaterials, personalization.focusSubject]);
+
+  // Auto Create SM-2 Revision Schedule Entries when a subject is added/updated in Exam Planning
+  const autoCreateSM2ScheduleForSubject = (subjectName: string, examDate?: string) => {
+    if (!subjectName || !subjectName.trim()) return;
+    const cleanName = subjectName.trim();
+
+    // SM-2 Spaced Repetition Intervals: 1, 6, 14, 30 days
+    const intervals = [1, 6, 14, 30];
+    const today = new Date();
+
+    const newTasks: ScheduledRevisionTask[] = intervals.map(days => {
+      const dueDateObj = new Date(today);
+      dueDateObj.setDate(today.getDate() + days);
+      const dueDate = dueDateObj.toISOString().split('T')[0];
+
+      return {
+        id: 'sm2_' + Math.random().toString(36).substr(2, 9),
+        activityId: 'exam_sub_' + Math.random().toString(36).substr(2, 7),
+        itemTitle: `[SM-2 Spaced Rev] ${cleanName} (Interval Day ${days})`,
+        itemType: 'study-task',
+        dueDate,
+        intervalDays: days,
+        completed: false,
+        durationMinutes: 25
+      };
+    });
+
+    setScheduledRevisions(prev => [...newTasks, ...prev]);
+    addNotification(
+      'SM-2 Schedule Generated',
+      `Created SM-2 spaced repetition study schedule for "${cleanName}" (Days 1, 6, 14, 30).`,
+      'exam'
+    );
+  };
+
+  const signOutUser = async () => {
+    try {
+      const { signOut } = await import('firebase/auth');
+      const { auth } = await import('../firebase');
+      await signOut(auth);
+    } catch (err) {
+      console.warn('Firebase signout error', err);
+    }
+    setUser(null);
+    localStorage.removeItem('ms_user');
+    addNotification('Signed Out', 'You have logged out successfully.');
+  };
+
   // Launch Focus Mode with task context
   const startStudyNow = (taskTitle: string, durationMinutes: number = 25, subject?: string) => {
     setActiveFocusTask({
@@ -625,6 +748,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       handleFileUpload,
       memoryLinks, addMemoryLink, removeMemoryLink, rateRecall,
       theme, setTheme,
+      allSubjects,
+      autoCreateSM2ScheduleForSubject,
+      signOutUser,
       activityEvents,
       scheduledRevisions,
       revisionIntervals,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { motion } from 'motion/react';
-import { LogIn, UserPlus, Mail, Lock, User as UserIcon } from 'lucide-react';
+import { LogIn, UserPlus, Mail, Lock, User as UserIcon, X } from 'lucide-react';
 import { MaanasMascot } from './MaanasMascot';
 import { Logo } from './Logo';
 import { 
@@ -120,6 +120,13 @@ export default function Auth() {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md bg-[#2a221f] rounded-[3rem] p-8 sm:p-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] border border-[#3f332c] relative overflow-hidden"
       >
+        <button 
+          onClick={() => setView('dashboard')} 
+          className="absolute top-6 left-6 p-2 rounded-xl bg-[#1a1614] border border-[#3f332c] text-orange-200/60 hover:text-white transition-colors z-20"
+          title="Back to Dashboard"
+        >
+          <X size={16} />
+        </button>
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-30" />
         
         <div className="flex flex-col items-center mb-8 text-center relative z-10">

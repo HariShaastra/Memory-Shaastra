@@ -24,12 +24,19 @@ import { MemoryLinker } from './MemoryLinker';
 import { triggerCompletionCelebration } from '../utils/confetti';
 
 export default function FlashcardDeck() {
-  const { flashcards: cards, setFlashcards: setCards, rateRecall } = useAppContext();
+  const { flashcards: cards, setFlashcards: setCards, rateRecall, allSubjects } = useAppContext();
 
+  const formRef = React.useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const scrollToForm = () => {
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
   const [viewMode, setViewMode] = useState<'flip' | 'grid' | 'list'>('flip');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -210,6 +217,7 @@ export default function FlashcardDeck() {
               setNewSubject('');
               setEditingId(null);
               setIsAdding(true);
+              scrollToForm();
             }}
             className="flex items-center space-x-2 bg-orange-600 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
           >
@@ -278,7 +286,7 @@ export default function FlashcardDeck() {
       </div>
 
       {isAdding && (
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-[#2a221f] border border-[#3f332c] rounded-[3rem] p-8 shadow-2xl relative overflow-hidden">
+        <motion.div ref={formRef} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-[#2a221f] border border-[#3f332c] rounded-[3rem] p-8 shadow-2xl relative overflow-hidden">
           <div className="space-y-6 relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
@@ -295,11 +303,17 @@ export default function FlashcardDeck() {
                 <div className="relative">
                   <Tags className="absolute left-6 top-1/2 -translate-y-1/2 text-orange-200/20" size={18} />
                   <input 
+                    list="fc-subjects-list"
                     placeholder="e.g. History, Math, Biology..." 
                     value={newSubject} 
                     onChange={e => setNewSubject(e.target.value)} 
                     className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 pl-14 pr-6 text-orange-100 font-bold italic outline-none focus:ring-2 focus:ring-orange-500 transition-all shadow-inner" 
                   />
+                  <datalist id="fc-subjects-list">
+                    {allSubjects.map(sub => (
+                      <option key={sub} value={sub} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
             </div>
@@ -325,50 +339,50 @@ export default function FlashcardDeck() {
         <div className="flex-1">
           {viewMode === 'flip' && (
             <div className="flex-1 flex flex-col items-center justify-center py-6">
-              <div className="relative w-full max-w-xl aspect-[4/3] md:aspect-[3/2] group">
+              <div className="relative w-full max-w-xl min-h-[280px] sm:aspect-[3/2] group">
                 <div 
                   onClick={() => setIsFlipped(!isFlipped)}
                   className="w-full h-full cursor-pointer perspective-2000"
                 >
-                  <div className={`relative w-full h-full transition-all duration-1000 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+                  <div className={`relative w-full min-h-[280px] sm:h-full transition-all duration-1000 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
                     {/* Front */}
-                    <div className="absolute inset-0 bg-[#2a221f] border border-[#3f332c] rounded-[4rem] p-12 flex flex-col items-center justify-center text-center backface-hidden shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)] group-hover:border-orange-500/30 transition-all">
+                    <div className="absolute inset-0 bg-[#2a221f] border border-[#3f332c] rounded-3xl sm:rounded-[4rem] p-6 sm:p-12 flex flex-col items-center justify-center text-center backface-hidden shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)] group-hover:border-orange-500/30 transition-all">
                       {currentCard.subject && (
-                        <div className="absolute top-10 px-6 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full">
-                          <span className="text-[8px] uppercase font-black tracking-widest text-orange-500">{currentCard.subject}</span>
+                        <div className="absolute top-4 sm:top-10 px-4 sm:px-6 py-1.5 sm:py-2 bg-orange-500/10 border border-orange-500/20 rounded-full">
+                          <span className="text-[8px] sm:text-[9px] uppercase font-black tracking-widest text-orange-500">{currentCard.subject}</span>
                         </div>
                       )}
-                      <span className="text-[10px] uppercase font-black tracking-[0.4em] text-orange-200/20 mb-8 italic">The Question</span>
-                      <p className="text-3xl font-black italic tracking-tighter text-orange-100 drop-shadow-lg uppercase leading-tight">{currentCard.question}</p>
-                      <div className="absolute bottom-12 flex items-center space-x-3 text-orange-200/20 text-[9px] uppercase tracking-[0.3em] font-black group-hover:text-orange-500 transition-all">
-                        <RotateCcw size={14} className="animate-spin-slow" />
+                      <span className="text-[10px] uppercase font-black tracking-[0.4em] text-orange-200/20 mb-4 sm:mb-8 italic mt-4 sm:mt-0">The Question</span>
+                      <p className="text-xl sm:text-3xl font-black italic tracking-tight text-orange-100 drop-shadow-lg uppercase leading-snug sm:leading-tight break-words max-w-full px-2">{currentCard.question}</p>
+                      <div className="absolute bottom-4 sm:bottom-12 flex items-center space-x-2 sm:space-x-3 text-orange-200/30 text-[8px] sm:text-[9px] uppercase tracking-[0.3em] font-black group-hover:text-orange-500 transition-all">
+                        <RotateCcw size={12} className="animate-spin-slow sm:w-3.5 sm:h-3.5" />
                         <span>Click to Reveal Answer</span>
                       </div>
                     </div>
 
                     {/* Back */}
-                    <div className="absolute inset-0 bg-orange-600 text-white rounded-[4rem] p-12 flex flex-col items-center justify-center text-center backface-hidden rotate-y-180 shadow-[0_30px_60px_-12px_rgba(234,88,12,0.3)]">
-                      <span className="text-[10px] uppercase font-black tracking-[0.4em] text-orange-100/40 mb-8 italic">The Answer</span>
-                      <p className="text-2xl font-black italic tracking-tight uppercase leading-relaxed">{currentCard.answer}</p>
+                    <div className="absolute inset-0 bg-orange-600 text-white rounded-3xl sm:rounded-[4rem] p-6 sm:p-12 flex flex-col items-center justify-center text-center backface-hidden rotate-y-180 shadow-[0_30px_60px_-12px_rgba(234,88,12,0.3)]">
+                      <span className="text-[10px] uppercase font-black tracking-[0.4em] text-orange-100/40 mb-4 sm:mb-8 italic">The Answer</span>
+                      <p className="text-lg sm:text-2xl font-black italic tracking-tight uppercase leading-relaxed break-words max-w-full px-2">{currentCard.answer}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Vertical Actions - Contrasting colors */}
-                <div className="absolute -right-20 top-1/2 -translate-y-1/2 flex flex-col gap-4 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+                {/* Edit/Delete Actions - Mobile & Desktop friendly */}
+                <div className="mt-4 sm:mt-0 sm:absolute sm:-right-20 sm:top-1/2 sm:-translate-y-1/2 flex sm:flex-col justify-center gap-3 sm:gap-4 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
                   <button 
                     onClick={() => startEdit(currentCard)}
-                    className="p-5 bg-amber-500 text-white rounded-2xl shadow-xl shadow-amber-500/20 hover:bg-amber-600 transition-all scale-90 hover:scale-100 border-2 border-white/10"
+                    className="p-3.5 sm:p-5 bg-amber-500 text-white rounded-xl sm:rounded-2xl shadow-xl shadow-amber-500/20 hover:bg-amber-600 transition-all border-2 border-white/10"
                     title="Edit Card"
                   >
-                    <Edit2 size={24} />
+                    <Edit2 size={18} className="sm:w-6 sm:h-6" />
                   </button>
                   <button 
                     onClick={() => deleteCard(currentCard.id)}
-                    className="p-5 bg-rose-600 text-white rounded-2xl shadow-xl shadow-rose-600/20 hover:bg-rose-700 transition-all scale-90 hover:scale-100 border-2 border-white/10"
+                    className="p-3.5 sm:p-5 bg-rose-600 text-white rounded-xl sm:rounded-2xl shadow-xl shadow-rose-600/20 hover:bg-rose-700 transition-all border-2 border-white/10"
                     title="Remove Card"
                   >
-                    <Trash2 size={24} />
+                    <Trash2 size={18} className="sm:w-6 sm:h-6" />
                   </button>
                 </div>
               </div>

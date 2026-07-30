@@ -13,7 +13,10 @@ import {
   Sparkles,
   HelpCircle,
   Brain,
-  Search
+  Search,
+  BookOpen,
+  Zap,
+  Target
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { StudyTask } from '../types';
@@ -24,13 +27,24 @@ export const StudyPlanner: React.FC = () => {
     setStudyTasks, 
     scheduledRevisions, 
     toggleScheduledRevision,
-    startStudyNow 
+    startStudyNow,
+    examPlans,
+    allSubjects,
+    autoCreateSM2ScheduleForSubject,
+    personalization
   } = useAppContext();
 
+  const formRef = React.useRef<HTMLDivElement>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'daily' | 'all' | 'revisions' | 'completed'>('daily');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const scrollToForm = () => {
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
   
   const [newTask, setNewTask] = useState<Partial<StudyTask>>({
     subject: '',
@@ -39,6 +53,17 @@ export const StudyPlanner: React.FC = () => {
     estimatedTime: '25 mins',
     completed: false
   });
+
+  const activeExamPlan = examPlans.find(p => p.isActive) || examPlans[0];
+
+  const syncExamSchedule = () => {
+    if (!activeExamPlan) return;
+    activeExamPlan.subjects.forEach(sub => {
+      if (sub.name) {
+        autoCreateSM2ScheduleForSubject(sub.name, activeExamPlan.examDate);
+      }
+    });
+  };
 
   const addTask = () => {
     if (!newTask.subject || !newTask.topic) return;
@@ -81,6 +106,7 @@ export const StudyPlanner: React.FC = () => {
     setNewTask(task);
     setEditingId(task.id);
     setIsAdding(true);
+    scrollToForm();
   };
 
   const toggleTask = (id: string) => {
@@ -129,7 +155,7 @@ export const StudyPlanner: React.FC = () => {
 
         {!isAdding && (
           <button 
-            onClick={() => { resetForm(); setIsAdding(true); }}
+            onClick={() => { resetForm(); setIsAdding(true); scrollToForm(); }}
             className="flex items-center space-x-2 bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-2xl font-bold text-xs shadow-lg transition-all active:scale-95"
           >
             <Plus size={18} />
@@ -148,6 +174,46 @@ export const StudyPlanner: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Upcoming Exam Schedule Sync Card */}
+      {activeExamPlan && (
+        <div className="bg-gradient-to-r from-[#2a221f] via-[#332824] to-[#2a221f] p-6 rounded-3xl border border-orange-500/30 shadow-xl space-y-4 relative overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <span className="bg-orange-600/20 text-orange-400 border border-orange-500/30 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full flex items-center space-x-1">
+                  <Target size={12} />
+                  <span>Active Exam Schedule</span>
+                </span>
+                <span className="text-xs font-bold text-orange-200/60">
+                  Target Date: {activeExamPlan.examDate}
+                </span>
+              </div>
+              <h3 className="text-xl font-black text-orange-100 italic">{activeExamPlan.title}</h3>
+              <p className="text-xs text-orange-200/70">
+                Subjects in Exam Plan: {activeExamPlan.subjects.map(s => s.name).join(', ') || 'No subjects set'}
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={syncExamSchedule}
+                className="px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl text-xs font-black shadow-lg transition-all flex items-center space-x-2 active:scale-95"
+              >
+                <Zap size={14} />
+                <span>Auto SM-2 Schedule Sync</span>
+              </button>
+              <button
+                onClick={() => startStudyNow(`Exam Prep: ${activeExamPlan.title}`, 45, activeExamPlan.subjects[0]?.name)}
+                className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-black shadow-lg transition-all flex items-center space-x-2 active:scale-95"
+              >
+                <Play size={14} className="fill-current" />
+                <span>Study Now</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Search & Filter Bar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-[#2a221f] p-4 rounded-3xl border border-[#3f332c]">
@@ -204,6 +270,7 @@ export const StudyPlanner: React.FC = () => {
       <AnimatePresence>
         {isAdding && (
           <motion.div 
+            ref={formRef}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -218,13 +285,21 @@ export const StudyPlanner: React.FC = () => {
                 className="bg-[#1a1614] border border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-[#fef3c7] focus:outline-none focus:border-orange-500"
                 placeholder="Topic Name (e.g. Chemical Bonds)"
               />
-              <input 
-                type="text"
-                value={newTask.subject}
-                onChange={e => setNewTask(prev => ({ ...prev, subject: e.target.value }))}
-                className="bg-[#1a1614] border border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-[#fef3c7] focus:outline-none focus:border-orange-500"
-                placeholder="Subject (e.g. Science)"
-              />
+              <div>
+                <input 
+                  type="text"
+                  list="subjects-list"
+                  value={newTask.subject}
+                  onChange={e => setNewTask(prev => ({ ...prev, subject: e.target.value }))}
+                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-[#fef3c7] focus:outline-none focus:border-orange-500"
+                  placeholder="Subject (e.g. Science or select existing)"
+                />
+                <datalist id="subjects-list">
+                  {allSubjects.map(sub => (
+                    <option key={sub} value={sub} />
+                  ))}
+                </datalist>
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

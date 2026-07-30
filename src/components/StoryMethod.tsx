@@ -7,14 +7,22 @@ import { t } from '../utils/translations';
 import { MemoryLinker } from './MemoryLinker';
 
 export default function StoryMethod() {
-  const { storyChains, setStoryChains, goBack } = useAppContext();
+  const { storyChains, setStoryChains, goBack, allSubjects } = useAppContext();
 
+  const formRef = React.useRef<HTMLDivElement>(null);
   const [isAddingStory, setIsAddingStory] = useState(false);
   const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
   const [newStoryTitle, setNewStoryTitle] = useState('');
   const [newItems, setNewItems] = useState('');
   const [newStoryText, setNewStoryText] = useState('');
+  const [newSubject, setNewSubject] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const scrollToForm = () => {
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
 
   // Practice State
   const [practiceMode, setPracticeMode] = useState(false);
@@ -28,6 +36,7 @@ export default function StoryMethod() {
     setNewStoryTitle('');
     setNewItems('');
     setNewStoryText('');
+    setNewSubject('');
     setIsAddingStory(false);
     setActiveStoryId(null);
   };
@@ -38,7 +47,8 @@ export default function StoryMethod() {
       id: Date.now().toString(),
       title: newStoryTitle,
       items: newItems.split(',').map(i => i.trim()).filter(i => i),
-      story: newStoryText
+      story: newStoryText,
+      subject: newSubject || undefined
     };
     setStoryChains([story, ...storyChains]);
     resetForm();
@@ -163,7 +173,7 @@ export default function StoryMethod() {
         </div>
         {!isAddingStory && (
           <button 
-            onClick={() => setIsAddingStory(true)}
+            onClick={() => { setIsAddingStory(true); scrollToForm(); }}
             className="flex items-center gap-4 bg-orange-600 text-white px-10 py-5 rounded-[2.5rem] font-black uppercase tracking-widest text-[10px] hover:bg-orange-700 transition-all shadow-2xl shadow-orange-600/20 w-full md:w-auto justify-center active:scale-95"
           >
             <Plus size={20} />
@@ -214,6 +224,7 @@ export default function StoryMethod() {
       {isAddingStory ? (
         <div className="max-w-2xl mx-auto">
           <motion.div 
+            ref={formRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-[#2a221f] border border-[#3f332c] rounded-[4rem] p-12 shadow-2xl"
@@ -225,52 +236,71 @@ export default function StoryMethod() {
               <h3 className="text-3xl font-black text-orange-100 uppercase tracking-tighter italic drop-shadow-sm">Add New Story</h3>
             </div>
             
-            <div className="space-y-8">
-              <div className="space-y-2">
-                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-6">Name</p>
-                <input 
-                  autoFocus
-                  type="text"
-                  placeholder="e.g. The Kingdom of Cells"
-                  value={newStoryTitle}
-                  onChange={(e) => setNewStoryTitle(e.target.value)}
-                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-5 px-8 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 transition-all italic tracking-tight"
-                />
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">Title / Name</p>
+                  <input 
+                    autoFocus
+                    type="text"
+                    placeholder="e.g. The Kingdom of Cells"
+                    value={newStoryTitle}
+                    onChange={(e) => setNewStoryTitle(e.target.value)}
+                    className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 transition-all italic text-xs"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">Link Subject</p>
+                  <input 
+                    type="text"
+                    list="st-subjects-list"
+                    placeholder="Select or type subject"
+                    value={newSubject}
+                    onChange={(e) => setNewSubject(e.target.value)}
+                    className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 text-orange-100 font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all text-xs"
+                  />
+                  <datalist id="st-subjects-list">
+                    {allSubjects.map(sub => (
+                      <option key={sub} value={sub} />
+                    ))}
+                  </datalist>
+                </div>
               </div>
 
               <div className="space-y-2">
-                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-6">Items (use commas)</p>
+                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">Items (comma separated)</p>
                 <input 
                   type="text"
                   placeholder="Nucleus, Mitochondria, Ribosomes..."
                   value={newItems}
                   onChange={(e) => setNewItems(e.target.value)}
-                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-5 px-8 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 transition-all italic tracking-tight"
+                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 transition-all italic text-xs"
                 />
               </div>
 
               <div className="space-y-2">
-                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-6">The Story</p>
+                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">The Story</p>
                 <textarea 
                   placeholder="Once upon a time, in a microscopic castle ruled by King Nucleus..."
                   value={newStoryText}
                   onChange={(e) => setNewStoryText(e.target.value)}
-                  rows={6}
-                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-[2rem] py-5 px-8 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 resize-none italic leading-relaxed"
+                  rows={5}
+                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 resize-none italic text-xs leading-relaxed"
                 />
               </div>
 
-              <div className="flex justify-end gap-6 pt-4">
-                <button onClick={resetForm} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-[#3f332c] hover:text-orange-200/40 transition-all">Cancel</button>
-                <button onClick={addStory} className="px-12 py-5 bg-orange-600 text-white rounded-[2rem] font-black text-[10px] uppercase shadow-xl shadow-orange-600/20 hover:bg-orange-700 transition-all active:scale-95">Save</button>
+              <div className="flex justify-end gap-3 pt-4">
+                <button onClick={resetForm} className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#3f332c] hover:text-orange-200/40 transition-all">Cancel</button>
+                <button onClick={addStory} className="px-8 py-3 bg-orange-600 text-white rounded-[1.5rem] font-black text-xs uppercase shadow-xl shadow-orange-600/20 hover:bg-orange-700 transition-all active:scale-95">Save</button>
               </div>
             </div>
           </motion.div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 px-2 sm:px-4">
           {storyChains.filter(s => !searchQuery.trim() || s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.story.toLowerCase().includes(searchQuery.toLowerCase()) || s.items.some(i => i.toLowerCase().includes(searchQuery.toLowerCase()))).length === 0 ? (
-            <div className="col-span-full text-center py-24 bg-[#2a221f]/30 border-2 border-dashed border-[#3f332c] rounded-[4rem]">
+            <div className="col-span-full text-center py-16 sm:py-24 bg-[#2a221f]/30 border-2 border-dashed border-[#3f332c] rounded-3xl sm:rounded-[4rem]">
               <BookOpen size={48} className="text-[#3f332c] mx-auto mb-4" />
               <p className="text-orange-200/40 font-bold text-xs uppercase tracking-widest">
                 {searchQuery ? `No stories found matching "${searchQuery}"` : 'No stories created yet.'}
@@ -281,42 +311,42 @@ export default function StoryMethod() {
             <motion.div 
               layout
               key={story.id}
-              className="bg-[#2a221f] border border-[#3f332c] rounded-[4rem] p-12 shadow-sm hover:bg-[#2d2522] transition-all group flex flex-col justify-between relative overflow-hidden"
+              className="bg-[#2a221f] border border-[#3f332c] rounded-3xl sm:rounded-[4rem] p-5 sm:p-10 md:p-12 shadow-sm hover:bg-[#2d2522] transition-all group flex flex-col justify-between relative overflow-hidden"
             >
               <div>
-                <div className="flex justify-between items-start mb-10">
-                  <div className="w-16 h-16 bg-[#1a1614] text-orange-500 rounded-[1.8rem] flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-all shadow-inner border border-[#3f332c]">
-                    <BookOpen size={28} />
+                <div className="flex justify-between items-start mb-6 sm:mb-10">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#1a1614] text-orange-500 rounded-2xl sm:rounded-[1.8rem] flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-all shadow-inner border border-[#3f332c]">
+                    <BookOpen size={24} className="sm:w-7 sm:h-7" />
                   </div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); setStoryChains(storyChains.filter(s => s.id !== story.id)); }}
-                    className="p-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
+                    className="p-3 sm:p-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-xl sm:rounded-2xl transition-all shadow-lg active:scale-95"
                   >
-                    <Trash2 size={20} />
+                    <Trash2 size={16} className="sm:w-5 sm:h-5" />
                   </button>
                 </div>
-                <h3 className="text-3xl font-black text-orange-100 tracking-tighter italic mb-4 uppercase drop-shadow-sm">{story.title}</h3>
-                <p className="text-orange-200/40 font-black uppercase text-[10px] tracking-[0.2em] mb-8">{story.items.length} Living Anchors</p>
+                <h3 className="text-xl sm:text-3xl font-black text-orange-100 tracking-tight italic mb-2 sm:mb-4 uppercase drop-shadow-sm break-words">{story.title}</h3>
+                <p className="text-orange-200/40 font-black uppercase text-[10px] tracking-[0.2em] mb-4 sm:mb-8">{story.items.length} Living Anchors</p>
                 
-                <div className="flex flex-wrap gap-3 mb-10">
+                <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-10">
                    {story.items.map((item, idx) => (
-                    <span key={idx} className="px-5 py-2.5 bg-[#1a1614] text-orange-200/50 rounded-2xl text-[10px] font-black uppercase border border-[#3f332c] shadow-inner group-hover:border-orange-500/20 transition-all">
+                    <span key={idx} className="px-3 sm:px-5 py-1.5 sm:py-2.5 bg-[#1a1614] text-orange-200/50 rounded-xl sm:rounded-2xl text-[10px] font-black uppercase border border-[#3f332c] shadow-inner group-hover:border-orange-500/20 transition-all break-words">
                       {item}
                     </span>
                   ))}
                 </div>
 
-                <div className="bg-[#1a1614] p-8 rounded-[2.5rem] border border-[#3f332c] mb-10 h-36 overflow-hidden relative shadow-inner">
-                  <p className="text-base font-bold text-orange-100/40 leading-relaxed italic line-clamp-3">"{story.story}"</p>
-                  <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-[#1a1614] to-transparent" />
+                <div className="bg-[#1a1614] p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] border border-[#3f332c] mb-6 sm:mb-10 h-28 sm:h-36 overflow-hidden relative shadow-inner">
+                  <p className="text-sm sm:text-base font-bold text-orange-100/40 leading-relaxed italic line-clamp-3">"{story.story}"</p>
+                  <div className="absolute bottom-0 left-0 w-full h-12 sm:h-16 bg-gradient-to-t from-[#1a1614] to-transparent" />
                 </div>
               </div>
 
               <button 
                 onClick={() => startPractice(story)}
-                className="w-full py-6 bg-orange-600 text-white rounded-[2.8rem] font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-4 hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
+                className="w-full py-4 sm:py-6 bg-orange-600 text-white rounded-2xl sm:rounded-[2.8rem] font-black uppercase tracking-widest text-[10px] sm:text-xs flex items-center justify-center gap-2 sm:gap-4 hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
               >
-                <Play size={20} fill="currentColor" /> Practice
+                <Play size={16} className="sm:w-5 sm:h-5" fill="currentColor" /> Practice
               </button>
 
               <MemoryLinker itemId={story.id} itemType="story" className="mt-4" />

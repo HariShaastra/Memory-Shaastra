@@ -36,8 +36,9 @@ const WORD_BANK: Record<string, string[]> = {
 };
 
 export default function FirstLetterMethod() {
-  const { firstLetterEntries, setFirstLetterEntries, goBack } = useAppContext();
+  const { firstLetterEntries, setFirstLetterEntries, goBack, allSubjects } = useAppContext();
 
+  const formRef = React.useRef<HTMLDivElement>(null);
   const [isAddingAid, setIsAddingAid] = useState(false);
   const [activeAidId, setActiveAidId] = useState<string | null>(null);
   const [editingAidId, setEditingAidId] = useState<string | null>(null);
@@ -45,7 +46,14 @@ export default function FirstLetterMethod() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [itemsText, setItemsText] = useState('');
+  const [subject, setSubject] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const scrollToForm = () => {
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
 
   // Practice State
   const [practiceMode, setPracticeMode] = useState(false);
@@ -57,6 +65,7 @@ export default function FirstLetterMethod() {
     setTitle('');
     setDescription('');
     setItemsText('');
+    setSubject('');
     setIsAddingAid(false);
     setEditingAidId(null);
   };
@@ -67,7 +76,7 @@ export default function FirstLetterMethod() {
     
     if (editingAidId) {
       setFirstLetterEntries(firstLetterEntries.map(a => 
-        a.id === editingAidId ? { ...a, title, description, items: itemsList } : a
+        a.id === editingAidId ? { ...a, title, description, items: itemsList, subject: subject || undefined } : a
       ));
     } else {
       const newAid: FirstLetterAid = {
@@ -75,7 +84,8 @@ export default function FirstLetterMethod() {
         title,
         description,
         items: itemsList,
-        mnemonic: ''
+        mnemonic: '',
+        subject: subject || undefined
       };
       setFirstLetterEntries([newAid, ...firstLetterEntries]);
     }
@@ -87,7 +97,9 @@ export default function FirstLetterMethod() {
     setTitle(aid.title);
     setDescription(aid.description);
     setItemsText(aid.items.join('\n'));
+    setSubject(aid.subject || '');
     setIsAddingAid(true);
+    scrollToForm();
   };
 
   const deleteAid = (id: string, e: React.MouseEvent) => {
@@ -166,7 +178,7 @@ export default function FirstLetterMethod() {
         </div>
         {!isAddingAid && (
           <button 
-            onClick={() => setIsAddingAid(true)}
+            onClick={() => { setIsAddingAid(true); scrollToForm(); }}
             className="flex items-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 w-full md:w-auto justify-center active:scale-95"
           >
             <Plus size={18} />
@@ -217,6 +229,7 @@ export default function FirstLetterMethod() {
       {isAddingAid ? (
         <div className="max-w-2xl mx-auto">
           <motion.div 
+            ref={formRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-[#2a221f] border border-[#3f332c] rounded-[3rem] p-10 shadow-xl shadow-orange-900/10"
@@ -229,16 +242,35 @@ export default function FirstLetterMethod() {
             </div>
             
             <div className="space-y-6">
-              <div className="space-y-2">
-                <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-2">Name</p>
-                <input 
-                  autoFocus
-                  type="text"
-                  placeholder="e.g. Rainbow Colors / Solar System"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-2">Name / Topic</p>
+                  <input 
+                    autoFocus
+                    type="text"
+                    placeholder="e.g. Rainbow Colors / Solar System"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-3.5 px-5 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-2">Link Subject</p>
+                  <input 
+                    type="text"
+                    list="fl-subjects-list"
+                    placeholder="Select or type subject"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-3.5 px-5 text-orange-100 font-bold outline-none focus:ring-2 focus:ring-orange-500 text-xs"
+                  />
+                  <datalist id="fl-subjects-list">
+                    {allSubjects.map(sub => (
+                      <option key={sub} value={sub} />
+                    ))}
+                  </datalist>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -248,7 +280,7 @@ export default function FirstLetterMethod() {
                   value={itemsText}
                   onChange={(e) => setItemsText(e.target.value)}
                   rows={4}
-                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 resize-none text-xs"
                 />
               </div>
 
@@ -256,13 +288,13 @@ export default function FirstLetterMethod() {
                 <div className="flex justify-between items-center px-2">
                   <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest">Calculated Initials</p>
                 </div>
-                <div className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-6 px-6 flex items-center justify-center gap-2">
+                <div className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 sm:py-6 px-4 sm:px-6 flex flex-wrap items-center justify-center gap-2">
                   {itemsText.split('\n').map(i => i.trim()[0]).filter(Boolean).map((char, index) => (
                     <motion.div
                       key={index}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="w-12 h-12 bg-orange-600/10 border border-orange-500/20 rounded-xl flex items-center justify-center text-orange-400 font-black text-xl italic"
+                      className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-600/10 border border-orange-500/20 rounded-xl flex items-center justify-center text-orange-400 font-black text-lg sm:text-xl italic"
                     >
                       {char.toUpperCase()}
                     </motion.div>
@@ -275,15 +307,15 @@ export default function FirstLetterMethod() {
 
               <div className="flex justify-end gap-3 pt-4">
                 <button onClick={resetForm} className="px-6 py-2 text-xs font-black uppercase tracking-widest text-[#3f332c]">Cancel</button>
-                <button onClick={saveAid} className="px-10 py-4 bg-orange-600 text-white rounded-2xl font-black text-xs uppercase shadow-lg shadow-orange-600/20 active:scale-95">Save Aid</button>
+                <button onClick={saveAid} className="px-8 py-3 bg-orange-600 text-white rounded-2xl font-black text-xs uppercase shadow-lg shadow-orange-600/20 active:scale-95">Save Aid</button>
               </div>
             </div>
           </motion.div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {firstLetterEntries.filter(aid => !searchQuery.trim() || aid.title.toLowerCase().includes(searchQuery.toLowerCase()) || aid.items.some(i => i.toLowerCase().includes(searchQuery.toLowerCase()))).length === 0 ? (
-            <div className="col-span-full text-center py-20 bg-[#2a221f]/30 border-2 border-dashed border-[#3f332c] rounded-[3rem]">
+            <div className="col-span-full text-center py-16 sm:py-20 bg-[#2a221f]/30 border-2 border-dashed border-[#3f332c] rounded-3xl sm:rounded-[3rem] p-4">
               <Type size={40} className="text-[#3f332c] mx-auto mb-3" />
               <p className="text-orange-200/40 font-bold text-xs uppercase tracking-widest">
                 {searchQuery ? `No aids found matching "${searchQuery}"` : 'No first-letter aids created yet.'}
@@ -294,32 +326,32 @@ export default function FirstLetterMethod() {
             <motion.div 
               layout
               key={aid.id}
-              className="bg-[#2a221f] border border-[#3f332c] rounded-[3rem] p-8 shadow-sm hover:shadow-2xl hover:shadow-orange-900/10 transition-all group flex flex-col justify-between"
+              className="bg-[#2a221f] border border-[#3f332c] rounded-3xl sm:rounded-[3rem] p-5 sm:p-8 shadow-sm hover:shadow-2xl hover:shadow-orange-900/10 transition-all group flex flex-col justify-between"
             >
               <div>
-                <div className="flex justify-between items-start mb-6">
-                  <div className="w-14 h-14 bg-orange-600/10 text-orange-400 rounded-2xl flex items-center justify-center">
-                    <Type size={28} />
+                <div className="flex justify-between items-start mb-4 sm:mb-6">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-orange-600/10 text-orange-400 rounded-2xl flex items-center justify-center shrink-0">
+                    <Type size={24} className="sm:w-7 sm:h-7" />
                   </div>
                   <div className="flex gap-2">
                     <button 
                       onClick={() => startEditing(aid)} 
-                      className="p-3 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 rounded-xl transition-all shadow-lg active:scale-95"
+                      className="p-2.5 sm:p-3 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 rounded-xl transition-all shadow-lg active:scale-95"
                     >
                       <Edit2 size={16} />
                     </button>
                     <button 
                       onClick={(e) => deleteAid(aid.id, e)} 
-                      className="p-3 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-xl transition-all shadow-lg active:scale-95"
+                      className="p-2.5 sm:p-3 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-xl transition-all shadow-lg active:scale-95"
                     >
                       <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
-                <h3 className="text-2xl font-black text-orange-100 tracking-tighter italic mb-4">{aid.title}</h3>
-                <div className="flex flex-wrap gap-2 mb-6">
+                <h3 className="text-xl sm:text-2xl font-black text-orange-100 tracking-tight italic mb-3 sm:mb-4 break-words">{aid.title}</h3>
+                <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
                   {aid.items.map((item, i) => (
-                    <span key={i} className="px-3 py-1 bg-[#1a1614] rounded-lg text-[10px] font-black uppercase text-orange-200/40 border border-[#3f332c]">
+                    <span key={i} className="px-2.5 sm:px-3 py-1 bg-[#1a1614] rounded-lg text-[10px] font-black uppercase text-orange-200/40 border border-[#3f332c] break-words">
                       {item}
                     </span>
                   ))}

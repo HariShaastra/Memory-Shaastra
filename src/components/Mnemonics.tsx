@@ -7,13 +7,21 @@ import { t } from '../utils/translations';
 import { MemoryLinker } from './MemoryLinker';
 
 export default function Mnemonics() {
-  const { mnemonics, setMnemonics, goBack } = useAppContext();
+  const { mnemonics, setMnemonics, goBack, allSubjects } = useAppContext();
 
+  const formRef = React.useRef<HTMLDivElement>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newPhrase, setNewPhrase] = useState('');
+  const [newSubject, setNewSubject] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const scrollToForm = () => {
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
 
   // Practice Mode State
   const [practiceMode, setPracticeMode] = useState(false);
@@ -27,7 +35,8 @@ export default function Mnemonics() {
     const item: Mnemonic = {
       id: Date.now().toString(),
       title: newTitle,
-      phrase: newPhrase
+      phrase: newPhrase,
+      subject: newSubject || undefined
     };
     setMnemonics([item, ...mnemonics]);
     resetForm();
@@ -37,13 +46,15 @@ export default function Mnemonics() {
     setEditingId(item.id);
     setNewTitle(item.title);
     setNewPhrase(item.phrase);
+    setNewSubject(item.subject || '');
     setIsAdding(true);
+    scrollToForm();
   };
 
   const saveEdit = () => {
     if (!editingId || !newTitle || !newPhrase) return;
     setMnemonics(mnemonics.map(m => 
-      m.id === editingId ? { ...m, title: newTitle, phrase: newPhrase } : m
+      m.id === editingId ? { ...m, title: newTitle, phrase: newPhrase, subject: newSubject || undefined } : m
     ));
     resetForm();
   };
@@ -51,6 +62,7 @@ export default function Mnemonics() {
   const resetForm = () => {
     setNewTitle('');
     setNewPhrase('');
+    setNewSubject('');
     setIsAdding(false);
     setEditingId(null);
   };
@@ -169,7 +181,7 @@ export default function Mnemonics() {
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <button 
-            onClick={() => { resetForm(); setIsAdding(true); }}
+            onClick={() => { resetForm(); setIsAdding(true); scrollToForm(); }}
             className="flex items-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
           >
             <Plus size={18} />
@@ -225,6 +237,7 @@ export default function Mnemonics() {
           <AnimatePresence>
             {(isAdding || editingId) && (
               <motion.div 
+                ref={formRef}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
@@ -239,16 +252,36 @@ export default function Mnemonics() {
                   </h3>
                 </div>
                 <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-2">Name</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. Order of Planets"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 text-orange-100 font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all italic"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-2">Concept / Name</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Order of Planets"
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
+                        className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 text-orange-100 font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all italic text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-2">Link Subject</label>
+                      <input 
+                        type="text"
+                        list="mn-subjects-list"
+                        placeholder="Select or type subject"
+                        value={newSubject}
+                        onChange={(e) => setNewSubject(e.target.value)}
+                        className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 text-orange-100 font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all text-xs"
+                      />
+                      <datalist id="mn-subjects-list">
+                        {allSubjects.map(sub => (
+                          <option key={sub} value={sub} />
+                        ))}
+                      </datalist>
+                    </div>
                   </div>
+
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase font-black tracking-widest text-orange-200/40 ml-2">Mnemonic Phrase</label>
                     <textarea 
@@ -256,16 +289,16 @@ export default function Mnemonics() {
                       value={newPhrase}
                       onChange={(e) => setNewPhrase(e.target.value)}
                       rows={3}
-                      className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 text-orange-100 font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all resize-none italic"
+                      className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 text-orange-100 font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all resize-none italic text-xs"
                     />
                   </div>
                   <div className="flex justify-end gap-3 pt-4">
-                    <button onClick={resetForm} className="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-[#3f332c] hover:text-orange-200/40">
+                    <button onClick={resetForm} className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#3f332c] hover:text-orange-200/40">
                       Cancel
                     </button>
                     <button 
                       onClick={editingId ? saveEdit : addMnemonic} 
-                      className="px-10 py-4 bg-orange-600 text-white rounded-[1.8rem] text-xs font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95"
+                      className="px-8 py-3 bg-orange-600 text-white rounded-[1.5rem] text-xs font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95"
                     >
                       Save
                     </button>
@@ -277,7 +310,7 @@ export default function Mnemonics() {
 
           <div className="grid grid-cols-1 gap-6">
             {filteredMnemonics.length === 0 ? (
-              <div className="text-center py-24 bg-[#2a221f]/30 border-2 border-dashed border-[#3f332c] rounded-[4rem] flex flex-col items-center">
+              <div className="text-center py-16 sm:py-24 bg-[#2a221f]/30 border-2 border-dashed border-[#3f332c] rounded-3xl sm:rounded-[4rem] flex flex-col items-center p-4">
                 <Brain size={48} className="text-[#3f332c] mb-4" />
                 <p className="text-orange-200/20 font-black italic uppercase tracking-widest text-xs">
                   {searchQuery ? `No mnemonics found for "${searchQuery}"` : 'Nothing here. Add a phrase!'}
@@ -289,39 +322,39 @@ export default function Mnemonics() {
                 <motion.div 
                   layout
                   key={item.id} 
-                  className="bg-[#2a221f] border border-[#3f332c] rounded-[3rem] p-10 hover:bg-[#2d2522] transition-all group shadow-sm flex flex-col gap-6 relative overflow-hidden"
+                  className="bg-[#2a221f] border border-[#3f332c] rounded-3xl sm:rounded-[3rem] p-4 sm:p-8 md:p-10 hover:bg-[#2d2522] transition-all group shadow-sm flex flex-col gap-4 sm:gap-6 relative overflow-hidden"
                 >
-                  <div className="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
-                    <div className="flex items-center gap-8 flex-1 w-full relative z-10">
-                      <div className="w-16 h-16 rounded-3xl bg-[#1a1614] text-orange-500 flex items-center justify-center shrink-0 border border-[#3f332c] group-hover:bg-orange-600 group-hover:text-white transition-all">
-                        <PenTool size={28} />
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-8 relative z-10">
+                    <div className="flex items-start sm:items-center gap-3 sm:gap-6 flex-1 w-full relative z-10 min-w-0">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-[#1a1614] text-orange-500 flex items-center justify-center shrink-0 border border-[#3f332c] group-hover:bg-orange-600 group-hover:text-white transition-all">
+                        <PenTool size={22} className="sm:w-7 sm:h-7" />
                       </div>
-                      <div className="min-w-0">
-                        <h3 className="font-black text-2xl text-orange-100 tracking-tighter italic mb-1">{item.title}</h3>
-                        <p className="text-orange-400 font-black text-xl italic drop-shadow-sm">"{item.phrase}"</p>
+                      <div className="min-w-0 flex-1 overflow-hidden break-words">
+                        <h3 className="font-black text-base sm:text-2xl text-orange-100 tracking-tight italic mb-1 truncate">{item.title}</h3>
+                        <p className="text-orange-400 font-black text-sm sm:text-xl italic drop-shadow-sm break-words whitespace-pre-wrap">"{item.phrase}"</p>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-4 shrink-0 relative z-10 w-full md:w-auto justify-end">
+                    <div className="flex items-center gap-2 sm:gap-4 shrink-0 relative z-10 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-[#3f332c]/50">
                       <button 
                         onClick={() => startPractice(item)}
-                        className="flex items-center gap-3 bg-orange-600 text-white px-10 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
+                        className="flex items-center gap-2 bg-orange-600 text-white px-5 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-[2rem] text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
                       >
-                        <Play size={18} fill="currentColor" />
+                        <Play size={14} className="sm:w-[18px] sm:h-[18px]" fill="currentColor" />
                         <span>Practice</span>
                       </button>
                       <div className="flex gap-2">
                         <button 
                           onClick={() => startEditing(item)}
-                          className="p-4 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
+                          className="p-3 sm:p-4 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 rounded-xl sm:rounded-2xl transition-all shadow-lg active:scale-95"
                         >
-                          <Edit2 size={18} />
+                          <Edit2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                         </button>
                         <button 
                           onClick={() => deleteMnemonic(item.id)}
-                          className="p-4 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl transition-all shadow-lg active:scale-95"
+                          className="p-3 sm:p-4 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-xl sm:rounded-2xl transition-all shadow-lg active:scale-95"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                         </button>
                       </div>
                     </div>
