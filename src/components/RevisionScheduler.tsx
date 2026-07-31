@@ -164,7 +164,12 @@ export default function RevisionScheduler() {
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
-                <button onClick={() => { setIsAdding(false); setEditingId(null); }} className="px-6 py-2 text-[10px] font-black uppercase tracking-widest text-orange-200/30">Cancel</button>
+                <button 
+                  onClick={() => { setIsAdding(false); setEditingId(null); }} 
+                  className="px-5 py-2.5 text-xs font-bold text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white bg-stone-200/80 dark:bg-stone-800/80 hover:bg-stone-300 dark:hover:bg-stone-700 rounded-xl transition-all border border-stone-300 dark:border-stone-700"
+                >
+                  Cancel
+                </button>
                 <button onClick={addRevision} className="px-10 py-4 bg-orange-600 text-white rounded-2xl font-black text-xs uppercase shadow-xl shadow-orange-600/20 active:scale-95">Save Schedule</button>
               </div>
             </div>

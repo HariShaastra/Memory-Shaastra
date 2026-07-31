@@ -328,7 +328,12 @@ export default function FlashcardDeck() {
               />
             </div>
             <div className="flex justify-end space-x-4">
-              <button onClick={() => setIsAdding(false)} className="px-8 py-3 text-[10px] text-orange-200/20 font-black uppercase tracking-widest hover:text-orange-200/40 transition-all">Cancel</button>
+              <button 
+                onClick={() => setIsAdding(false)} 
+                className="px-5 py-2.5 text-xs font-bold text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white bg-stone-200/80 dark:bg-stone-800/80 hover:bg-stone-300 dark:hover:bg-stone-700 rounded-xl transition-all border border-stone-300 dark:border-stone-700"
+              >
+                Cancel
+              </button>
               <button onClick={addCard} className="px-10 py-3.5 bg-orange-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95 transition-all">Save Card</button>
             </div>
           </div>

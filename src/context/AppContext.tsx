@@ -70,6 +70,7 @@ interface AppContextType {
   
   // Subjects & Auto Schedule
   allSubjects: string[];
+  getChaptersForSubject: (subjectName?: string) => string[];
   autoCreateSM2ScheduleForSubject: (subjectName: string, examDate?: string) => void;
   signOutUser: () => Promise<void>;
 
@@ -381,26 +382,84 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return saved ? JSON.parse(saved) : [
       {
         id: 'ep1',
-        title: 'Master Final Exam Plan',
-        examDate: '2026-05-15',
+        title: 'CA Inter Exam Plan',
+        examDate: '2026-04-30',
         isActive: true,
         subjects: [
           {
             id: 'es1',
-            name: 'Economics & Policy',
+            name: 'Advanced Accounts',
             chapters: [
               {
                 id: 'ec1',
-                name: 'Macroeconomics Foundations',
+                name: 'Accounting Standards & Financial Statements',
                 completed: false,
                 topics: [
                   {
                     id: 'et1',
-                    name: 'GDP & Inflation Indicators',
+                    name: 'AS-15 Employee Benefits & AS-28 Impairment',
                     completed: false,
                     subTopics: [
-                      { id: 'est1', name: 'CPI Calculation Method', completed: true },
-                      { id: 'est2', name: 'WPI Index Basket', completed: false }
+                      { id: 'est1', name: 'Actuarial Valuations & Defined Benefits', completed: true },
+                      { id: 'est2', name: 'Cash Generating Units (CGU) Valuation', completed: false }
+                    ]
+                  }
+                ]
+              },
+              {
+                id: 'ec2',
+                name: 'Consolidated Financial Statements',
+                completed: false,
+                topics: [
+                  {
+                    id: 'et2',
+                    name: 'Holding & Subsidiary Companies Equity',
+                    completed: false,
+                    subTopics: [
+                      { id: 'est3', name: 'Non-Controlling Interest (NCI) Calculation', completed: false }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: 'es2',
+            name: 'Corporate & Other Laws',
+            chapters: [
+              {
+                id: 'ec3',
+                name: 'Companies Act, 2013',
+                completed: false,
+                topics: [
+                  {
+                    id: 'et3',
+                    name: 'Management & Administration',
+                    completed: false,
+                    subTopics: [
+                      { id: 'est4', name: 'Annual General Meeting (AGM) Rules', completed: true },
+                      { id: 'est5', name: 'Board Meeting Quorum & Resolutions', completed: false }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: 'es3',
+            name: 'Taxation & GST',
+            chapters: [
+              {
+                id: 'ec4',
+                name: 'Goods & Services Tax (GST)',
+                completed: false,
+                topics: [
+                  {
+                    id: 'et4',
+                    name: 'Input Tax Credit (ITC) Mechanism',
+                    completed: false,
+                    subTopics: [
+                      { id: 'est6', name: 'Blocked Credits under Sec 17(5)', completed: false }
                     ]
                   }
                 ]
@@ -522,6 +581,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     return Array.from(set).filter(Boolean);
   }, [examPlans, studyTasks, flashcards, studyMaterials, personalization.focusSubject]);
+
+  const getChaptersForSubject = React.useCallback((subjectName?: string) => {
+    if (!subjectName) return [];
+    const chaptersSet = new Set<string>();
+
+    examPlans.forEach(plan => {
+      plan.subjects?.forEach(sub => {
+        if (sub.name.toLowerCase().trim() === subjectName.toLowerCase().trim()) {
+          sub.chapters?.forEach(chap => {
+            if (chap.name) chaptersSet.add(chap.name);
+          });
+        }
+      });
+    });
+
+    studyMaterials.forEach(mat => {
+      if (mat.subject?.toLowerCase().trim() === subjectName.toLowerCase().trim() && mat.subGroup) {
+        chaptersSet.add(mat.subGroup);
+      }
+    });
+
+    return Array.from(chaptersSet);
+  }, [examPlans, studyMaterials]);
 
   // Auto Create SM-2 Revision Schedule Entries when a subject is added/updated in Exam Planning
   const autoCreateSM2ScheduleForSubject = (subjectName: string, examDate?: string) => {
@@ -749,6 +831,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       memoryLinks, addMemoryLink, removeMemoryLink, rateRecall,
       theme, setTheme,
       allSubjects,
+      getChaptersForSubject,
       autoCreateSM2ScheduleForSubject,
       signOutUser,
       activityEvents,
@@ -777,15 +860,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
 const handleFileUpload = async (file: File): Promise<FileAttachment> => {
   return new Promise((resolve) => {
-    setTimeout(() => {
+    const reader = new FileReader();
+    reader.onload = () => {
       resolve({
         id: Math.random().toString(36).substr(2, 9),
         name: file.name,
-        type: file.type.split('/')[0] as any,
+        type: file.type.includes('pdf') ? 'pdf' : (file.type.split('/')[0] as any),
+        url: reader.result as string,
+        size: file.size
+      });
+    };
+    reader.onerror = () => {
+      resolve({
+        id: Math.random().toString(36).substr(2, 9),
+        name: file.name,
+        type: file.type.includes('pdf') ? 'pdf' : (file.type.split('/')[0] as any),
         url: URL.createObjectURL(file),
         size: file.size
       });
-    }, 500);
+    };
+    reader.readAsDataURL(file);
   });
 };
 

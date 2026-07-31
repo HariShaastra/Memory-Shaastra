@@ -77,10 +77,6 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
     { id: 'memory-boost', label: 'Memory Boost', icon: Brain },
   ];
 
-  const aiStrategyItems = [
-    { id: 'advice', label: 'Learner Advice', icon: Brain },
-  ];
-
   const toolItems = [
     { id: 'flashcards', label: t.flashcards, icon: BookOpen },
     { id: 'mnemonics', label: t.mnemonics, icon: Quote },
@@ -110,16 +106,6 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
           <p className="px-4 text-[10px] uppercase font-black tracking-[0.3em] text-orange-500 mb-3 font-sans italic">Overview</p>
           <div className="space-y-1">
             {mainItems.map(item => <NavItem key={item.id} item={item} id={item.id} currentView={currentView} setView={setView} onClose={onClose} />)}
-          </div>
-        </div>
-
-        <div>
-          <p className="px-4 text-[10px] uppercase font-black tracking-[0.3em] text-amber-400 mb-3 font-sans italic flex items-center gap-1.5">
-            <Brain size={12} />
-            <span>Learner Guidance</span>
-          </p>
-          <div className="space-y-1">
-            {aiStrategyItems.map(item => <NavItem key={item.id} item={item} id={item.id} currentView={currentView} setView={setView} onClose={onClose} />)}
           </div>
         </div>
 

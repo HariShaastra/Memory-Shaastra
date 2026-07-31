@@ -294,7 +294,7 @@ export default function Settings() {
           <div className="flex gap-4 mt-8 relative z-10">
             <button 
               onClick={() => setIsEditing(false)}
-              className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-orange-200/40 hover:text-orange-100"
+              className="flex-1 py-3 px-5 text-xs font-bold text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white bg-stone-200/80 dark:bg-stone-800/80 hover:bg-stone-300 dark:hover:bg-stone-700 rounded-2xl transition-all border border-stone-300 dark:border-stone-700"
             >
               {t.cancel}
             </button>

@@ -49,7 +49,9 @@ export interface Mnemonic {
   id: string;
   title: string;
   phrase: string;
+  actualInfo?: string; // The actual concept/information user wants to remember
   subject?: string;
+  chapter?: string;
   libraryMaterialId?: string;
   attachments?: FileAttachment[];
 }
@@ -66,6 +68,7 @@ export interface MemoryPalace {
   name: string;
   locations: PalaceLocation[];
   subject?: string;
+  chapter?: string;
   libraryMaterialId?: string;
 }
 
@@ -75,6 +78,7 @@ export interface LinkChain {
   items: string[];
   story: string;
   subject?: string;
+  chapter?: string;
   libraryMaterialId?: string;
   attachments?: FileAttachment[];
 }
@@ -86,6 +90,7 @@ export interface FirstLetterAid {
   items: string[];
   mnemonic: string;
   subject?: string;
+  chapter?: string;
   libraryMaterialId?: string;
   attachments?: FileAttachment[];
 }
@@ -225,7 +230,6 @@ export type AppView =
   | 'planner'
   | 'exam-mode'
   | 'library'
-  | 'advice'
   | 'ai-tester'
   | 'simplifier'
   | 'memory-dna'

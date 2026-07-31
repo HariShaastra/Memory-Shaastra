@@ -295,3 +295,16 @@ html.light .bg-orange-600 { background-color: #ea580c !important; }
 html.light .hover\:bg-orange-700:hover { background-color: #c2410c !important; }
 html.light .bg-\[rgba\(42\,34\,31\,0\.8\)\] { background-color: rgba(255, 255, 255, 0.9) !important; }
 
+/* Placeholder & search toolbar light mode overrides */
+html.light input::placeholder,
+html.light textarea::placeholder,
+html.light ::placeholder {
+  color: #786254 !important;
+  opacity: 1 !important;
+}
+
+html.light .bg-\[\#1a1614\].p-1\.5 {
+  background-color: #F0EAE1 !important;
+  border-color: #e5dfd4 !important;
+}
+

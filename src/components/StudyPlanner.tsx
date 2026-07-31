@@ -16,7 +16,9 @@ import {
   Search,
   BookOpen,
   Zap,
-  Target
+  Target,
+  LayoutGrid,
+  LayoutList
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { StudyTask } from '../types';
@@ -39,6 +41,7 @@ export const StudyPlanner: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'daily' | 'all' | 'revisions' | 'completed'>('daily');
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'line'>('line');
 
   const scrollToForm = () => {
     setTimeout(() => {
@@ -175,37 +178,30 @@ export const StudyPlanner: React.FC = () => {
         </div>
       </div>
 
-      {/* Upcoming Exam Schedule Sync Card */}
+      {/* Upcoming Exam Schedule Card (Without Auto SM2 Sync Button) */}
       {activeExamPlan && (
-        <div className="bg-gradient-to-r from-[#2a221f] via-[#332824] to-[#2a221f] p-6 rounded-3xl border border-orange-500/30 shadow-xl space-y-4 relative overflow-hidden">
+        <div className="bg-amber-500/10 dark:bg-gradient-to-r dark:from-[#2a221f] dark:via-[#332824] dark:to-[#2a221f] p-6 rounded-3xl border border-orange-500/30 shadow-xl space-y-4 relative overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
-                <span className="bg-orange-600/20 text-orange-400 border border-orange-500/30 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full flex items-center space-x-1">
+                <span className="bg-orange-600/20 text-orange-600 dark:text-orange-400 border border-orange-500/30 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full flex items-center space-x-1">
                   <Target size={12} />
                   <span>Active Exam Schedule</span>
                 </span>
-                <span className="text-xs font-bold text-orange-200/60">
+                <span className="text-xs font-bold text-stone-600 dark:text-orange-200/60">
                   Target Date: {activeExamPlan.examDate}
                 </span>
               </div>
-              <h3 className="text-xl font-black text-orange-100 italic">{activeExamPlan.title}</h3>
-              <p className="text-xs text-orange-200/70">
+              <h3 className="text-xl font-black text-stone-900 dark:text-orange-100 italic">{activeExamPlan.title}</h3>
+              <p className="text-xs text-stone-600 dark:text-orange-200/70">
                 Subjects in Exam Plan: {activeExamPlan.subjects.map(s => s.name).join(', ') || 'No subjects set'}
               </p>
             </div>
 
             <div className="flex items-center space-x-3">
               <button
-                onClick={syncExamSchedule}
-                className="px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl text-xs font-black shadow-lg transition-all flex items-center space-x-2 active:scale-95"
-              >
-                <Zap size={14} />
-                <span>Auto SM-2 Schedule Sync</span>
-              </button>
-              <button
                 onClick={() => startStudyNow(`Exam Prep: ${activeExamPlan.title}`, 45, activeExamPlan.subjects[0]?.name)}
-                className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-black shadow-lg transition-all flex items-center space-x-2 active:scale-95"
+                className="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl text-xs font-black shadow-lg transition-all flex items-center space-x-2 active:scale-95"
               >
                 <Play size={14} className="fill-current" />
                 <span>Study Now</span>
@@ -237,32 +233,62 @@ export const StudyPlanner: React.FC = () => {
           )}
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex flex-wrap gap-1.5 bg-[#1a1614] p-1.5 rounded-2xl border border-[#3f332c] text-xs font-bold">
-          <button
-            onClick={() => setFilter('daily')}
-            className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'daily' ? 'bg-orange-600 text-white shadow-md' : 'text-orange-200/60'}`}
-          >
-            Today's Schedule
-          </button>
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'all' ? 'bg-orange-600 text-white shadow-md' : 'text-orange-200/60'}`}
-          >
-            All Activities
-          </button>
-          <button
-            onClick={() => setFilter('revisions')}
-            className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'revisions' ? 'bg-orange-600 text-white shadow-md' : 'text-orange-200/60'}`}
-          >
-            Revisions ({scheduledRevisions.filter(r => !r.completed).length})
-          </button>
-          <button
-            onClick={() => setFilter('completed')}
-            className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'completed' ? 'bg-orange-600 text-white shadow-md' : 'text-orange-200/60'}`}
-          >
-            Completed
-          </button>
+        {/* Filter Tabs & Grid/Line View Toggle */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-1.5 bg-[#1a1614] dark:bg-[#1a1614] bg-stone-100 p-1.5 rounded-2xl border border-stone-200 dark:border-[#3f332c] text-xs font-bold">
+            <button
+              onClick={() => setFilter('daily')}
+              className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'daily' ? 'bg-orange-600 text-white shadow-md' : 'text-stone-600 dark:text-orange-200/60 hover:text-stone-900 dark:hover:text-white'}`}
+            >
+              Today's Schedule
+            </button>
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'all' ? 'bg-orange-600 text-white shadow-md' : 'text-stone-600 dark:text-orange-200/60 hover:text-stone-900 dark:hover:text-white'}`}
+            >
+              All Activities
+            </button>
+            <button
+              onClick={() => setFilter('revisions')}
+              className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'revisions' ? 'bg-orange-600 text-white shadow-md' : 'text-stone-600 dark:text-orange-200/60 hover:text-stone-900 dark:hover:text-white'}`}
+            >
+              Revisions ({scheduledRevisions.filter(r => !r.completed).length})
+            </button>
+            <button
+              onClick={() => setFilter('completed')}
+              className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'completed' ? 'bg-orange-600 text-white shadow-md' : 'text-stone-600 dark:text-orange-200/60 hover:text-stone-900 dark:hover:text-white'}`}
+            >
+              Completed
+            </button>
+          </div>
+
+          {/* Grid View / Line View Switcher */}
+          <div className="flex items-center space-x-1 bg-stone-100 dark:bg-[#1a1614] p-1 rounded-2xl border border-stone-200 dark:border-[#3f332c] shrink-0 self-end sm:self-auto">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                viewMode === 'grid' 
+                  ? 'bg-orange-600 text-white shadow-md' 
+                  : 'text-stone-600 dark:text-orange-200/60 hover:text-stone-900 dark:hover:text-white'
+              }`}
+              title="Grid View"
+            >
+              <LayoutGrid size={14} />
+              <span>Grid</span>
+            </button>
+            <button
+              onClick={() => setViewMode('line')}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                viewMode === 'line' 
+                  ? 'bg-orange-600 text-white shadow-md' 
+                  : 'text-stone-600 dark:text-orange-200/60 hover:text-stone-900 dark:hover:text-white'
+              }`}
+              title="Line View"
+            >
+              <LayoutList size={14} />
+              <span>Line</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -274,15 +300,15 @@ export const StudyPlanner: React.FC = () => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-[#2a221f] rounded-3xl p-6 border border-orange-500/30 space-y-4 shadow-xl"
+            className="bg-white dark:bg-[#2a221f] rounded-3xl p-6 border border-orange-500/30 space-y-4 shadow-xl transition-colors"
           >
-            <h3 className="font-bold text-orange-300 text-sm">{editingId ? 'Edit Activity' : 'Add New Study Activity'}</h3>
+            <h3 className="font-bold text-orange-600 dark:text-orange-300 text-sm">{editingId ? 'Edit Activity' : 'Add New Study Activity'}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input 
                 type="text"
                 value={newTask.topic}
                 onChange={e => setNewTask(prev => ({ ...prev, topic: e.target.value }))}
-                className="bg-[#1a1614] border border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-[#fef3c7] focus:outline-none focus:border-orange-500"
+                className="bg-amber-50/60 dark:bg-[#1a1614] border border-amber-200 dark:border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-stone-900 dark:text-[#fef3c7] focus:outline-none focus:border-orange-500"
                 placeholder="Topic Name (e.g. Chemical Bonds)"
               />
               <div>
@@ -291,7 +317,7 @@ export const StudyPlanner: React.FC = () => {
                   list="subjects-list"
                   value={newTask.subject}
                   onChange={e => setNewTask(prev => ({ ...prev, subject: e.target.value }))}
-                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-[#fef3c7] focus:outline-none focus:border-orange-500"
+                  className="w-full bg-amber-50/60 dark:bg-[#1a1614] border border-amber-200 dark:border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-stone-900 dark:text-[#fef3c7] focus:outline-none focus:border-orange-500"
                   placeholder="Subject (e.g. Science or select existing)"
                 />
                 <datalist id="subjects-list">
@@ -307,13 +333,13 @@ export const StudyPlanner: React.FC = () => {
                 type="date"
                 value={newTask.plannedDate}
                 onChange={e => setNewTask(prev => ({ ...prev, plannedDate: e.target.value }))}
-                className="bg-[#1a1614] border border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-[#fef3c7] focus:outline-none focus:border-orange-500"
+                className="bg-amber-50/60 dark:bg-[#1a1614] border border-amber-200 dark:border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-stone-900 dark:text-[#fef3c7] focus:outline-none focus:border-orange-500"
               />
               <input 
                 type="text"
                 value={newTask.estimatedTime}
                 onChange={e => setNewTask(prev => ({ ...prev, estimatedTime: e.target.value }))}
-                className="bg-[#1a1614] border border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-[#fef3c7] focus:outline-none focus:border-orange-500"
+                className="bg-amber-50/60 dark:bg-[#1a1614] border border-amber-200 dark:border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-stone-900 dark:text-[#fef3c7] focus:outline-none focus:border-orange-500"
                 placeholder="Focus Duration (e.g. 25 mins)"
               />
             </div>
@@ -321,13 +347,13 @@ export const StudyPlanner: React.FC = () => {
             <div className="flex justify-end space-x-3 pt-2">
               <button 
                 onClick={() => { setIsAdding(false); resetForm(); }}
-                className="px-4 py-2 text-xs font-bold text-orange-200/50 hover:text-white"
+                className="px-5 py-2.5 text-xs font-bold text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white bg-stone-200/80 dark:bg-stone-800/80 hover:bg-stone-300 dark:hover:bg-stone-700 rounded-xl transition-all border border-stone-300 dark:border-stone-700"
               >
                 Cancel
               </button>
               <button 
                 onClick={addTask}
-                className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold shadow-lg"
+                className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold shadow-lg active:scale-95 transition-all"
               >
                 {editingId ? 'Save Changes' : 'Schedule Activity'}
               </button>
@@ -337,32 +363,32 @@ export const StudyPlanner: React.FC = () => {
       </AnimatePresence>
 
       {/* Task & Revision List */}
-      <div className="space-y-4">
+      <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
         {filteredCustomTasks.map(task => (
           <div 
             key={task.id}
             className={`p-5 rounded-3xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
               task.completed 
-                ? 'bg-[#1a1614]/40 border-emerald-500/30 opacity-70' 
-                : 'bg-[#2a221f] border-[#3f332c] hover:border-orange-500/50'
+                ? 'bg-emerald-500/10 dark:bg-[#1a1614]/40 border-emerald-500/30 opacity-70' 
+                : 'bg-amber-50 dark:bg-[#2a221f] border-amber-200 dark:border-[#3f332c] hover:border-orange-500/50'
             }`}
           >
             <div className="flex items-start space-x-4">
               <button 
                 onClick={() => toggleTask(task.id)}
-                className="mt-1 shrink-0 text-orange-400 hover:text-emerald-400"
+                className="mt-1 shrink-0 text-orange-500 dark:text-orange-400 hover:text-emerald-500"
               >
-                {task.completed ? <CheckCircle2 size={22} className="text-emerald-400" /> : <Circle size={22} />}
+                {task.completed ? <CheckCircle2 size={22} className="text-emerald-500 dark:text-emerald-400" /> : <Circle size={22} />}
               </button>
 
               <div className="space-y-1">
-                <h3 className={`font-bold text-base ${task.completed ? 'line-through text-orange-200/50' : 'text-[#fef3c7]'}`}>
+                <h3 className={`font-bold text-base ${task.completed ? 'line-through text-stone-400 dark:text-orange-200/50' : 'text-stone-900 dark:text-[#fef3c7]'}`}>
                   {task.topic}
                 </h3>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-orange-200/60 font-medium">
-                  <span className="flex items-center space-x-1"><Book size={12} className="text-orange-400" /><span>{task.subject}</span></span>
-                  <span className="flex items-center space-x-1"><CalendarIcon size={12} className="text-amber-400" /><span>{task.plannedDate}</span></span>
-                  <span className="flex items-center space-x-1"><Clock size={12} className="text-sky-400" /><span>{task.estimatedTime}</span></span>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600 dark:text-orange-200/60 font-medium">
+                  <span className="flex items-center space-x-1"><Book size={12} className="text-orange-500 dark:text-orange-400" /><span>{task.subject}</span></span>
+                  <span className="flex items-center space-x-1"><CalendarIcon size={12} className="text-amber-600 dark:text-amber-400" /><span>{task.plannedDate}</span></span>
+                  <span className="flex items-center space-x-1"><Clock size={12} className="text-sky-600 dark:text-sky-400" /><span>{task.estimatedTime}</span></span>
                 </div>
               </div>
             </div>

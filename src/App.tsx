@@ -18,7 +18,6 @@ import Settings from './components/Settings';
 import { ExamMode } from './components/ExamMode';
 import Library from './components/Library';
 import RescueQueue from './components/RescueQueue';
-import LearnerAdviceView from './components/LearnerAdvice';
 import AiTester from './components/AiTester';
 import ConceptSimplifier from './components/ConceptSimplifier';
 import MemoryDna from './components/MemoryDna';
@@ -32,6 +31,14 @@ function AppContent() {
   const { currentView, goBack, setView, theme, user, signOutUser, startStudyNow } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false);
+  const mainRef = React.useRef<HTMLElement>(null);
+
+  React.useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [currentView]);
 
   if (currentView === 'auth') return <Auth />;
 
@@ -53,7 +60,6 @@ function AppContent() {
       case 'settings': return <Settings />;
       case 'library': return <Library />;
       case 'rescue-queue': return <RescueQueue />;
-      case 'advice': return <LearnerAdviceView />;
       case 'ai-tester': return <AiTester />;
       case 'simplifier': return <ConceptSimplifier />;
       case 'memory-dna': return <MemoryDna />;
@@ -65,7 +71,9 @@ function AppContent() {
   const showBackButton = currentView !== 'dashboard';
 
   return (
-    <div className="flex h-screen bg-[#1a1614] text-[#fef3c7] overflow-hidden font-sans relative">
+    <div className={`flex h-screen overflow-hidden font-sans relative transition-colors duration-300 ${
+      theme === 'dark' ? 'bg-[#1a1614] text-[#fef3c7]' : 'bg-[#fffaf5] text-stone-900'
+    }`}>
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -84,12 +92,14 @@ function AppContent() {
         <Sidebar onClose={() => setIsSidebarOpen(false)} />
       </div>
       
-      <main className="flex-1 overflow-y-auto relative bg-[#1a1614] border-l border-[#3f332c] w-full">
+      <main ref={mainRef} className={`flex-1 overflow-y-auto relative border-l w-full transition-colors duration-300 ${
+        theme === 'dark' ? 'bg-[#1a1614] border-[#3f332c] text-[#fef3c7]' : 'bg-[#fffaf5] border-orange-200 text-stone-900'
+      }`}>
         {/* TOP RIBBON */}
-        <div className={`sticky top-0 z-20 px-2 sm:px-6 py-2 sm:py-2.5 border-b shadow-md flex items-center justify-between gap-1 sm:gap-2 max-w-full min-w-0 overflow-x-hidden transition-colors duration-300 ${
+        <div className={`sticky top-0 z-30 px-3 sm:px-6 py-2 sm:py-2.5 border-b shadow-md flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 max-w-full w-full transition-colors duration-300 ${
           theme === 'dark' ? 'bg-[#2a221f] text-orange-100 border-[#3f332c]' : 'bg-[#fffaf5] text-slate-900 border-orange-200'
         }`}>
-          <div className="flex items-center space-x-1 sm:space-x-2 min-w-0 shrink">
+          <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0 flex-wrap sm:flex-nowrap gap-y-1">
             <button 
               onClick={() => setIsSidebarOpen(true)}
               className={`lg:hidden p-1.5 rounded-xl border active:scale-95 transition-all shrink-0 ${
@@ -103,12 +113,12 @@ function AppContent() {
             {/* Title Button in Top Ribbon leading to Home */}
             <button
               onClick={() => setView('dashboard')}
-              className={`flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-2xl border transition-all active:scale-95 group shadow-sm min-w-0 shrink ${
+              className={`flex items-center space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-2xl border transition-all active:scale-95 group shadow-sm shrink-0 ${
                 theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] border-[#3f332c] text-orange-100' : 'bg-orange-100/80 hover:bg-orange-200/80 border-orange-300 text-slate-900'
               }`}
             >
               <Logo size={18} className="group-hover:scale-110 transition-transform shrink-0" />
-              <span className={`font-black text-xs sm:text-sm tracking-tight transition-colors truncate ${
+              <span className={`font-black text-xs sm:text-sm tracking-tight transition-colors whitespace-nowrap ${
                 theme === 'dark' ? 'text-orange-100 group-hover:text-orange-400' : 'text-slate-900 group-hover:text-orange-700'
               }`}>
                 Memory Shaastra
@@ -118,25 +128,25 @@ function AppContent() {
             {showBackButton && (
               <button 
                 onClick={goBack}
-                className={`flex items-center space-x-1 transition-colors font-bold uppercase tracking-wider text-[10px] py-1 sm:py-1.5 px-2 rounded-xl border shadow-sm active:scale-95 shrink-0 ${
+                className={`flex items-center space-x-1 transition-colors font-bold uppercase tracking-wider text-[10px] py-1 sm:py-1.5 px-2.5 rounded-xl border shadow-sm active:scale-95 shrink-0 ${
                   theme === 'dark' ? 'text-orange-200 hover:text-white bg-[#1a1614] hover:bg-[#3f332c] border-[#3f332c]' : 'text-slate-700 hover:text-slate-900 bg-white/80 hover:bg-white border-orange-200'
                 }`}
               >
                 <ArrowLeft size={14} />
-                <span className="hidden sm:inline">{t.back}</span>
+                <span>{t.back}</span>
               </button>
             )}
           </div>
 
-          <div className="flex items-center space-x-1 sm:space-x-2 shrink-0 relative">
+          <div className="flex items-center space-x-2 shrink-0 relative ml-auto sm:ml-0">
             {/* Study Now Focus Sprint Button */}
             <button
               onClick={() => startStudyNow('Active Focus Study', 25)}
-              className="px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1 sm:space-x-1.5 active:scale-95 whitespace-nowrap shrink-0"
+              className="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5 active:scale-95 whitespace-nowrap shrink-0"
               title="Start Study Now Focus Sprint"
             >
               <Play size={12} className="fill-current shrink-0" />
-              <span className="text-[10px] sm:text-xs">Study Now</span>
+              <span className="text-[11px] sm:text-xs font-black">Study Now</span>
             </button>
 
             {/* Normal Sign In / Account Button WITHOUT profile picture */}
@@ -144,20 +154,20 @@ function AppContent() {
               <div className="relative shrink-0">
                 <button
                   onClick={() => setIsProfileMenuOpen(prev => !prev)}
-                  className={`px-2 sm:px-2.5 py-1 sm:py-1.5 border rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm shrink-0 ${
+                  className={`px-2.5 py-1 sm:py-1.5 border rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm shrink-0 ${
                     theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-100 border-[#3f332c]' : 'bg-white hover:bg-orange-50 text-slate-800 border-orange-300'
                   }`}
                   title="Account Profile & Sign Out"
                 >
                   <UserIcon size={16} className="text-orange-500 shrink-0" />
-                  <span className="hidden md:inline font-bold text-[11px] max-w-[90px] truncate">
+                  <span className="font-bold text-[11px] max-w-[110px] truncate">
                     {user.name || user.email.split('@')[0]}
                   </span>
                 </button>
 
                 {/* Profile Dropdown */}
                 {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-[#2a221f] border border-[#3f332c] rounded-2xl shadow-2xl p-3 z-50 text-left space-y-2">
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-[#2a221f] border border-[#3f332c] rounded-2xl shadow-2xl p-3 z-50 text-left space-y-2">
                     <div className="px-2 py-1.5 border-b border-[#3f332c]">
                       <p className="text-xs font-black text-orange-100 truncate">{user.name || 'Learner'}</p>
                       <p className="text-[10px] text-orange-200/50 truncate">{user.email}</p>
@@ -188,7 +198,7 @@ function AppContent() {
             ) : (
               <button
                 onClick={() => setView('auth')}
-                className={`px-2 sm:px-2.5 py-1 sm:py-1.5 border rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm shrink-0 ${
+                className={`px-2.5 py-1 sm:py-1.5 border rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm shrink-0 ${
                   theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-100 border-[#3f332c]' : 'bg-white hover:bg-orange-50 text-slate-800 border-orange-300'
                 }`}
                 title="Sign In"
