@@ -128,18 +128,6 @@ export default function Auth() {
     }
   };
 
-  const handleDemoLogin = () => {
-    const demoUser = {
-      id: 'demo_user_101',
-      name: 'Ananya Sharma',
-      email: 'hari310804@gmail.com',
-      photoUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=demo_user_101'
-    };
-    setUser(demoUser as any);
-    localStorage.setItem('ms_user', JSON.stringify(demoUser));
-    setView('dashboard');
-  };
-
   return (
     <div 
       className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
@@ -180,18 +168,6 @@ export default function Auth() {
             {authError}
           </div>
         )}
-
-        {/* Quick Demo Sign In Button */}
-        <div className="mb-4 relative z-10">
-          <button
-            type="button"
-            onClick={handleDemoLogin}
-            className="w-full py-3 px-4 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-xs rounded-2xl border border-amber-500/30 transition-all flex items-center justify-center space-x-2 active:scale-98"
-          >
-            <Sparkles size={15} className="text-amber-400" />
-            <span>Quick 1-Click Demo Sign In (hari310804@gmail.com)</span>
-          </button>
-        </div>
 
         {/* Google Sign In Button */}
         <div className="space-y-4 mb-6 relative z-10">
