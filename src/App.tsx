@@ -23,7 +23,7 @@ import ConceptSimplifier from './components/ConceptSimplifier';
 import MemoryDna from './components/MemoryDna';
 import StudyWellbeingCoach from './components/StudyWellbeingCoach';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Menu, Sparkles, LogOut, User as UserIcon, Play } from 'lucide-react';
+import { ArrowLeft, Menu, Sparkles, LogOut, LogIn, User as UserIcon, Play } from 'lucide-react';
 import { t } from './utils/translations';
 import { CalendarView } from './components/CalendarView';
 
@@ -40,8 +40,7 @@ function AppContent() {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [currentView]);
 
-  if (currentView === 'auth') return <Auth />;
-
+  // Render view router
   const renderView = () => {
     switch (currentView) {
       case 'dashboard': return <HomeScreen />;
@@ -149,25 +148,25 @@ function AppContent() {
               <span className="text-[11px] sm:text-xs font-black">Study Now</span>
             </button>
 
-            {/* Normal Sign In / Account Button WITHOUT profile picture */}
-            {user && (user.email || user.name) ? (
+            {/* Sign In / Account Button in Top Ribbon */}
+            {user && user.id !== 'guest' && user.email !== 'guest@maanas.com' ? (
               <div className="relative shrink-0">
                 <button
                   onClick={() => setIsProfileMenuOpen(prev => !prev)}
-                  className={`px-2.5 py-1 sm:py-1.5 border rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm shrink-0 ${
+                  className={`px-3 py-1.5 border rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm shrink-0 ${
                     theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-100 border-[#3f332c]' : 'bg-white hover:bg-orange-50 text-slate-800 border-orange-300'
                   }`}
-                  title="Account Profile & Sign Out"
+                  title="Account Profile & Settings"
                 >
                   <UserIcon size={16} className="text-orange-500 shrink-0" />
-                  <span className="font-bold text-[11px] max-w-[110px] truncate">
+                  <span className="font-bold text-[11px] max-w-[120px] truncate">
                     {user.name || user.email.split('@')[0]}
                   </span>
                 </button>
 
                 {/* Profile Dropdown */}
                 {isProfileMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-[#2a221f] border border-[#3f332c] rounded-2xl shadow-2xl p-3 z-50 text-left space-y-2">
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-[#2a221f] border border-[#3f332c] rounded-2xl shadow-2xl p-3 z-50 text-left space-y-2 text-[#fef3c7]">
                     <div className="px-2 py-1.5 border-b border-[#3f332c]">
                       <p className="text-xs font-black text-orange-100 truncate">{user.name || 'Learner'}</p>
                       <p className="text-[10px] text-orange-200/50 truncate">{user.email}</p>
@@ -177,17 +176,27 @@ function AppContent() {
                         setIsProfileMenuOpen(false);
                         setView('settings');
                       }}
-                      className="w-full text-left px-2 py-1.5 text-xs font-bold text-orange-200/80 hover:text-white hover:bg-[#3f332c] rounded-xl transition-colors flex items-center space-x-2"
+                      className="w-full text-left px-2.5 py-2 text-xs font-bold text-orange-200/80 hover:text-white hover:bg-[#3f332c] rounded-xl transition-colors flex items-center space-x-2"
                     >
                       <UserIcon size={14} />
                       <span>Account Settings</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        setView('auth');
+                      }}
+                      className="w-full text-left px-2.5 py-2 text-xs font-bold text-orange-400 hover:text-orange-300 hover:bg-[#3f332c] rounded-xl transition-colors flex items-center space-x-2"
+                    >
+                      <LogIn size={14} />
+                      <span>Switch Account / Sign In</span>
                     </button>
                     <button
                       onClick={async () => {
                         setIsProfileMenuOpen(false);
                         await signOutUser();
                       }}
-                      className="w-full text-left px-2 py-1.5 text-xs font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl transition-colors flex items-center space-x-2"
+                      className="w-full text-left px-2.5 py-2 text-xs font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl transition-colors flex items-center space-x-2"
                     >
                       <LogOut size={14} />
                       <span>Sign Out</span>
@@ -198,13 +207,11 @@ function AppContent() {
             ) : (
               <button
                 onClick={() => setView('auth')}
-                className={`px-2.5 py-1 sm:py-1.5 border rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm shrink-0 ${
-                  theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-100 border-[#3f332c]' : 'bg-white hover:bg-orange-50 text-slate-800 border-orange-300'
-                }`}
-                title="Sign In"
+                className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center space-x-1 sm:space-x-1.5 active:scale-95 shrink-0"
+                title="Sign In / Log In"
               >
-                <UserIcon size={16} className="text-orange-500 shrink-0" />
-                <span className="font-black text-[11px]">Sign In</span>
+                <UserIcon size={15} className="shrink-0" />
+                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider whitespace-nowrap">Sign In / Log In</span>
               </button>
             )}
           </div>
@@ -212,7 +219,7 @@ function AppContent() {
         
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentView}
+            key={currentView === 'auth' ? 'dashboard' : currentView}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -221,6 +228,11 @@ function AppContent() {
           >
             {renderView()}
           </motion.div>
+        </AnimatePresence>
+
+        {/* AUTH POPUP WINDOW OVERLAY */}
+        <AnimatePresence>
+          {currentView === 'auth' && <Auth />}
         </AnimatePresence>
       </main>
     </div>

@@ -550,6 +550,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setScheduledRevisions(prev => prev.filter(task => task.id !== id));
   };
 
+  const updateScheduledRevision = (id: string, updated: Partial<ScheduledRevisionTask>) => {
+    setScheduledRevisions(prev => prev.map(task => task.id === id ? { ...task, ...updated } : task));
+  };
+
+  const addScheduledRevision = (taskData: Partial<ScheduledRevisionTask>) => {
+    const newTask: ScheduledRevisionTask = {
+      id: 'rev_' + Math.random().toString(36).substr(2, 9),
+      activityId: 'custom_' + Date.now(),
+      itemTitle: taskData.itemTitle || 'Revision Task',
+      itemType: taskData.itemType || 'study-task',
+      dueDate: taskData.dueDate || new Date().toISOString().split('T')[0],
+      intervalDays: taskData.intervalDays || 1,
+      completed: false,
+      durationMinutes: taskData.durationMinutes || 20
+    };
+    setScheduledRevisions(prev => [newTask, ...prev]);
+  };
+
   // Helper for all subjects across Exam Plans, Tasks, Flashcards, Materials
   const allSubjects = React.useMemo(() => {
     const set = new Set<string>([
@@ -841,6 +859,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       logActivity,
       toggleScheduledRevision,
       deleteScheduledRevision,
+      updateScheduledRevision,
+      addScheduledRevision,
       activeFocusTask,
       setActiveFocusTask,
       startStudyNow,

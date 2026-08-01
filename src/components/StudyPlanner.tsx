@@ -18,10 +18,11 @@ import {
   Zap,
   Target,
   LayoutGrid,
-  LayoutList
+  LayoutList,
+  CalendarDays
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { StudyTask } from '../types';
+import { StudyTask, ScheduledRevisionTask } from '../types';
 
 export const StudyPlanner: React.FC = () => {
   const { 
@@ -29,6 +30,9 @@ export const StudyPlanner: React.FC = () => {
     setStudyTasks, 
     scheduledRevisions, 
     toggleScheduledRevision,
+    deleteScheduledRevision,
+    updateScheduledRevision,
+    addScheduledRevision,
     startStudyNow,
     examPlans,
     allSubjects,
@@ -39,6 +43,8 @@ export const StudyPlanner: React.FC = () => {
   const formRef = React.useRef<HTMLDivElement>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingType, setEditingType] = useState<'task' | 'revision' | null>(null);
+  const [activityCategory, setActivityCategory] = useState<'task' | 'revision'>('task');
   const [filter, setFilter] = useState<'daily' | 'all' | 'revisions' | 'completed'>('daily');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'line'>('line');
@@ -49,65 +55,110 @@ export const StudyPlanner: React.FC = () => {
     }, 100);
   };
   
-  const [newTask, setNewTask] = useState<Partial<StudyTask>>({
+  const [formData, setFormData] = useState({
     subject: '',
     topic: '',
     plannedDate: new Date().toISOString().split('T')[0],
     estimatedTime: '25 mins',
+    intervalDays: 1,
     completed: false
   });
 
   const activeExamPlan = examPlans.find(p => p.isActive) || examPlans[0];
 
-  const syncExamSchedule = () => {
-    if (!activeExamPlan) return;
-    activeExamPlan.subjects.forEach(sub => {
-      if (sub.name) {
-        autoCreateSM2ScheduleForSubject(sub.name, activeExamPlan.examDate);
-      }
+  const resetForm = () => {
+    setFormData({
+      subject: '',
+      topic: '',
+      plannedDate: new Date().toISOString().split('T')[0],
+      estimatedTime: '25 mins',
+      intervalDays: 1,
+      completed: false
     });
+    setEditingId(null);
+    setEditingType(null);
+    setActivityCategory('task');
   };
 
-  const addTask = () => {
-    if (!newTask.subject || !newTask.topic) return;
+  const handleSaveActivity = () => {
+    if (!formData.topic) return;
     
-    if (editingId) {
+    if (editingId && editingType === 'task') {
       setStudyTasks(prev => prev.map(task => 
         task.id === editingId 
-          ? { ...task, ...newTask as StudyTask } 
+          ? { 
+              ...task, 
+              topic: formData.topic, 
+              subject: formData.subject || 'General', 
+              plannedDate: formData.plannedDate, 
+              estimatedTime: formData.estimatedTime 
+            } 
           : task
       ));
-      setEditingId(null);
+    } else if (editingId && editingType === 'revision') {
+      const durMins = parseInt(formData.estimatedTime) || 20;
+      updateScheduledRevision(editingId, {
+        itemTitle: formData.topic,
+        dueDate: formData.plannedDate,
+        durationMinutes: durMins,
+        intervalDays: formData.intervalDays || 1
+      });
     } else {
-      const task: StudyTask = {
-        id: Date.now().toString(),
-        subject: newTask.subject!,
-        topic: newTask.topic!,
-        plannedDate: newTask.plannedDate!,
-        estimatedTime: newTask.estimatedTime || '25 mins',
-        completed: false
-      };
-      setStudyTasks(prev => [...prev, task]);
+      // Adding New
+      if (activityCategory === 'revision') {
+        const durMins = parseInt(formData.estimatedTime) || 20;
+        addScheduledRevision({
+          itemTitle: formData.topic,
+          dueDate: formData.plannedDate,
+          durationMinutes: durMins,
+          intervalDays: formData.intervalDays || 1,
+          itemType: 'study-task'
+        });
+      } else {
+        const task: StudyTask = {
+          id: Date.now().toString(),
+          subject: formData.subject || 'General',
+          topic: formData.topic,
+          plannedDate: formData.plannedDate,
+          estimatedTime: formData.estimatedTime || '25 mins',
+          completed: false
+        };
+        setStudyTasks(prev => [...prev, task]);
+      }
     }
     
     setIsAdding(false);
     resetForm();
   };
 
-  const resetForm = () => {
-    setNewTask({
-      subject: '',
-      topic: '',
-      plannedDate: new Date().toISOString().split('T')[0],
-      estimatedTime: '25 mins',
-      completed: false
+  const startEditTask = (task: StudyTask) => {
+    setFormData({
+      subject: task.subject || '',
+      topic: task.topic,
+      plannedDate: task.plannedDate,
+      estimatedTime: task.estimatedTime || '25 mins',
+      intervalDays: 1,
+      completed: task.completed
     });
-    setEditingId(null);
+    setEditingId(task.id);
+    setEditingType('task');
+    setActivityCategory('task');
+    setIsAdding(true);
+    scrollToForm();
   };
 
-  const startEdit = (task: StudyTask) => {
-    setNewTask(task);
-    setEditingId(task.id);
+  const startEditRevision = (rev: ScheduledRevisionTask) => {
+    setFormData({
+      subject: '',
+      topic: rev.itemTitle,
+      plannedDate: rev.dueDate,
+      estimatedTime: `${rev.durationMinutes || 20} mins`,
+      intervalDays: rev.intervalDays || 1,
+      completed: rev.completed
+    });
+    setEditingId(rev.id);
+    setEditingType('revision');
+    setActivityCategory('revision');
     setIsAdding(true);
     scrollToForm();
   };
@@ -152,17 +203,17 @@ export const StudyPlanner: React.FC = () => {
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-[#2a221f] p-6 rounded-3xl border border-[#3f332c]">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#fef3c7]">Study Schedule</h1>
-          <p className="text-xs text-orange-200/60 mt-1">Organized study roadmap with search & direct Focus Timer integration</p>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#fef3c7]">Flexible Study Schedule</h1>
+          <p className="text-xs text-orange-200/60 mt-1">Full control to add, edit, delete, and manage all study activities & revisions</p>
         </div>
 
         {!isAdding && (
           <button 
             onClick={() => { resetForm(); setIsAdding(true); scrollToForm(); }}
-            className="flex items-center space-x-2 bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-2xl font-bold text-xs shadow-lg transition-all active:scale-95"
+            className="flex items-center space-x-2 bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-2xl font-bold text-xs shadow-lg transition-all active:scale-95 cursor-pointer"
           >
             <Plus size={18} />
-            <span>Add Study Activity</span>
+            <span>+ Add Activity / Revision</span>
           </button>
         )}
       </header>
@@ -171,45 +222,12 @@ export const StudyPlanner: React.FC = () => {
       <div className="bg-[#2a221f]/60 p-5 rounded-2xl border border-[#3f332c] flex items-start space-x-3 text-xs text-orange-100/90">
         <HelpCircle size={18} className="text-orange-400 shrink-0 mt-0.5" />
         <div>
-          <strong className="text-orange-300 font-bold">How "Study Schedule" Works:</strong>
+          <strong className="text-orange-300 font-bold">Flexible Schedule Management:</strong>
           <p className="text-orange-200/70 mt-0.5">
-            Create tasks with planned dates and focus durations. Use the <strong>Search Facility</strong> below to instantly filter activities by subject or topic. Click <strong>"Study Now"</strong> on any task to enter Monk Mode focus timer.
+            Easily click the <strong>Edit (pencil)</strong> icon or <strong>Delete (trash)</strong> icon on any study activity or revision item below to adjust dates, durations, and topics anytime.
           </p>
         </div>
       </div>
-
-      {/* Upcoming Exam Schedule Card (Without Auto SM2 Sync Button) */}
-      {activeExamPlan && (
-        <div className="bg-amber-500/10 dark:bg-gradient-to-r dark:from-[#2a221f] dark:via-[#332824] dark:to-[#2a221f] p-6 rounded-3xl border border-orange-500/30 shadow-xl space-y-4 relative overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <span className="bg-orange-600/20 text-orange-600 dark:text-orange-400 border border-orange-500/30 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full flex items-center space-x-1">
-                  <Target size={12} />
-                  <span>Active Exam Schedule</span>
-                </span>
-                <span className="text-xs font-bold text-stone-600 dark:text-orange-200/60">
-                  Target Date: {activeExamPlan.examDate}
-                </span>
-              </div>
-              <h3 className="text-xl font-black text-stone-900 dark:text-orange-100 italic">{activeExamPlan.title}</h3>
-              <p className="text-xs text-stone-600 dark:text-orange-200/70">
-                Subjects in Exam Plan: {activeExamPlan.subjects.map(s => s.name).join(', ') || 'No subjects set'}
-              </p>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => startStudyNow(`Exam Prep: ${activeExamPlan.title}`, 45, activeExamPlan.subjects[0]?.name)}
-                className="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl text-xs font-black shadow-lg transition-all flex items-center space-x-2 active:scale-95"
-              >
-                <Play size={14} className="fill-current" />
-                <span>Study Now</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Search & Filter Bar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-[#2a221f] p-4 rounded-3xl border border-[#3f332c]">
@@ -220,7 +238,7 @@ export const StudyPlanner: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search activities in Study Schedule by topic or subject..."
+            placeholder="Search activities by topic, subject, or revision name..."
             className="w-full bg-[#1a1614] border border-[#3f332c] text-xs py-3 pl-12 pr-4 rounded-2xl text-[#fef3c7] focus:outline-none focus:border-orange-500 font-medium"
           />
           {searchQuery && (
@@ -235,41 +253,41 @@ export const StudyPlanner: React.FC = () => {
 
         {/* Filter Tabs & Grid/Line View Toggle */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-1.5 bg-[#1a1614] dark:bg-[#1a1614] bg-stone-100 p-1.5 rounded-2xl border border-stone-200 dark:border-[#3f332c] text-xs font-bold">
+          <div className="flex flex-wrap gap-1.5 bg-[#1a1614] p-1.5 rounded-2xl border border-[#3f332c] text-xs font-bold">
             <button
               onClick={() => setFilter('daily')}
-              className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'daily' ? 'bg-orange-600 text-white shadow-md' : 'text-stone-600 dark:text-orange-200/60 hover:text-stone-900 dark:hover:text-white'}`}
+              className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${filter === 'daily' ? 'bg-orange-600 text-white shadow-md' : 'text-orange-200/60 hover:text-white'}`}
             >
               Today's Schedule
             </button>
             <button
               onClick={() => setFilter('all')}
-              className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'all' ? 'bg-orange-600 text-white shadow-md' : 'text-stone-600 dark:text-orange-200/60 hover:text-stone-900 dark:hover:text-white'}`}
+              className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${filter === 'all' ? 'bg-orange-600 text-white shadow-md' : 'text-orange-200/60 hover:text-white'}`}
             >
               All Activities
             </button>
             <button
               onClick={() => setFilter('revisions')}
-              className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'revisions' ? 'bg-orange-600 text-white shadow-md' : 'text-stone-600 dark:text-orange-200/60 hover:text-stone-900 dark:hover:text-white'}`}
+              className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${filter === 'revisions' ? 'bg-orange-600 text-white shadow-md' : 'text-orange-200/60 hover:text-white'}`}
             >
               Revisions ({scheduledRevisions.filter(r => !r.completed).length})
             </button>
             <button
               onClick={() => setFilter('completed')}
-              className={`px-3.5 py-2 rounded-xl transition-all ${filter === 'completed' ? 'bg-orange-600 text-white shadow-md' : 'text-stone-600 dark:text-orange-200/60 hover:text-stone-900 dark:hover:text-white'}`}
+              className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${filter === 'completed' ? 'bg-orange-600 text-white shadow-md' : 'text-orange-200/60 hover:text-white'}`}
             >
               Completed
             </button>
           </div>
 
           {/* Grid View / Line View Switcher */}
-          <div className="flex items-center space-x-1 bg-stone-100 dark:bg-[#1a1614] p-1 rounded-2xl border border-stone-200 dark:border-[#3f332c] shrink-0 self-end sm:self-auto">
+          <div className="flex items-center space-x-1 bg-[#1a1614] p-1 rounded-2xl border border-[#3f332c] shrink-0 self-end sm:self-auto">
             <button
               onClick={() => setViewMode('grid')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 viewMode === 'grid' 
                   ? 'bg-orange-600 text-white shadow-md' 
-                  : 'text-stone-600 dark:text-orange-200/60 hover:text-stone-900 dark:hover:text-white'
+                  : 'text-orange-200/60 hover:text-white'
               }`}
               title="Grid View"
             >
@@ -278,10 +296,10 @@ export const StudyPlanner: React.FC = () => {
             </button>
             <button
               onClick={() => setViewMode('line')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 viewMode === 'line' 
                   ? 'bg-orange-600 text-white shadow-md' 
-                  : 'text-stone-600 dark:text-orange-200/60 hover:text-stone-900 dark:hover:text-white'
+                  : 'text-orange-200/60 hover:text-white'
               }`}
               title="Line View"
             >
@@ -302,23 +320,47 @@ export const StudyPlanner: React.FC = () => {
             exit={{ opacity: 0, y: -10 }}
             className="bg-white dark:bg-[#2a221f] rounded-3xl p-6 border border-orange-500/30 space-y-4 shadow-xl transition-colors"
           >
-            <h3 className="font-bold text-orange-600 dark:text-orange-300 text-sm">{editingId ? 'Edit Activity' : 'Add New Study Activity'}</h3>
+            <div className="flex items-center justify-between border-b border-stone-200 dark:border-[#3f332c] pb-3">
+              <h3 className="font-bold text-orange-600 dark:text-orange-300 text-sm">
+                {editingId ? `Edit ${editingType === 'revision' ? 'Revision Activity' : 'Study Activity'}` : 'Add New Study Activity'}
+              </h3>
+
+              {!editingId && (
+                <div className="flex items-center space-x-2 bg-stone-100 dark:bg-[#1a1614] p-1 rounded-xl border border-stone-200 dark:border-[#3f332c]">
+                  <button
+                    type="button"
+                    onClick={() => setActivityCategory('task')}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${activityCategory === 'task' ? 'bg-orange-600 text-white shadow' : 'text-stone-600 dark:text-orange-200/60'}`}
+                  >
+                    Regular Task
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActivityCategory('revision')}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${activityCategory === 'revision' ? 'bg-orange-600 text-white shadow' : 'text-stone-600 dark:text-orange-200/60'}`}
+                  >
+                    Revision Item
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input 
                 type="text"
-                value={newTask.topic}
-                onChange={e => setNewTask(prev => ({ ...prev, topic: e.target.value }))}
+                value={formData.topic}
+                onChange={e => setFormData(prev => ({ ...prev, topic: e.target.value }))}
                 className="bg-amber-50/60 dark:bg-[#1a1614] border border-amber-200 dark:border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-stone-900 dark:text-[#fef3c7] focus:outline-none focus:border-orange-500"
-                placeholder="Topic Name (e.g. Chemical Bonds)"
+                placeholder="Topic / Activity Title (e.g. Chemical Bonds)"
               />
               <div>
                 <input 
                   type="text"
                   list="subjects-list"
-                  value={newTask.subject}
-                  onChange={e => setNewTask(prev => ({ ...prev, subject: e.target.value }))}
+                  value={formData.subject}
+                  onChange={e => setFormData(prev => ({ ...prev, subject: e.target.value }))}
                   className="w-full bg-amber-50/60 dark:bg-[#1a1614] border border-amber-200 dark:border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-stone-900 dark:text-[#fef3c7] focus:outline-none focus:border-orange-500"
-                  placeholder="Subject (e.g. Science or select existing)"
+                  placeholder="Subject (e.g. Science or General)"
                 />
                 <datalist id="subjects-list">
                   {allSubjects.map(sub => (
@@ -329,31 +371,42 @@ export const StudyPlanner: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input 
-                type="date"
-                value={newTask.plannedDate}
-                onChange={e => setNewTask(prev => ({ ...prev, plannedDate: e.target.value }))}
-                className="bg-amber-50/60 dark:bg-[#1a1614] border border-amber-200 dark:border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-stone-900 dark:text-[#fef3c7] focus:outline-none focus:border-orange-500"
-              />
-              <input 
-                type="text"
-                value={newTask.estimatedTime}
-                onChange={e => setNewTask(prev => ({ ...prev, estimatedTime: e.target.value }))}
-                className="bg-amber-50/60 dark:bg-[#1a1614] border border-amber-200 dark:border-[#3f332c] rounded-xl py-3 px-4 text-xs font-bold text-stone-900 dark:text-[#fef3c7] focus:outline-none focus:border-orange-500"
-                placeholder="Focus Duration (e.g. 25 mins)"
-              />
+              <div>
+                <label className="text-[10px] font-black uppercase text-stone-500 dark:text-orange-200/50 block mb-1">
+                  Scheduled Date
+                </label>
+                <input 
+                  type="date"
+                  value={formData.plannedDate}
+                  onChange={e => setFormData(prev => ({ ...prev, plannedDate: e.target.value }))}
+                  className="w-full bg-amber-50/60 dark:bg-[#1a1614] border border-amber-200 dark:border-[#3f332c] rounded-xl py-2.5 px-4 text-xs font-bold text-stone-900 dark:text-[#fef3c7] focus:outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black uppercase text-stone-500 dark:text-orange-200/50 block mb-1">
+                  Estimated Duration
+                </label>
+                <input 
+                  type="text"
+                  value={formData.estimatedTime}
+                  onChange={e => setFormData(prev => ({ ...prev, estimatedTime: e.target.value }))}
+                  className="w-full bg-amber-50/60 dark:bg-[#1a1614] border border-amber-200 dark:border-[#3f332c] rounded-xl py-2.5 px-4 text-xs font-bold text-stone-900 dark:text-[#fef3c7] focus:outline-none focus:border-orange-500"
+                  placeholder="Focus Duration (e.g. 25 mins)"
+                />
+              </div>
             </div>
 
             <div className="flex justify-end space-x-3 pt-2">
               <button 
                 onClick={() => { setIsAdding(false); resetForm(); }}
-                className="px-5 py-2.5 text-xs font-bold text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white bg-stone-200/80 dark:bg-stone-800/80 hover:bg-stone-300 dark:hover:bg-stone-700 rounded-xl transition-all border border-stone-300 dark:border-stone-700"
+                className="px-5 py-2.5 text-xs font-bold text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white bg-stone-200/80 dark:bg-stone-800/80 hover:bg-stone-300 dark:hover:bg-stone-700 rounded-xl transition-all border border-stone-300 dark:border-stone-700 cursor-pointer"
               >
                 Cancel
               </button>
               <button 
-                onClick={addTask}
-                className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold shadow-lg active:scale-95 transition-all"
+                onClick={handleSaveActivity}
+                className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold shadow-lg active:scale-95 transition-all cursor-pointer"
               >
                 {editingId ? 'Save Changes' : 'Schedule Activity'}
               </button>
@@ -363,7 +416,8 @@ export const StudyPlanner: React.FC = () => {
       </AnimatePresence>
 
       {/* Task & Revision List */}
-      <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
+      <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-4'}>
+        {/* Custom Study Tasks */}
         {filteredCustomTasks.map(task => (
           <div 
             key={task.id}
@@ -376,7 +430,7 @@ export const StudyPlanner: React.FC = () => {
             <div className="flex items-start space-x-4">
               <button 
                 onClick={() => toggleTask(task.id)}
-                className="mt-1 shrink-0 text-orange-500 dark:text-orange-400 hover:text-emerald-500"
+                className="mt-1 shrink-0 text-orange-500 dark:text-orange-400 hover:text-emerald-500 cursor-pointer"
               >
                 {task.completed ? <CheckCircle2 size={22} className="text-emerald-500 dark:text-emerald-400" /> : <Circle size={22} />}
               </button>
@@ -393,29 +447,31 @@ export const StudyPlanner: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-3 shrink-0 self-end md:self-center">
+            <div className="flex items-center space-x-2 shrink-0 self-end md:self-center">
               <button
                 onClick={() => {
                   const minutes = parseInt(task.estimatedTime) || 25;
                   startStudyNow(task.topic, minutes, task.subject);
                 }}
-                className="flex items-center space-x-2 py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-95"
+                className="flex items-center space-x-1.5 py-2 px-3.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
               >
-                <Play size={14} fill="currentColor" />
+                <Play size={13} fill="currentColor" />
                 <span>Study Now</span>
               </button>
 
               <button 
-                onClick={() => startEdit(task)} 
-                className="p-2 bg-white/5 hover:bg-white/10 text-amber-300 rounded-xl"
+                onClick={() => startEditTask(task)} 
+                className="p-2 bg-stone-200 dark:bg-white/5 hover:bg-stone-300 dark:hover:bg-white/10 text-stone-800 dark:text-amber-300 rounded-xl cursor-pointer transition-all"
+                title="Edit Activity"
               >
-                <Edit2 size={16} />
+                <Edit2 size={15} />
               </button>
               <button 
                 onClick={() => deleteTask(task.id)} 
-                className="p-2 bg-white/5 hover:bg-white/10 text-rose-400 rounded-xl"
+                className="p-2 bg-stone-200 dark:bg-white/5 hover:bg-stone-300 dark:hover:bg-white/10 text-rose-600 dark:text-rose-400 rounded-xl cursor-pointer transition-all"
+                title="Delete Activity"
               >
-                <Trash2 size={16} />
+                <Trash2 size={15} />
               </button>
             </div>
           </div>
@@ -434,7 +490,7 @@ export const StudyPlanner: React.FC = () => {
             <div className="flex items-start space-x-4">
               <button 
                 onClick={() => toggleScheduledRevision(rev.id)}
-                className="mt-1 shrink-0 text-orange-400 hover:text-emerald-400"
+                className="mt-1 shrink-0 text-orange-400 hover:text-emerald-400 cursor-pointer"
               >
                 {rev.completed ? <CheckCircle2 size={22} className="text-emerald-400" /> : <Circle size={22} />}
               </button>
@@ -448,19 +504,44 @@ export const StudyPlanner: React.FC = () => {
                     {rev.itemTitle}
                   </h3>
                 </div>
-                <p className="text-xs text-orange-200/60 font-medium">
-                  Due Date: <strong className="text-amber-300">{rev.dueDate}</strong>
-                </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-orange-200/60 font-medium">
+                  <span className="flex items-center space-x-1">
+                    <CalendarIcon size={12} className="text-amber-400" />
+                    <span>Due: <strong className="text-amber-300">{rev.dueDate}</strong></span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <Clock size={12} className="text-sky-400" />
+                    <span>{rev.durationMinutes || 20} mins</span>
+                  </span>
+                </div>
               </div>
             </div>
 
-            <button
-              onClick={() => startStudyNow(rev.itemTitle, 20)}
-              className="flex items-center space-x-2 py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-95 shrink-0 self-end md:self-center"
-            >
-              <Play size={14} fill="currentColor" />
-              <span>Revise Now</span>
-            </button>
+            <div className="flex items-center space-x-2 shrink-0 self-end md:self-center">
+              <button
+                onClick={() => startStudyNow(rev.itemTitle, rev.durationMinutes || 20)}
+                className="flex items-center space-x-1.5 py-2 px-3.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+              >
+                <Play size={13} fill="currentColor" />
+                <span>Revise Now</span>
+              </button>
+
+              <button 
+                onClick={() => startEditRevision(rev)} 
+                className="p-2 bg-white/5 hover:bg-white/10 text-amber-300 rounded-xl cursor-pointer transition-all"
+                title="Edit Revision"
+              >
+                <Edit2 size={15} />
+              </button>
+
+              <button 
+                onClick={() => deleteScheduledRevision(rev.id)} 
+                className="p-2 bg-white/5 hover:bg-white/10 text-rose-400 rounded-xl cursor-pointer transition-all"
+                title="Delete Revision"
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
           </div>
         ))}
 
