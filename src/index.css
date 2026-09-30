@@ -10,6 +10,17 @@
 html, body, #root {
   overflow-x: hidden !important;
   max-width: 100vw !important;
+  width: 100%;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Ensure no elements cause side scrolling */
+main {
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 @layer base {
@@ -117,7 +128,7 @@ html.light .bg-white\/5 {
   background-color: rgba(60, 42, 33, 0.04) !important;
 }
 
-/* Text overrides: mapping light/neon colors to elegant dark, high-contrast colors */
+/* Text overrides: mapping light/neon colors to elegant dark, high-contrast colors in light mode */
 html.light .text-orange-50,
 html.light .text-orange-100,
 html.light .text-orange-200,
@@ -142,71 +153,93 @@ html.light .text-rose-300,
 html.light .text-emerald-100,
 html.light .text-emerald-200,
 html.light .text-emerald-300,
+html.light .text-stone-400,
+html.light .text-stone-500,
 html.light .text-\[\#fef3c7\] {
   color: #2D201A !important;
+  opacity: 1 !important;
 }
 
-/* Map specific text-opacity utility classes (e.g. text-orange-200/60 on buttons) to rich, completely legible colors matching the photo */
-html.light .text-orange-200\/60,
-html.light .text-orange-200\/70,
+/* Comprehensive light-theme overrides for all opacity variations to guarantee dark, readable letters */
+html.light [class*="text-orange-100"],
+html.light [class*="text-orange-200"],
+html.light [class*="text-orange-300"],
+html.light [class*="text-amber-100"],
+html.light [class*="text-amber-200"],
+html.light [class*="text-amber-300"] {
+  color: #3b281f !important;
+  opacity: 1 !important;
+}
+
+html.light .text-orange-200\/95,
+html.light .text-orange-200\/90,
 html.light .text-orange-200\/80,
-html.light .text-orange-100\/60,
-html.light .text-orange-100\/70,
+html.light .text-orange-200\/70,
+html.light .text-orange-200\/60,
+html.light .text-orange-200\/50,
+html.light .text-orange-200\/40,
+html.light .text-orange-200\/30,
+html.light .text-orange-200\/20,
+html.light .text-orange-100\/95,
+html.light .text-orange-100\/90,
 html.light .text-orange-100\/80,
-html.light .text-orange-300\/60,
-html.light .text-orange-300\/70,
+html.light .text-orange-100\/70,
+html.light .text-orange-100\/60,
+html.light .text-orange-100\/50,
 html.light .text-orange-300\/80,
-html.light .text-amber-200\/60,
-html.light .text-amber-200\/70,
+html.light .text-orange-300\/70,
+html.light .text-orange-300\/60,
+html.light .text-orange-300\/50,
+html.light .text-orange-300\/40,
+html.light .text-amber-200\/90,
 html.light .text-amber-200\/80,
+html.light .text-amber-200\/70,
+html.light .text-amber-200\/60,
+html.light .text-amber-200\/50,
+html.light .text-amber-200\/40,
+html.light .text-amber-200\/30,
+html.light .text-amber-100\/90,
+html.light .text-amber-100\/80,
+html.light .text-amber-100\/70,
+html.light .text-amber-100\/60,
+html.light .text-amber-100\/50 {
+  color: #3f2e24 !important; /* Bold, completely dark, high-contrast letters in light theme */
+  opacity: 1 !important;
+}
+
+/* In dark mode, ensure letters are bright and high-contrast against the dark background */
+html:not(.light) .text-orange-200\/50,
+html:not(.light) .text-orange-200\/40,
+html:not(.light) .text-amber-200\/50,
+html:not(.light) .text-amber-200\/40,
+html.dark .text-orange-200\/50,
+html.dark .text-orange-200\/40,
+html.dark .text-amber-200\/50,
+html.dark .text-amber-200\/40 {
+  color: rgba(254, 215, 170, 0.85) !important;
+}
+
+html:not(.light) .text-orange-200\/30,
+html:not(.light) .text-orange-200\/20,
+html:not(.light) .text-amber-200\/30,
+html:not(.light) .text-amber-200\/20,
+html.dark .text-orange-200\/30,
+html.dark .text-orange-200\/20,
+html.dark .text-amber-200\/30,
+html.dark .text-amber-200\/20 {
+  color: rgba(254, 215, 170, 0.75) !important;
+}
+
+/* Secondary warm-amber accent in light theme */
 html.light .text-orange-400\/60,
 html.light .text-orange-400\/80 {
-  color: #b45309 !important; /* Beautiful rich, dark warm-amber matching the photo perfectly */
-  opacity: 1 !important;
-}
-
-html.light .text-orange-200\/40,
-html.light .text-orange-300\/40,
-html.light .text-amber-200\/40 {
-  color: #615047 !important;
-  opacity: 1 !important;
-}
-
-html.light .text-orange-200\/30,
-html.light .text-orange-300\/30,
-html.light .text-amber-200\/30 {
-  color: #7d685c !important;
-  opacity: 1 !important;
-}
-
-html.light .text-orange-200\/20,
-html.light .text-orange-300\/20,
-html.light .text-amber-200\/20 {
-  color: #8c786c !important;
-  opacity: 1 !important;
-}
-
-html.light .text-orange-100\/90,
-html.light .text-amber-100\/90,
-html.light .text-orange-200\/90 {
-  color: #2D201A !important;
-  opacity: 1 !important;
-}
-
-html.light .text-orange-100\/95,
-html.light .text-amber-100\/95,
-html.light .text-orange-200\/95 {
-  color: #2D201A !important;
-  opacity: 1 !important;
-}
-
-html.light .text-orange-100\/80 {
-  color: #4E3C33 !important; /* Elegant deep-brown for sidebar inactive links */
+  color: #b45309 !important;
   opacity: 1 !important;
 }
 
 html.light .text-\[\#e2b89d\] {
-  color: #5C4033 !important; /* Beautiful readable dark warm-brown */
+  color: #3b281f !important;
+  opacity: 1 !important;
 }
 
 /* Normal solid accent colors */

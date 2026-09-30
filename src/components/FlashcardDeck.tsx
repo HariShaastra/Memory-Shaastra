@@ -249,16 +249,16 @@ export default function FlashcardDeck() {
         </div>
 
         {subjects.length > 1 && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+          <div className="flex flex-wrap items-center gap-2 pb-2 md:pb-0">
             <Filter size={16} className="text-orange-200/20 flex-shrink-0 ml-2" />
             {subjects.map(subject => (
               <button
                 key={subject}
                 onClick={() => { setSelectedSubject(subject); setCurrentIndex(0); }}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border ${
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
                   selectedSubject === subject 
                     ? 'bg-orange-500/10 border-orange-500 text-orange-500 shadow-lg' 
-                    : 'bg-[#1a1614] border-[#3f332c] text-orange-200/20 hover:border-orange-200/20'
+                    : 'bg-[#1a1614] border-[#3f332c] text-orange-200/40 hover:border-orange-200/40'
                 }`}
               >
                 {subject === 'all' ? 'All Cards' : subject}

@@ -103,6 +103,7 @@ export interface Revision {
   examDate: string;
   completedDates: string[];
   nextRevision: string;
+  estimatedDuration?: string;
 }
 
 export interface StudyTask {
@@ -110,7 +111,7 @@ export interface StudyTask {
   subject: string;
   topic: string;
   plannedDate: string;
-  estimatedTime: string; // e.g. "2 hours"
+  estimatedTime?: string; // Optional e.g. "25 mins"
   completed: boolean;
 }
 

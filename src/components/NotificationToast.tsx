@@ -5,10 +5,14 @@ import { useAppContext } from '../context/AppContext';
 import { AppNotification } from '../types';
 
 export function NotificationToast() {
-  const { notifications } = useAppContext();
+  const { notifications, currentView } = useAppContext();
   const [activeToast, setActiveToast] = useState<AppNotification | null>(null);
 
   useEffect(() => {
+    // Suppress intrusive toasts if in distraction-free mode or active focus
+    const isDistractionFree = currentView === 'focus' || !!document.fullscreenElement;
+    if (isDistractionFree) return;
+
     // Show most recent unread notification if it's less than 30 seconds old
     const recentUnread = notifications.find(n => !n.read && (Date.now() - new Date(n.timestamp).getTime() < 30000));
     if (recentUnread && (!activeToast || activeToast.id !== recentUnread.id)) {
@@ -16,9 +20,10 @@ export function NotificationToast() {
       const timer = setTimeout(() => setActiveToast(null), 8000);
       return () => clearTimeout(timer);
     }
-  }, [notifications]);
+  }, [notifications, currentView, activeToast]);
 
-  if (!activeToast) return null;
+  const isDistractionFree = currentView === 'focus' || !!document.fullscreenElement;
+  if (!activeToast || isDistractionFree) return null;
 
   const getTypeStyles = (type: AppNotification['type']) => {
     switch (type) {

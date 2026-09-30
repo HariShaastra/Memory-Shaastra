@@ -88,10 +88,10 @@ export default function ConceptSimplifier() {
         {/* Input Text Area & Upload */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <label className="text-[10px] font-black uppercase tracking-widest text-orange-200/50">
+            <label className="text-[10px] font-black uppercase tracking-widest text-stone-700 dark:text-orange-200/80">
               Textbook Passage / Concept Text
             </label>
-            <label className="flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 font-bold cursor-pointer">
+            <label className="flex items-center gap-1.5 text-xs text-orange-600 dark:text-orange-400 hover:text-orange-500 font-bold cursor-pointer">
               <Upload size={14} />
               <span>Upload File / PDF</span>
               <input type="file" accept=".pdf,.txt,.doc,.docx" onChange={handleFileUpload} className="hidden" />
@@ -103,13 +103,13 @@ export default function ConceptSimplifier() {
             onChange={e => setTextInput(e.target.value)}
             placeholder="Paste difficult textbook paragraph, scientific theory, law clause, or complex notes here..."
             rows={6}
-            className="w-full bg-[#1a1614] border border-[#3f332c] text-sm text-orange-100 p-5 rounded-2xl focus:outline-none focus:border-orange-500 font-medium"
+            className="w-full bg-white dark:bg-[#1a1614] border border-stone-200 dark:border-[#3f332c] text-sm text-stone-900 dark:text-orange-100 p-5 rounded-2xl focus:outline-none focus:border-orange-500 font-medium"
           />
         </div>
 
         {/* Select Target Version */}
         <div className="space-y-3">
-          <label className="text-[10px] font-black uppercase tracking-widest text-orange-200/50 block">
+          <label className="text-[10px] font-black uppercase tracking-widest text-stone-700 dark:text-orange-200/80 block">
             Select Output Version Format
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -124,11 +124,11 @@ export default function ConceptSimplifier() {
                 className={`p-4 rounded-2xl border text-left transition-all ${
                   version === opt.id 
                     ? 'bg-orange-500 text-slate-950 border-orange-400 shadow-lg shadow-orange-500/20' 
-                    : 'bg-[#1a1614] border-[#3f332c] text-orange-200/70 hover:border-orange-500/40'
+                    : 'bg-stone-50 dark:bg-[#1a1614] border-stone-200 dark:border-[#3f332c] text-stone-700 dark:text-orange-200/80 hover:border-orange-500/40'
                 }`}
               >
                 <p className="font-black text-xs uppercase tracking-wider">{opt.label}</p>
-                <p className={`text-[10px] mt-1 ${version === opt.id ? 'text-slate-900 font-medium' : 'text-orange-200/50'}`}>
+                <p className={`text-[10px] mt-1 ${version === opt.id ? 'text-slate-900 font-medium' : 'text-stone-600 dark:text-orange-200/60'}`}>
                   {opt.desc}
                 </p>
               </button>

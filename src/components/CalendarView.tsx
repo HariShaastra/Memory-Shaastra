@@ -606,7 +606,7 @@ export function CalendarView() {
 
                   <div className="flex items-center justify-between pt-1 border-t border-[#3f332c]/30">
                     <span className="text-[10px] text-orange-200/60 flex items-center space-x-1">
-                      <Clock size={11} /><span>{task.durationMinutes || 20} mins</span>
+                      <Clock size={11} /><span>{task.durationMinutes ? `${task.durationMinutes} mins` : 'Flexible'}</span>
                     </span>
                     <button
                       onClick={() => startStudyNow(task.itemTitle, task.durationMinutes || 25, 'Spaced Recall')}
@@ -630,28 +630,37 @@ export function CalendarView() {
         </div>
       )}
 
-      {/* WEEK VIEW */}
+      {/* WEEK VIEW - RESPONSIVE & ZERO SIDE-SCROLL */}
       {viewMode === 'week' && (
-        <div className="bg-[#2a221f] p-4 sm:p-6 rounded-3xl border border-[#3f332c] overflow-x-auto space-y-4">
-          <div className="grid grid-cols-8 min-w-[700px] border-b border-[#3f332c] pb-2 text-center text-xs font-bold">
-            <div className="text-orange-200/40 text-[10px]">TIME</div>
+        <div className="bg-[#2a221f] p-4 sm:p-6 rounded-3xl border border-[#3f332c] space-y-4">
+          {/* Day Headers (7 days + Time) */}
+          <div className="grid grid-cols-4 sm:grid-cols-8 gap-1 border-b border-[#3f332c] pb-2 text-center text-xs font-bold w-full">
+            <div className="hidden sm:block text-orange-200/40 text-[10px] self-center">TIME</div>
             {weekDays.map(d => {
               const dStr = d.toISOString().split('T')[0];
               const isToday = new Date().toISOString().split('T')[0] === dStr;
+              const isSelected = selectedDate === dStr;
               return (
                 <div 
                   key={dStr} 
                   onClick={() => setSelectedDate(dStr)} 
-                  className={`cursor-pointer p-1 rounded-xl transition-all ${isToday ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'text-orange-200/80 hover:bg-white/5'}`}
+                  className={`cursor-pointer p-1.5 sm:p-1 rounded-xl transition-all ${
+                    isSelected 
+                      ? 'bg-orange-600 text-white shadow-md' 
+                      : isToday 
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                        : 'text-orange-200/80 hover:bg-white/5'
+                  }`}
                 >
-                  <p className="text-[10px] uppercase">{d.toLocaleDateString('default', { weekday: 'short' })}</p>
+                  <p className="text-[10px] uppercase font-bold">{d.toLocaleDateString('default', { weekday: 'short' })}</p>
                   <p className="text-sm font-black">{d.getDate()}</p>
                 </div>
               );
             })}
           </div>
 
-          <div className="min-w-[700px] space-y-1 max-h-[500px] overflow-y-auto">
+          {/* Desktop/Tablet 8-column Grid (sm:grid) */}
+          <div className="hidden sm:block space-y-1 max-h-[500px] overflow-y-auto w-full">
             {timeSlots.map(hour => (
               <div key={hour} className="grid grid-cols-8 gap-1 border-b border-[#3f332c]/30 min-h-[44px] items-center text-xs">
                 <div className="text-[10px] font-bold text-orange-200/40 text-center">
@@ -660,7 +669,7 @@ export function CalendarView() {
                 {weekDays.map(d => {
                   const dStr = d.toISOString().split('T')[0];
                   const hourCustom = customEvents.filter(e => e.date === dStr && (parseInt(e.time?.split(':')[0] || '10') === hour));
-                  const hourTasks = scheduledRevisions.filter(t => t.dueDate === dStr && hour === 10); // Default placing
+                  const hourTasks = scheduledRevisions.filter(t => t.dueDate === dStr && hour === 10);
 
                   return (
                     <div key={dStr} className="p-1 min-h-[40px] bg-[#1a1614]/40 rounded-xl space-y-1">
@@ -679,6 +688,45 @@ export function CalendarView() {
                 })}
               </div>
             ))}
+          </div>
+
+          {/* Mobile Single-Day Schedule (sm:hidden) */}
+          <div className="sm:hidden space-y-2 max-h-[400px] overflow-y-auto pt-2">
+            <div className="flex items-center justify-between px-2 text-xs font-bold text-orange-200/70 border-b border-[#3f332c] pb-2">
+              <span>Selected Day: <strong className="text-amber-300">{selectedDate}</strong></span>
+              <span className="text-[10px] uppercase text-orange-400">Tap day above to switch</span>
+            </div>
+            {timeSlots.map(hour => {
+              const hourCustom = customEvents.filter(e => e.date === selectedDate && (parseInt(e.time?.split(':')[0] || '10') === hour));
+              const hourTasks = scheduledRevisions.filter(t => t.dueDate === selectedDate && hour === 10);
+              const hasEvents = hourCustom.length > 0 || hourTasks.length > 0;
+
+              return (
+                <div key={hour} className="flex items-start gap-3 p-2 bg-[#1a1614]/40 rounded-xl border border-[#3f332c]/30 text-xs">
+                  <div className="w-16 text-[10px] font-bold text-orange-200/40 shrink-0 pt-0.5">
+                    {hour > 12 ? `${hour - 12} PM` : hour === 12 ? '12 PM' : `${hour} AM`}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    {hasEvents ? (
+                      <>
+                        {hourCustom.map(c => (
+                          <div key={c.id} className="p-1.5 bg-amber-500/20 border border-amber-500/30 rounded-lg text-xs font-bold text-amber-200">
+                            {c.title}
+                          </div>
+                        ))}
+                        {hourTasks.map(t => (
+                          <div key={t.id} className="p-1.5 bg-orange-600/30 border border-orange-500/30 rounded-lg text-xs font-bold text-orange-200">
+                            {t.itemTitle}
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      <span className="text-[10px] text-orange-200/20 font-medium">Free Slot</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

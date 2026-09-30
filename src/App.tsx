@@ -23,15 +23,34 @@ import ConceptSimplifier from './components/ConceptSimplifier';
 import MemoryDna from './components/MemoryDna';
 import StudyWellbeingCoach from './components/StudyWellbeingCoach';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Menu, Sparkles, LogOut, LogIn, User as UserIcon, Play } from 'lucide-react';
+import { ArrowLeft, Menu, Sparkles, LogOut, LogIn, User as UserIcon, Play, Shield, Brain, Info, CheckCircle2, X, BellOff, Lock } from 'lucide-react';
 import { t } from './utils/translations';
 import { CalendarView } from './components/CalendarView';
+import { distractionShield } from './utils/distractionShield';
 
 function AppContent() {
   const { currentView, goBack, setView, theme, user, signOutUser, startStudyNow } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false);
+  const [isFocusShieldActive, setIsFocusShieldActive] = React.useState(true);
+  const [heldNotificationCount, setHeldNotificationCount] = React.useState(0);
+  const [showShieldModal, setShowShieldModal] = React.useState(false);
   const mainRef = React.useRef<HTMLElement>(null);
+
+  // Subscribe to distraction shield status
+  React.useEffect(() => {
+    const unsubscribe = distractionShield.subscribe((active, count) => {
+      setIsFocusShieldActive(active);
+      setHeldNotificationCount(count);
+    });
+    return unsubscribe;
+  }, []);
+
+  // Toggle Focus Shield & Fullscreen Immersion
+  const toggleFocusShield = async () => {
+    const newState = await distractionShield.toggleShield();
+    setIsFocusShieldActive(newState);
+  };
 
   React.useEffect(() => {
     if (mainRef.current) {
@@ -70,7 +89,7 @@ function AppContent() {
   const showBackButton = currentView !== 'dashboard';
 
   return (
-    <div className={`flex h-screen overflow-hidden font-sans relative transition-colors duration-300 ${
+    <div className={`flex h-screen overflow-hidden font-sans relative transition-colors duration-300 w-full max-w-full ${
       theme === 'dark' ? 'bg-[#1a1614] text-[#fef3c7]' : 'bg-[#fffaf5] text-stone-900'
     }`}>
       {/* Mobile Sidebar Overlay */}
@@ -91,14 +110,14 @@ function AppContent() {
         <Sidebar onClose={() => setIsSidebarOpen(false)} />
       </div>
       
-      <main ref={mainRef} className={`flex-1 overflow-y-auto relative border-l w-full transition-colors duration-300 ${
+      <main ref={mainRef} className={`flex-1 overflow-y-auto overflow-x-hidden relative border-l w-full max-w-full transition-colors duration-300 ${
         theme === 'dark' ? 'bg-[#1a1614] border-[#3f332c] text-[#fef3c7]' : 'bg-[#fffaf5] border-orange-200 text-stone-900'
       }`}>
         {/* TOP RIBBON */}
-        <div className={`sticky top-0 z-30 px-3 sm:px-6 py-2 sm:py-2.5 border-b shadow-md flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 max-w-full w-full transition-colors duration-300 ${
+        <div className={`sticky top-0 z-30 px-3 sm:px-6 py-2 sm:py-2.5 border-b shadow-md flex flex-wrap items-center justify-between gap-2 max-w-full w-full transition-colors duration-300 ${
           theme === 'dark' ? 'bg-[#2a221f] text-orange-100 border-[#3f332c]' : 'bg-[#fffaf5] text-slate-900 border-orange-200'
         }`}>
-          <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0 flex-wrap sm:flex-nowrap gap-y-1">
+          <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0 flex-wrap gap-y-1">
             <button 
               onClick={() => setIsSidebarOpen(true)}
               className={`lg:hidden p-1.5 rounded-xl border active:scale-95 transition-all shrink-0 ${
@@ -137,11 +156,30 @@ function AppContent() {
             )}
           </div>
 
-          <div className="flex items-center space-x-2 shrink-0 relative ml-auto sm:ml-0">
+          <div className="flex items-center space-x-2 shrink-0 relative ml-auto sm:ml-0 flex-wrap gap-y-1">
+            {/* Distraction-Free Focus Shield Toggle */}
+            <button
+              onClick={toggleFocusShield}
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 active:scale-95 shrink-0 border cursor-pointer ${
+                isFocusShieldActive
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
+                  : theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-200 border-[#3f332c]' : 'bg-white hover:bg-orange-50 text-slate-800 border-orange-300'
+              }`}
+              title="Distraction-Free Immersion Shield: Outside notifications are suppressed while using the app and shown only after you exit."
+            >
+              <BellOff size={13} className={isFocusShieldActive ? 'text-emerald-400' : 'text-orange-400'} />
+              <span className="text-[10px] sm:text-xs font-black">
+                {isFocusShieldActive ? '🛡️ Outside Notifications Suppressed' : 'Focus Shield: Off'}
+              </span>
+            </button>
+
             {/* Study Now Focus Sprint Button */}
             <button
-              onClick={() => startStudyNow('Active Focus Study', 25)}
-              className="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5 active:scale-95 whitespace-nowrap shrink-0"
+              onClick={() => {
+                distractionShield.enterFullscreenImmersion();
+                startStudyNow('Active Focus Study', 25);
+              }}
+              className="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5 active:scale-95 shrink-0"
               title="Start Study Now Focus Sprint"
             >
               <Play size={12} className="fill-current shrink-0" />
@@ -211,11 +249,74 @@ function AppContent() {
                 title="Sign In / Log In"
               >
                 <UserIcon size={15} className="shrink-0" />
-                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider whitespace-nowrap">Sign In / Log In</span>
+                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider">Sign In / Log In</span>
               </button>
             )}
           </div>
         </div>
+
+        {/* DISTRACTION-FREE SHIELD MODAL */}
+        <AnimatePresence>
+          {showShieldModal && (
+            <div 
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4"
+              onClick={() => setShowShieldModal(false)}
+            >
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                onClick={e => e.stopPropagation()}
+                className="bg-[#2a221f] border border-[#3f332c] rounded-[2.5rem] p-6 sm:p-8 max-w-lg w-full space-y-4 shadow-2xl relative"
+              >
+                <div className="flex items-center justify-between border-b border-[#3f332c] pb-3">
+                  <div className="flex items-center gap-2 text-emerald-400">
+                    <Shield size={20} />
+                    <h3 className="font-black text-lg text-orange-100 uppercase tracking-tight">
+                      Distraction-Free Immersion Shield
+                    </h3>
+                  </div>
+                  <button 
+                    onClick={() => setShowShieldModal(false)}
+                    className="p-1.5 bg-[#1a1614] rounded-xl text-orange-200/60 hover:text-white cursor-pointer"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                
+                <p className="text-xs text-orange-100/90 leading-relaxed font-medium">
+                  When you are using Memory Shaastra, the <strong>Distraction-Free Immersion Shield</strong> suppresses all interruptions so you can focus deeply:
+                </p>
+
+                <div className="space-y-2.5 text-xs text-orange-200/80">
+                  <div className="flex items-start gap-2.5 bg-[#1a1614] p-3 rounded-2xl border border-[#3f332c]">
+                    <BellOff size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Outside Notifications Blocked While Using:</strong> Notifications and heads-up banners from other apps and websites are suppressed while you are inside the app. They are delivered only after you exit the app.</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 bg-[#1a1614] p-3 rounded-2xl border border-[#3f332c]">
+                    <Lock size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Fullscreen Immersion:</strong> Hides device taskbars, browser chrome, and status bars so no distracting icons or popups catch your eye.</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 bg-[#1a1614] p-3 rounded-2xl border border-[#3f332c]">
+                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Screen Wake Lock:</strong> Prevents your device display from going to sleep or triggering lock-screen notifications while reading cards or solving boost puzzles.</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    toggleFocusShield();
+                    setShowShieldModal(false);
+                  }}
+                  className="w-full py-3.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Shield size={16} />
+                  <span>{isFocusShieldActive ? 'Re-engage Immersion & Fullscreen' : 'Engage Distraction-Free Immersion'}</span>
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
         
         <AnimatePresence mode="wait">
           <motion.div
@@ -224,7 +325,7 @@ function AppContent() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="min-h-[calc(100vh-68px)] w-full"
+            className="min-h-[calc(100vh-68px)] w-full max-w-full overflow-x-hidden"
           >
             {renderView()}
           </motion.div>
@@ -246,3 +347,4 @@ export default function App() {
     </AppProvider>
   );
 }
+

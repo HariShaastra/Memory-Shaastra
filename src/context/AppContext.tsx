@@ -563,7 +563,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       dueDate: taskData.dueDate || new Date().toISOString().split('T')[0],
       intervalDays: taskData.intervalDays || 1,
       completed: false,
-      durationMinutes: taskData.durationMinutes || 20
+      durationMinutes: taskData.durationMinutes !== undefined ? taskData.durationMinutes : undefined
     };
     setScheduledRevisions(prev => [newTask, ...prev]);
   };

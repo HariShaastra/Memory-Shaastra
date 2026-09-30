@@ -172,7 +172,7 @@ export const MemoryLinker: React.FC<MemoryLinkerProps> = ({ itemId, itemType, cl
               </header>
 
               {/* Type Category Tabs */}
-              <div className="flex bg-[#1a1614] overflow-x-auto p-1.5 rounded-2xl border border-[#3f332c] no-scrollbar mb-6">
+              <div className="flex flex-wrap gap-1.5 bg-[#1a1614] p-1.5 rounded-2xl border border-[#3f332c] mb-6">
                 {[
                   { id: 'flashcard', label: 'Flashcards', icon: Layers },
                   { id: 'mnemonic', label: 'Mnemonics', icon: Brain },
@@ -187,10 +187,10 @@ export const MemoryLinker: React.FC<MemoryLinkerProps> = ({ itemId, itemType, cl
                     <button
                       key={tab.id}
                       onClick={() => { setActiveTab(tab.id as any); setSearchTerm(''); }}
-                      className={`px-5 py-3 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center gap-2 whitespace-nowrap ${
+                      className={`px-3 sm:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
                         activeTab === tab.id 
                           ? 'bg-orange-600 text-white shadow-lg' 
-                          : 'text-orange-200/30 hover:text-orange-200/60'
+                          : 'text-orange-200/40 hover:text-orange-200 hover:bg-white/5'
                       }`}
                     >
                       <Icon size={12} />

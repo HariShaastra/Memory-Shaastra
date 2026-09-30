@@ -115,6 +115,17 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
             {toolItems.map(item => <NavItem key={item.id} item={item} id={item.id} currentView={currentView} setView={setView} onClose={onClose} />)}
           </div>
         </div>
+
+        {/* What is Memory Shaastra Sidebar Card */}
+        <div className="mx-2 p-3.5 bg-[#2a221f] rounded-2xl border border-orange-500/30 space-y-1.5 shadow-md">
+          <div className="flex items-center space-x-1.5 text-amber-300">
+            <Brain size={14} className="text-orange-400 shrink-0" />
+            <span className="text-[10px] font-black uppercase tracking-wider">What is Memory Shaastra?</span>
+          </div>
+          <p className="text-[10px] text-orange-200/80 leading-relaxed font-medium">
+            <strong className="text-amber-400">In Simple Words:</strong> Converts tough syllabus into visual memory palaces, linking & mnemonics with automated spaced review cycles (1d, 3d, 7d, 14d, 30d) for permanent exam recall.
+          </p>
+        </div>
       </div>
 
       <div className="p-4 bg-white/5 space-y-1">

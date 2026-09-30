@@ -15,6 +15,7 @@ export default function RevisionScheduler() {
   const [newChapter, setNewChapter] = useState('');
   const [examDate, setExamDate] = useState('');
   const [nextRevisionDate, setNextRevisionDate] = useState('');
+  const [estimatedDuration, setEstimatedDuration] = useState('');
 
   const addRevision = () => {
     if (!newSubject || !newChapter) return;
@@ -27,7 +28,8 @@ export default function RevisionScheduler() {
               subject: newSubject, 
               chapter: newChapter, 
               examDate: examDate || '',
-              nextRevision: nextRevisionDate ? new Date(nextRevisionDate).toISOString() : rev.nextRevision
+              nextRevision: nextRevisionDate ? new Date(nextRevisionDate).toISOString() : rev.nextRevision,
+              estimatedDuration: estimatedDuration.trim() || undefined
             } 
           : rev
       ));
@@ -40,7 +42,8 @@ export default function RevisionScheduler() {
         dateStudied: new Date().toISOString(),
         examDate: examDate || '',
         completedDates: [],
-        nextRevision: nextRevisionDate ? new Date(nextRevisionDate).toISOString() : new Date(Date.now() + 86400000).toISOString()
+        nextRevision: nextRevisionDate ? new Date(nextRevisionDate).toISOString() : new Date(Date.now() + 86400000).toISOString(),
+        estimatedDuration: estimatedDuration.trim() || undefined
       };
       setRevisions([rev, ...revisions]);
     }
@@ -49,6 +52,7 @@ export default function RevisionScheduler() {
     setNewChapter('');
     setExamDate('');
     setNextRevisionDate('');
+    setEstimatedDuration('');
     setIsAdding(false);
   };
 
@@ -57,6 +61,7 @@ export default function RevisionScheduler() {
     setNewChapter(rev.chapter);
     setExamDate(rev.examDate);
     setNextRevisionDate(new Date(rev.nextRevision).toISOString().split('T')[0]);
+    setEstimatedDuration(rev.estimatedDuration || '');
     setEditingId(rev.id);
     setIsAdding(true);
   };
@@ -163,6 +168,20 @@ export default function RevisionScheduler() {
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <div className="flex items-center justify-between ml-2">
+                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest">Estimated Duration (Optional)</p>
+                  <span className="text-[9px] text-orange-400 font-bold uppercase tracking-wider">Optional</span>
+                </div>
+                <input 
+                  type="text"
+                  placeholder="e.g. 20 mins (optional, leave blank for untimed)"
+                  value={estimatedDuration}
+                  onChange={(e) => setEstimatedDuration(e.target.value)}
+                  className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-bold text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
+                />
+              </div>
+
               <div className="flex justify-end gap-3 pt-4">
                 <button 
                   onClick={() => { setIsAdding(false); setEditingId(null); }} 
@@ -213,6 +232,14 @@ export default function RevisionScheduler() {
                       <span className="text-[10px] uppercase tracking-widest text-orange-500 font-black">{rev.subject}</span>
                       <span className="w-1 h-1 bg-[#3f332c] rounded-full" />
                       <span className="text-[10px] uppercase tracking-widest text-orange-200/40 font-black">{rev.completedDates.length} reviews done</span>
+                      {rev.estimatedDuration && (
+                        <>
+                          <span className="w-1 h-1 bg-[#3f332c] rounded-full" />
+                          <span className="text-[10px] uppercase tracking-widest text-sky-400 font-black flex items-center gap-1">
+                            <Clock size={10} /> {rev.estimatedDuration}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

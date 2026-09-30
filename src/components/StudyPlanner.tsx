@@ -59,7 +59,7 @@ export const StudyPlanner: React.FC = () => {
     subject: '',
     topic: '',
     plannedDate: new Date().toISOString().split('T')[0],
-    estimatedTime: '25 mins',
+    estimatedTime: '',
     intervalDays: 1,
     completed: false
   });
@@ -71,7 +71,7 @@ export const StudyPlanner: React.FC = () => {
       subject: '',
       topic: '',
       plannedDate: new Date().toISOString().split('T')[0],
-      estimatedTime: '25 mins',
+      estimatedTime: '',
       intervalDays: 1,
       completed: false
     });
@@ -91,12 +91,13 @@ export const StudyPlanner: React.FC = () => {
               topic: formData.topic, 
               subject: formData.subject || 'General', 
               plannedDate: formData.plannedDate, 
-              estimatedTime: formData.estimatedTime 
+              estimatedTime: formData.estimatedTime.trim() || undefined 
             } 
           : task
       ));
     } else if (editingId && editingType === 'revision') {
-      const durMins = parseInt(formData.estimatedTime) || 20;
+      const parsed = parseInt(formData.estimatedTime);
+      const durMins = !isNaN(parsed) && parsed > 0 ? parsed : undefined;
       updateScheduledRevision(editingId, {
         itemTitle: formData.topic,
         dueDate: formData.plannedDate,
@@ -106,7 +107,8 @@ export const StudyPlanner: React.FC = () => {
     } else {
       // Adding New
       if (activityCategory === 'revision') {
-        const durMins = parseInt(formData.estimatedTime) || 20;
+        const parsed = parseInt(formData.estimatedTime);
+        const durMins = !isNaN(parsed) && parsed > 0 ? parsed : undefined;
         addScheduledRevision({
           itemTitle: formData.topic,
           dueDate: formData.plannedDate,
@@ -120,7 +122,7 @@ export const StudyPlanner: React.FC = () => {
           subject: formData.subject || 'General',
           topic: formData.topic,
           plannedDate: formData.plannedDate,
-          estimatedTime: formData.estimatedTime || '25 mins',
+          estimatedTime: formData.estimatedTime.trim() || undefined,
           completed: false
         };
         setStudyTasks(prev => [...prev, task]);
@@ -136,7 +138,7 @@ export const StudyPlanner: React.FC = () => {
       subject: task.subject || '',
       topic: task.topic,
       plannedDate: task.plannedDate,
-      estimatedTime: task.estimatedTime || '25 mins',
+      estimatedTime: task.estimatedTime || '',
       intervalDays: 1,
       completed: task.completed
     });
@@ -152,7 +154,7 @@ export const StudyPlanner: React.FC = () => {
       subject: '',
       topic: rev.itemTitle,
       plannedDate: rev.dueDate,
-      estimatedTime: `${rev.durationMinutes || 20} mins`,
+      estimatedTime: rev.durationMinutes ? `${rev.durationMinutes} mins` : '',
       intervalDays: rev.intervalDays || 1,
       completed: rev.completed
     });
@@ -372,7 +374,7 @@ export const StudyPlanner: React.FC = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-black uppercase text-stone-500 dark:text-orange-200/50 block mb-1">
+                <label className="text-[10px] font-black uppercase text-stone-700 dark:text-orange-200/80 block mb-1">
                   Scheduled Date
                 </label>
                 <input 
@@ -384,15 +386,18 @@ export const StudyPlanner: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase text-stone-500 dark:text-orange-200/50 block mb-1">
-                  Estimated Duration
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] font-black uppercase text-stone-700 dark:text-orange-200/80 block">
+                    Estimated Duration (Optional)
+                  </label>
+                  <span className="text-[9px] text-orange-400 font-bold">Optional</span>
+                </div>
                 <input 
                   type="text"
                   value={formData.estimatedTime}
                   onChange={e => setFormData(prev => ({ ...prev, estimatedTime: e.target.value }))}
                   className="w-full bg-amber-50/60 dark:bg-[#1a1614] border border-amber-200 dark:border-[#3f332c] rounded-xl py-2.5 px-4 text-xs font-bold text-stone-900 dark:text-[#fef3c7] focus:outline-none focus:border-orange-500"
-                  placeholder="Focus Duration (e.g. 25 mins)"
+                  placeholder="e.g. 25 mins (optional, leave blank for flexible)"
                 />
               </div>
             </div>
@@ -439,10 +444,12 @@ export const StudyPlanner: React.FC = () => {
                 <h3 className={`font-bold text-base ${task.completed ? 'line-through text-stone-400 dark:text-orange-200/50' : 'text-stone-900 dark:text-[#fef3c7]'}`}>
                   {task.topic}
                 </h3>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600 dark:text-orange-200/60 font-medium">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-800 dark:text-orange-200/80 font-medium">
                   <span className="flex items-center space-x-1"><Book size={12} className="text-orange-500 dark:text-orange-400" /><span>{task.subject}</span></span>
                   <span className="flex items-center space-x-1"><CalendarIcon size={12} className="text-amber-600 dark:text-amber-400" /><span>{task.plannedDate}</span></span>
-                  <span className="flex items-center space-x-1"><Clock size={12} className="text-sky-600 dark:text-sky-400" /><span>{task.estimatedTime}</span></span>
+                  {task.estimatedTime ? (
+                    <span className="flex items-center space-x-1"><Clock size={12} className="text-sky-600 dark:text-sky-400" /><span>{task.estimatedTime}</span></span>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -450,7 +457,7 @@ export const StudyPlanner: React.FC = () => {
             <div className="flex items-center space-x-2 shrink-0 self-end md:self-center">
               <button
                 onClick={() => {
-                  const minutes = parseInt(task.estimatedTime) || 25;
+                  const minutes = parseInt(task.estimatedTime || '') || 25;
                   startStudyNow(task.topic, minutes, task.subject);
                 }}
                 className="flex items-center space-x-1.5 py-2 px-3.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
@@ -504,22 +511,29 @@ export const StudyPlanner: React.FC = () => {
                     {rev.itemTitle}
                   </h3>
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-orange-200/60 font-medium">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-800 dark:text-orange-200/80 font-medium">
                   <span className="flex items-center space-x-1">
-                    <CalendarIcon size={12} className="text-amber-400" />
-                    <span>Due: <strong className="text-amber-300">{rev.dueDate}</strong></span>
+                    <CalendarIcon size={12} className="text-amber-500 dark:text-amber-400" />
+                    <span>Due: <strong className="text-amber-600 dark:text-amber-300">{rev.dueDate}</strong></span>
                   </span>
-                  <span className="flex items-center space-x-1">
-                    <Clock size={12} className="text-sky-400" />
-                    <span>{rev.durationMinutes || 20} mins</span>
-                  </span>
+                  {rev.durationMinutes ? (
+                    <span className="flex items-center space-x-1">
+                      <Clock size={12} className="text-sky-500 dark:text-sky-400" />
+                      <span>{rev.durationMinutes} mins</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center space-x-1 text-stone-700 dark:text-orange-200/70">
+                      <Clock size={12} className="text-stone-600 dark:text-orange-200/50" />
+                      <span>Flexible</span>
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
 
             <div className="flex items-center space-x-2 shrink-0 self-end md:self-center">
               <button
-                onClick={() => startStudyNow(rev.itemTitle, rev.durationMinutes || 20)}
+                onClick={() => startStudyNow(rev.itemTitle, rev.durationMinutes || 25)}
                 className="flex items-center space-x-1.5 py-2 px-3.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
               >
                 <Play size={13} fill="currentColor" />
