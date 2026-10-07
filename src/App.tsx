@@ -120,7 +120,7 @@ function AppContent() {
           {/* Primary Header Row */}
           <div className="flex items-center justify-between gap-2 sm:gap-3 w-full">
             {/* Left Group: Menu + Brand + Back */}
-            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1 sm:flex-initial">
               <button 
                 onClick={() => setIsSidebarOpen(true)}
                 className={`lg:hidden h-9 w-9 sm:h-10 sm:w-10 rounded-xl border flex items-center justify-center active:scale-95 transition-all shrink-0 cursor-pointer ${
@@ -135,7 +135,7 @@ function AppContent() {
               {/* Title Button in Top Ribbon leading to Home */}
               <button
                 onClick={() => setView('dashboard')}
-                className={`h-9 sm:h-10 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 rounded-xl border transition-all active:scale-95 group shadow-sm shrink-0 cursor-pointer ${
+                className={`h-9 sm:h-10 flex-1 sm:flex-initial flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 sm:px-3.5 rounded-xl border transition-all active:scale-95 group shadow-sm cursor-pointer ${
                   theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] border-[#3f332c] text-orange-100' : 'bg-orange-100/90 hover:bg-orange-200/80 border-orange-300 text-slate-900'
                 }`}
               >
@@ -150,13 +150,13 @@ function AppContent() {
               {showBackButton && (
                 <button 
                   onClick={goBack}
-                  className={`h-9 sm:h-10 flex items-center gap-1 transition-colors font-bold uppercase tracking-wider text-[10px] sm:text-xs px-2.5 sm:px-3 rounded-xl border shadow-sm active:scale-95 shrink-0 cursor-pointer ${
+                  className={`hidden sm:flex h-9 sm:h-10 items-center gap-1 transition-colors font-bold uppercase tracking-wider text-[10px] sm:text-xs px-2.5 sm:px-3 rounded-xl border shadow-sm active:scale-95 shrink-0 cursor-pointer ${
                     theme === 'dark' ? 'text-orange-200 hover:text-white bg-[#1a1614] hover:bg-[#3f332c] border-[#3f332c]' : 'text-slate-800 hover:text-slate-950 bg-white hover:bg-orange-50 border-orange-300'
                   }`}
                   title="Go Back"
                 >
                   <ArrowLeft size={14} className="shrink-0" />
-                  <span className="hidden xs:inline sm:inline">{t.back}</span>
+                  <span>{t.back}</span>
                 </button>
               )}
             </div>
@@ -179,7 +179,7 @@ function AppContent() {
               >
                 <BellOff size={14} className={isFocusShieldActive ? 'text-emerald-500 shrink-0' : 'text-orange-500 shrink-0'} />
                 <span className="text-xs font-black whitespace-nowrap xl:hidden">
-                  {isFocusShieldActive ? 'Shield: On' : 'Shield: Off'}
+                  {isFocusShieldActive ? 'Shield: Active' : 'Shield: Off'}
                 </span>
                 <span className="text-xs font-black whitespace-nowrap hidden xl:inline">
                   {isFocusShieldActive ? 'Outside Notifications Suppressed' : 'Focus Shield: Off'}
@@ -260,7 +260,7 @@ function AppContent() {
               ) : (
                 <button
                   onClick={() => setView('auth')}
-                  className="h-9 sm:h-10 px-2.5 sm:px-3.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95 shrink-0 cursor-pointer"
+                  className="h-9 sm:h-10 px-3 sm:px-3.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95 shrink-0 cursor-pointer"
                   title="Sign In / Log In"
                 >
                   <UserIcon size={14} className="shrink-0" />
@@ -273,8 +273,20 @@ function AppContent() {
             </div>
           </div>
 
-          {/* Mobile Symmetric 2-Column Action Bar (< 640px) */}
-          <div className="grid grid-cols-2 gap-2 pt-2 sm:hidden">
+          {/* Mobile Symmetric Action Row (< 640px) */}
+          <div className={`grid ${showBackButton ? 'grid-cols-3' : 'grid-cols-2'} gap-2 pt-2 sm:hidden`}>
+            {showBackButton && (
+              <button 
+                onClick={goBack}
+                className={`h-9 w-full px-2 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 border shadow-sm active:scale-95 cursor-pointer ${
+                  theme === 'dark' ? 'text-orange-200 bg-[#1a1614] border-[#3f332c]' : 'text-slate-800 bg-white border-orange-300'
+                }`}
+              >
+                <ArrowLeft size={13} className="shrink-0" />
+                <span>{t.back}</span>
+              </button>
+            )}
+
             <button
               onClick={toggleFocusShield}
               className={`h-9 w-full px-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1.5 active:scale-95 border cursor-pointer ${
@@ -288,7 +300,7 @@ function AppContent() {
               }`}
             >
               <BellOff size={13} className={isFocusShieldActive ? 'text-emerald-500 shrink-0' : 'text-orange-500 shrink-0'} />
-              <span className="truncate">{isFocusShieldActive ? 'Shield: Active' : 'Shield: Off'}</span>
+              <span className="whitespace-nowrap">{isFocusShieldActive ? 'Shield: Active' : 'Shield: Off'}</span>
             </button>
 
             <button
@@ -299,55 +311,9 @@ function AppContent() {
               className="h-9 w-full px-2.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-[11px] font-black shadow-md transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
             >
               <Play size={12} className="fill-current shrink-0" />
-              <span className="truncate">Study Now</span>
+              <span className="whitespace-nowrap">Study Now</span>
             </button>
           </div>
-
-          {/* Symmetric Quick-Navigation Strip for Mobile & Tablet View Modes (lg:hidden) */}
-          <nav
-            aria-label="Quick Mobile and Tablet Navigation"
-            className={`grid grid-cols-6 gap-1 sm:gap-2 pt-2 mt-2 border-t lg:hidden ${
-              theme === 'dark' ? 'border-[#3f332c]' : 'border-orange-200/80'
-            }`}
-          >
-            {[
-              { id: 'dashboard', label: 'Home', icon: Home },
-              { id: 'planner', label: 'Schedule', icon: CalendarIcon },
-              { id: 'flashcards', label: 'Cards', icon: BookOpen },
-              { id: 'library', label: 'Library', icon: Book },
-              { id: 'exam-mode', label: 'Exams', icon: Target },
-            ].map(tab => {
-              const Icon = tab.icon;
-              const isActive = currentView === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setView(tab.id as any)}
-                  className={`h-8 sm:h-9 px-1 sm:px-2.5 rounded-xl text-[10px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer border ${
-                    isActive
-                      ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                      : theme === 'dark'
-                        ? 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-200 border-[#3f332c]'
-                        : 'bg-white hover:bg-orange-50 text-stone-800 border-orange-200'
-                  }`}
-                >
-                  <Icon size={13} className={isActive ? 'text-white shrink-0' : 'text-orange-500 shrink-0'} />
-                  <span className="truncate">{tab.label}</span>
-                </button>
-              );
-            })}
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className={`h-8 sm:h-9 px-1 sm:px-2.5 rounded-xl text-[10px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer border ${
-                theme === 'dark'
-                  ? 'bg-[#1a1614] hover:bg-[#3f332c] text-amber-300 border-[#3f332c]'
-                  : 'bg-orange-50 hover:bg-orange-100 text-stone-900 border-orange-300'
-              }`}
-            >
-              <LayoutGrid size={13} className="text-orange-500 shrink-0" />
-              <span className="truncate">All Tools</span>
-            </button>
-          </nav>
         </header>
 
         {/* DISTRACTION-FREE SHIELD MODAL */}

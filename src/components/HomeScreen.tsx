@@ -27,7 +27,9 @@ import {
   CalendarDays,
   Lightbulb,
   Book,
-  Shield
+  Shield,
+  Home,
+  LayoutGrid
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { downloadProgressAsWordDoc } from '../utils/downloadProgressDocx';
@@ -375,6 +377,57 @@ export const HomeScreen: React.FC = () => {
       </div>
 
       {/* ========================================================================= */}
+      {/* QUICK NAVIGATION RIBBON (RIGHT ABOVE "WHAT IS MEMORY SHAASTRA?" BOX)      */}
+      {/* ========================================================================= */}
+      <nav
+        aria-label="Home Screen Quick Navigation"
+        className={`p-3 sm:p-4 rounded-3xl border shadow-md transition-colors ${
+          isLight ? 'bg-white border-orange-200' : 'bg-[#2a221f] border-[#3f332c]'
+        }`}
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-2.5">
+          {[
+            { id: 'dashboard', label: 'Home', icon: Home, active: true },
+            { id: 'planner', label: 'Schedule', icon: CalendarIcon, active: false },
+            { id: 'flashcards', label: 'Cards', icon: BookOpen, active: false },
+            { id: 'library', label: 'Library', icon: Book, active: false },
+            { id: 'exam-mode', label: 'Exams', icon: Target, active: false },
+          ].map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setView(tab.id as AppView)}
+                className={`h-10 px-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer border shadow-sm ${
+                  tab.active
+                    ? 'bg-orange-600 text-white border-orange-500'
+                    : isLight
+                      ? 'bg-orange-50/70 hover:bg-orange-100 text-stone-900 border-orange-200'
+                      : 'bg-[#1a1614] hover:bg-[#342722] text-[#fef3c7] border-[#3f332c]'
+                }`}
+              >
+                <Icon size={15} className={tab.active ? 'text-white shrink-0' : 'text-orange-500 shrink-0'} />
+                <span className="whitespace-nowrap">{tab.label}</span>
+              </button>
+            );
+          })}
+          <button
+            onClick={() => {
+              document.getElementById('all-facilities-directory')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className={`h-10 px-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer border shadow-sm ${
+              isLight
+                ? 'bg-orange-50/70 hover:bg-orange-100 text-stone-900 border-orange-200'
+                : 'bg-[#1a1614] hover:bg-[#342722] text-amber-300 border-[#3f332c]'
+            }`}
+          >
+            <LayoutGrid size={15} className="text-orange-500 shrink-0" />
+            <span className="whitespace-nowrap">All Tools</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* ========================================================================= */}
       {/* 2. WHAT IS MEMORY SHAASTRA? (IN SIMPLE WORDS) - PROMINENT CORE BOX        */}
       {/* ========================================================================= */}
       <div className="bg-[#2a221f] p-6 sm:p-8 rounded-3xl sm:rounded-[2.5rem] border-2 border-orange-500/40 shadow-2xl space-y-4 relative overflow-hidden">
@@ -718,7 +771,7 @@ export const HomeScreen: React.FC = () => {
       {/* ========================================================================= */}
       {/* 6. SHORTCUTS & ALL FACILITIES (BELOW DASHBOARD - LAST ON PAGE)            */}
       {/* ========================================================================= */}
-      <div className="space-y-8 pt-4">
+      <div id="all-facilities-directory" className="space-y-8 pt-4">
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#3f332c] pb-4">
           <div>

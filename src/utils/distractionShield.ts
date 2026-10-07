@@ -195,40 +195,42 @@ class DistractionShieldService {
   }
 
   private interceptWebNotifications() {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      this.originalNotification = window.Notification;
-      const self = this;
+    try {
+      if (typeof window !== 'undefined' && 'Notification' in window && window.Notification) {
+        this.originalNotification = window.Notification;
+        const self = this;
 
-      // Wrap Notification constructor to prevent interruption while inside the app
-      const PatchedNotification = function (title: string, options?: NotificationOptions) {
-        if (self.isShieldActive && document.visibilityState === 'visible') {
-          // Suppress notification banner and queue it for when user exits
-          self.holdNotification(title, options?.body || '');
-          return {
-            close: () => {},
-            addEventListener: () => {},
-            removeEventListener: () => {},
-            onclick: null,
-            onerror: null
-          } as any;
+        // Wrap Notification constructor to prevent interruption while inside the app
+        const PatchedNotification = function (title: string, options?: NotificationOptions) {
+          if (self.isShieldActive && document.visibilityState === 'visible') {
+            // Suppress notification banner and queue it for when user exits
+            self.holdNotification(title, options?.body || '');
+            return {
+              close: () => {},
+              addEventListener: () => {},
+              removeEventListener: () => {},
+              onclick: null,
+              onerror: null
+            } as any;
+          }
+
+          // Outside app or shield inactive - dispatch normally
+          if (self.originalNotification) {
+            return new self.originalNotification(title, options);
+          }
+          return {} as any;
+        } as any;
+
+        PatchedNotification.permission = window.Notification.permission;
+        if (typeof window.Notification.requestPermission === 'function') {
+          PatchedNotification.requestPermission = window.Notification.requestPermission.bind(window.Notification);
         }
+        PatchedNotification.maxActions = (window.Notification as any).maxActions;
 
-        // Outside app or shield inactive - dispatch normally
-        if (self.originalNotification) {
-          return new self.originalNotification(title, options);
-        }
-        return {} as any;
-      } as any;
-
-      PatchedNotification.permission = window.Notification.permission;
-      PatchedNotification.requestPermission = window.Notification.requestPermission.bind(window.Notification);
-      PatchedNotification.maxActions = (window.Notification as any).maxActions;
-
-      try {
         (window as any).Notification = PatchedNotification;
-      } catch {
-        // Protected window property in some browsers
       }
+    } catch {
+      // Protected window property or unsupported Notification API in some browsers
     }
   }
 }

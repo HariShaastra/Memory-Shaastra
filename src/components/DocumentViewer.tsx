@@ -14,12 +14,6 @@ import {
   X,
   BookOpen
 } from 'lucide-react';
-import * as pdfjsLib from 'pdfjs-dist';
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-import mammoth from 'mammoth';
-
-// Configure local bundled worker for PDF.js so it works inside sandboxed environments without external CDN blocks
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 export interface DocumentAttachment {
   id?: string;
@@ -180,10 +174,21 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
         setDocKind(kind);
 
         if (kind === 'pdf') {
+          const pdfjsLib = await import('pdfjs-dist');
+          if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+            try {
+              const workerUrlMod = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
+              pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrlMod.default;
+            } catch {
+              pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+                'pdfjs-dist/build/pdf.worker.min.mjs',
+                import.meta.url
+              ).toString();
+            }
+          }
           const pdfBytesCopy = new Uint8Array(bytes);
           const loadingTask = pdfjsLib.getDocument({
             data: pdfBytesCopy,
-            isEvalSupported: false,
             useSystemFonts: true
           });
           const pdfDoc = await loadingTask.promise;
@@ -201,7 +206,9 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
           }
           setLoading(false);
         } else if (kind === 'docx') {
-          const result = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer });
+          const mammothMod = await import('mammoth');
+          const mammothLib = (mammothMod as any).default || mammothMod;
+          const result = await mammothLib.convertToHtml({ arrayBuffer: bytes.buffer });
           if (isCancelled) return;
           setHtmlContent(result.value || '<p>Document is empty.</p>');
           setLoading(false);

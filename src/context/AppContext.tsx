@@ -111,11 +111,20 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+function safeLoadFromStorage<T>(key: string, fallback: T): T {
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved) return fallback;
+    const parsed = JSON.parse(saved);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
+  } catch (err) {
+    console.warn(`Failed to parse localStorage key "${key}", using fallback:`, err);
+    return fallback;
+  }
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('ms_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState<User | null>(() => safeLoadFromStorage<User | null>('ms_user', null));
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
@@ -193,24 +202,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Editable Revision Intervals (default: 1 day, 3 days, 7 days, 14 days, 30 days)
-  const [revisionIntervals, setRevisionIntervals] = useState<number[]>(() => {
-    const saved = localStorage.getItem('ms_revision_intervals');
-    return saved ? JSON.parse(saved) : [1, 3, 7, 14, 30];
-  });
+  const [revisionIntervals, setRevisionIntervals] = useState<number[]>(() =>
+    safeLoadFromStorage<number[]>('ms_revision_intervals', [1, 3, 7, 14, 30])
+  );
 
   // Calendar Activity Events
-  const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>(() => {
-    const saved = localStorage.getItem('ms_activity_events');
-    return saved ? JSON.parse(saved) : [
+  const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>(() =>
+    safeLoadFromStorage<ActivityEvent[]>('ms_activity_events', [
       { id: 'a1', title: 'Created Flashcard Deck', type: 'flashcard', createdAt: new Date(Date.now() - 86400000 * 2).toISOString(), description: 'Active Recall & Spaced Repetition' },
       { id: 'a2', title: 'Created Mnemonic: Order of Planets', type: 'mnemonic', createdAt: new Date(Date.now() - 86400000 * 4).toISOString(), description: 'My Very Educated Mother Just Served Us Noodles' }
-    ];
-  });
+    ])
+  );
 
   // Scheduled Revision Tasks (Intervals 1, 3, 7, 14, 30 days)
   const [scheduledRevisions, setScheduledRevisions] = useState<ScheduledRevisionTask[]>(() => {
-    const saved = localStorage.getItem('ms_scheduled_revisions');
-    if (saved) return JSON.parse(saved);
+    const saved = safeLoadFromStorage<ScheduledRevisionTask[] | null>('ms_scheduled_revisions', null);
+    if (Array.isArray(saved)) return saved;
 
     // Initial default scheduled items for immediate usage
     const today = new Date();
@@ -257,20 +264,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [activeFocusTask, setActiveFocusTask] = useState<ActiveFocusTask | null>(null);
 
   // Personalization settings
-  const [personalization, setPersonalization] = useState<PersonalizationSettings>(() => {
-    const saved = localStorage.getItem('ms_personalization');
-    return saved ? JSON.parse(saved) : {
+  const [personalization, setPersonalization] = useState<PersonalizationSettings>(() =>
+    safeLoadFromStorage<PersonalizationSettings>('ms_personalization', {
       targetExamName: '',
       targetExamDate: '',
       focusSubject: '',
       dailyStudyGoalHours: 3
-    };
-  });
+    })
+  );
 
   // Notifications
-  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
-    const saved = localStorage.getItem('ms_notifications');
-    return saved ? JSON.parse(saved) : [
+  const [notifications, setNotifications] = useState<AppNotification[]>(() =>
+    safeLoadFromStorage<AppNotification[]>('ms_notifications', [
       {
         id: 'n1',
         title: 'Welcome to Shaastra Mind',
@@ -289,8 +294,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         read: false,
         priority: 'medium'
       }
-    ];
-  });
+    ])
+  );
 
   const addNotification = (
     title: string, 
@@ -319,25 +324,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Other Core Data State
-  const [studyTasks, setStudyTasks] = useState<StudyTask[]>(() => {
-    const saved = localStorage.getItem('ms_study_tasks');
-    return saved ? JSON.parse(saved) : [
+  const [studyTasks, setStudyTasks] = useState<StudyTask[]>(() =>
+    safeLoadFromStorage<StudyTask[]>('ms_study_tasks', [
       { id: 'st1', subject: 'Economics', topic: 'Monetary Policy & Inflation Rates', plannedDate: new Date().toISOString().split('T')[0], estimatedTime: '30 mins', completed: false },
       { id: 'st2', subject: 'Memory Science', topic: 'Loci Visualizations & Mind Palaces', plannedDate: new Date().toISOString().split('T')[0], estimatedTime: '25 mins', completed: true }
-    ];
-  });
+    ])
+  );
 
-  const [mnemonics, setMnemonics] = useState<Mnemonic[]>(() => {
-    const saved = localStorage.getItem('ms_mnemonics');
-    return saved ? JSON.parse(saved) : [
+  const [mnemonics, setMnemonics] = useState<Mnemonic[]>(() =>
+    safeLoadFromStorage<Mnemonic[]>('ms_mnemonics', [
       { id: '1', title: 'Order of Planets', phrase: 'My Very Educated Mother Just Served Us Noodles' },
       { id: '2', title: 'Taxonomy Ranks', phrase: 'Dear King Philip Came Over For Good Soup' },
-    ];
-  });
+    ])
+  );
 
-  const [memoryPalaces, setMemoryPalaces] = useState<MemoryPalace[]>(() => {
-    const saved = localStorage.getItem('ms_memory_palaces');
-    return saved ? JSON.parse(saved) : [
+  const [memoryPalaces, setMemoryPalaces] = useState<MemoryPalace[]>(() =>
+    safeLoadFromStorage<MemoryPalace[]>('ms_memory_palaces', [
       { 
         id: 'p1', 
         name: 'Grand Living Room', 
@@ -346,40 +348,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           { id: 'l2', name: 'Center Foyer Sofa', concept: 'Calvin Cycle Enzyme Step' }
         ] 
       }
-    ];
-  });
+    ])
+  );
 
-  const [linkChains, setLinkChains] = useState<LinkChain[]>(() => {
-    const saved = localStorage.getItem('ms_link_chains');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [linkChains, setLinkChains] = useState<LinkChain[]>(() =>
+    safeLoadFromStorage<LinkChain[]>('ms_link_chains', [])
+  );
 
-  const [storyChains, setStoryChains] = useState<LinkChain[]>(() => {
-    const saved = localStorage.getItem('ms_story_chains');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [storyChains, setStoryChains] = useState<LinkChain[]>(() =>
+    safeLoadFromStorage<LinkChain[]>('ms_story_chains', [])
+  );
 
-  const [firstLetterEntries, setFirstLetterEntries] = useState<FirstLetterAid[]>(() => {
-    const saved = localStorage.getItem('ms_first_letter');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [firstLetterEntries, setFirstLetterEntries] = useState<FirstLetterAid[]>(() =>
+    safeLoadFromStorage<FirstLetterAid[]>('ms_first_letter', [])
+  );
 
-  const [flashcards, setFlashcards] = useState<Flashcard[]>(() => {
-    const saved = localStorage.getItem('ms_flashcards');
-    return saved ? JSON.parse(saved) : [
+  const [flashcards, setFlashcards] = useState<Flashcard[]>(() =>
+    safeLoadFromStorage<Flashcard[]>('ms_flashcards', [
       { id: '1', question: 'What is Active Recall?', answer: 'A learning technique that involves testing yourself on information to strengthen memory pathways.', difficulty: 'medium', nextReview: new Date().toISOString(), interval: 0, easeFactor: 2.5 },
       { id: '2', question: 'Explain Spaced Repetition.', answer: 'Reviewing information at increasing intervals (1, 3, 7, 14, 30 days) to prevent forgetting.', difficulty: 'easy', nextReview: new Date().toISOString(), interval: 0, easeFactor: 2.5 },
-    ];
-  });
+    ])
+  );
 
-  const [revisions, setRevisions] = useState<Revision[]>(() => {
-    const saved = localStorage.getItem('ms_revisions');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [revisions, setRevisions] = useState<Revision[]>(() =>
+    safeLoadFromStorage<Revision[]>('ms_revisions', [])
+  );
 
-  const [examPlans, setExamPlans] = useState<ExamPlan[]>(() => {
-    const saved = localStorage.getItem('ms_exam_plans');
-    return saved ? JSON.parse(saved) : [
+  const [examPlans, setExamPlans] = useState<ExamPlan[]>(() =>
+    safeLoadFromStorage<ExamPlan[]>('ms_exam_plans', [
       {
         id: 'ep1',
         title: 'CA Inter Exam Plan',
@@ -470,8 +466,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         phases: [],
         revisionSchedule: []
       }
-    ];
-  });
+    ])
+  );
 
   const [studyMaterials, setStudyMaterials] = useState<StudyMaterial[]>(() => {
     try {
@@ -483,7 +479,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.warn('Error reading study materials:', e);
     }
-    const sampleGuideText = `MEMORY SHAASTRA — SCIENTIFIC STUDY & RECALL REFERENCE GUIDE
+    const sampleGuideText = `MEMORY SHAASTRA - SCIENTIFIC STUDY & RECALL REFERENCE GUIDE
 ====================================================================
 
 1. SPACED REPETITION (SM-2 INTERVALS)
@@ -511,7 +507,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             id: 'att_sample_1',
             name: 'Memory_Shaastra_Reference_Guide.txt',
             type: 'file',
-            url: 'data:text/plain;base64,' + btoa(sampleGuideText),
+            url: 'data:text/plain;charset=utf-8,' + encodeURIComponent(sampleGuideText),
             size: sampleGuideText.length
           }
         ]
@@ -519,10 +515,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ];
   });
 
-  const [memoryLinks, setMemoryLinks] = useState<MemoryLink[]>(() => {
-    const saved = localStorage.getItem('ms_memory_links');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [memoryLinks, setMemoryLinks] = useState<MemoryLink[]>(() =>
+    safeLoadFromStorage<MemoryLink[]>('ms_memory_links', [])
+  );
 
   // Calendar Activity & Spaced Revision Logger
   const logActivity = (
@@ -742,10 +737,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     // 3. Exam Plans Subtopics
     examPlans.forEach(plan => {
-      plan.subjects.forEach(sub => {
-        sub.chapters.forEach(chap => {
-          chap.topics.forEach(top => {
-            top.subTopics.forEach(st => {
+      plan.subjects?.forEach(sub => {
+        sub.chapters?.forEach(chap => {
+          chap.topics?.forEach(top => {
+            top.subTopics?.forEach(st => {
               totalItems++;
               if (st.completed) completedItems++;
             });
