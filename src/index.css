@@ -279,8 +279,8 @@ html.light .text-violet-500 {
   color: #6d28d9 !important;
 }
 
-/* Master text-white mapping with exclusions so text stays white inside solid color buttons/elements */
-html.light .text-white:not([class*="bg-orange"] *):not([class*="bg-rose"] *):not([class*="bg-amber"] *):not([class*="bg-emerald"] *):not([class*="bg-sky"] *):not([class*="bg-indigo"] *):not([class*="bg-violet"] *) {
+/* Master text-white mapping with exclusions so text stays white inside solid color and gradient buttons/elements */
+html.light .text-white:not([class*="bg-orange"]):not([class*="bg-orange"] *):not([class*="from-orange"]):not([class*="from-orange"] *):not([class*="bg-rose"]):not([class*="bg-rose"] *):not([class*="bg-amber"]):not([class*="bg-amber"] *):not([class*="bg-emerald"]):not([class*="bg-emerald"] *):not([class*="bg-sky"]):not([class*="bg-sky"] *):not([class*="bg-indigo"]):not([class*="bg-indigo"] *):not([class*="from-indigo"]):not([class*="from-indigo"] *):not([class*="bg-violet"]):not([class*="bg-violet"] *):not([class*="from-violet"]):not([class*="from-violet"] *) {
   color: #2D201A !important;
 }
 

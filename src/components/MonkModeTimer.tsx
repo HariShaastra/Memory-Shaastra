@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Clock, Target, Coffee, Sparkles, Plus, FileText, Video, Music, File, Trash2, Save, X, HelpCircle, Search, LayoutGrid, LayoutList, ExternalLink } from 'lucide-react';
+import { Play, Pause, RotateCcw, Clock, Target, Coffee, Sparkles, Plus, FileText, Video, Music, File, Trash2, Save, X, HelpCircle, Search, LayoutGrid, LayoutList, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
 import { StudyMaterial } from '../types';
+import { DocumentViewer, DocumentAttachment } from './DocumentViewer';
 
 const STUDY_QUOTES = [
   "Study hard! You can do it.",
@@ -120,48 +121,19 @@ export default function MonkModeTimer() {
     setStudyMaterials(prev => prev.filter(m => m.id !== id));
   };
 
-  const handleOpenDocumentInBrowser = (att?: { url?: string; name?: string; type?: string }) => {
+  const [viewingDoc, setViewingDoc] = useState<{ attachment: DocumentAttachment; title?: string; notes?: string } | null>(null);
+
+  const handleOpenDocumentSafely = (att?: { url?: string; name?: string; type?: string }, mat?: StudyMaterial) => {
     if (!att || !att.url) return;
-
-    try {
-      if (att.url.startsWith('data:')) {
-        const parts = att.url.split(',');
-        const header = parts[0];
-        const base64Data = parts[1] ? parts[1].trim() : '';
-
-        let mime = 'application/pdf';
-        const mimeMatch = header.match(/:(.*?);/);
-        if (mimeMatch && mimeMatch[1] && mimeMatch[1] !== 'application/octet-stream') {
-          mime = mimeMatch[1];
-        } else if (att.name?.toLowerCase().endsWith('.png')) {
-          mime = 'image/png';
-        } else if (att.name?.toLowerCase().endsWith('.jpg') || att.name?.toLowerCase().endsWith('.jpeg')) {
-          mime = 'image/jpeg';
-        } else if (att.name?.toLowerCase().endsWith('.txt')) {
-          mime = 'text/plain';
-        }
-
-        const binaryStr = atob(base64Data);
-        const len = binaryStr.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-          bytes[i] = binaryStr.charCodeAt(i);
-        }
-
-        const blob = new Blob([bytes], { type: mime });
-        const blobUrl = URL.createObjectURL(blob);
-
-        const win = window.open(blobUrl, '_blank');
-        if (!win) {
-          window.location.href = blobUrl;
-        }
-      } else {
-        window.open(att.url, '_blank');
-      }
-    } catch (err) {
-      console.error('Error opening document in browser:', err);
-      window.open(att.url, '_blank');
-    }
+    setViewingDoc({
+      attachment: {
+        name: att.name || mat?.title || 'Document',
+        url: att.url,
+        type: att.type
+      },
+      title: mat?.title,
+      notes: mat?.content
+    });
   };
 
   // Filter study materials by search query
@@ -482,13 +454,13 @@ export default function MonkModeTimer() {
                       <button 
                         key={id}
                         type="button"
-                        onClick={() => handleOpenDocumentInBrowser(file)}
+                        onClick={() => handleOpenDocumentSafely(file, material)}
                         className="flex items-center gap-2 px-4 py-2 bg-[#1a1614] rounded-xl border border-[#3f332c] hover:border-orange-500/50 transition-all group/file cursor-pointer active:scale-95"
-                        title="Open document in browser without downloading"
+                        title="Open document in safe in-app reader"
                       >
                         <Icon size={14} className="text-orange-500" />
                         <span className="text-[10px] font-black uppercase tracking-widest text-orange-200/60 group-hover/file:text-orange-100 truncate max-w-[160px]">{file.name}</span>
-                        <ExternalLink size={12} className="text-orange-400 shrink-0 ml-1" />
+                        <Eye size={12} className="text-orange-400 shrink-0 ml-1" />
                       </button>
                     );
                   })}
@@ -531,13 +503,13 @@ export default function MonkModeTimer() {
                       <button 
                         key={file.id}
                         type="button"
-                        onClick={() => handleOpenDocumentInBrowser(file)}
+                        onClick={() => handleOpenDocumentSafely(file, material)}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1a1614] rounded-xl border border-[#3f332c] hover:border-orange-500/50 text-xs font-bold text-orange-200 hover:text-white transition-all cursor-pointer active:scale-95"
-                        title="Open document in browser without downloading"
+                        title="Open document in safe in-app reader"
                       >
                         <FileText size={13} className="text-orange-500" />
                         <span className="truncate max-w-[120px] text-[10px]">{file.name}</span>
-                        <ExternalLink size={12} className="text-orange-400 shrink-0" />
+                        <Eye size={12} className="text-orange-400 shrink-0" />
                       </button>
                     ))}
                   </div>
@@ -560,6 +532,17 @@ export default function MonkModeTimer() {
           </div>
         )}
       </div>
+
+      {/* Safe In-App Document Reader Modal */}
+      {viewingDoc && (
+        <DocumentViewer
+          attachment={viewingDoc.attachment}
+          title={viewingDoc.title}
+          notes={viewingDoc.notes}
+          isModal={true}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }

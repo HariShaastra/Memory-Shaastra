@@ -20,9 +20,10 @@ import {
   Filter,
   Sparkles,
   Check,
-  ExternalLink
+  Maximize2
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { DocumentViewer, DocumentAttachment } from './DocumentViewer';
 
 interface Grouping {
   id: string;
@@ -61,6 +62,8 @@ export default function Library() {
   const [selectedGroup, setSelectedGroup] = useState<string>('Science & Medical');
   const [selectedSubgroup, setSelectedSubgroup] = useState<string>('Physics');
   const [activeMaterialId, setActiveMaterialId] = useState<string | null>(null);
+  const [selectedAttachmentIdx, setSelectedAttachmentIdx] = useState<number>(0);
+  const [modalAttachment, setModalAttachment] = useState<DocumentAttachment | null>(null);
 
   // Add Document form fields
   const [newTitle, setNewTitle] = useState('');
@@ -204,51 +207,21 @@ export default function Library() {
     return true;
   });
 
-  const activeMaterial = studyMaterials.find(m => m.id === activeMaterialId);
-  const mainAttachment = activeMaterial?.attachments?.[0];
-  const otherAttachments = activeMaterial?.attachments?.slice(1) || [];
+  const activeMaterial = studyMaterials.find(m => m.id === activeMaterialId) || filteredMaterials[0] || studyMaterials[0] || null;
+  const allAttachments = activeMaterial?.attachments || [];
+  const selectedAttachment = allAttachments[selectedAttachmentIdx] || allAttachments[0] || null;
 
-  const handleOpenDocumentInBrowser = (att?: { url: string; name: string; type?: string }) => {
+  const handleSafeDownloadAttachment = (att?: { url: string; name: string; type?: string }) => {
     if (!att || !att.url) return;
-
     try {
-      if (att.url.startsWith('data:')) {
-        const parts = att.url.split(',');
-        const header = parts[0];
-        const base64Data = parts[1] ? parts[1].trim() : '';
-
-        let mime = 'application/pdf';
-        const mimeMatch = header.match(/:(.*?);/);
-        if (mimeMatch && mimeMatch[1] && mimeMatch[1] !== 'application/octet-stream') {
-          mime = mimeMatch[1];
-        } else if (att.name?.toLowerCase().endsWith('.png')) {
-          mime = 'image/png';
-        } else if (att.name?.toLowerCase().endsWith('.jpg') || att.name?.toLowerCase().endsWith('.jpeg')) {
-          mime = 'image/jpeg';
-        } else if (att.name?.toLowerCase().endsWith('.txt')) {
-          mime = 'text/plain';
-        }
-
-        const binaryStr = atob(base64Data);
-        const len = binaryStr.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-          bytes[i] = binaryStr.charCodeAt(i);
-        }
-
-        const blob = new Blob([bytes], { type: mime });
-        const blobUrl = URL.createObjectURL(blob);
-
-        const win = window.open(blobUrl, '_blank');
-        if (!win) {
-          window.location.href = blobUrl;
-        }
-      } else {
-        window.open(att.url, '_blank');
-      }
+      const a = document.createElement('a');
+      a.href = att.url;
+      a.download = att.name || 'document';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } catch (err) {
-      console.error('Error opening document in browser:', err);
-      window.open(att.url, '_blank');
+      console.error('Error downloading document:', err);
     }
   };
 
@@ -563,6 +536,7 @@ export default function Library() {
                   key={mat.id}
                   onClick={() => {
                     setActiveMaterialId(mat.id);
+                    setSelectedAttachmentIdx(0);
                     setCurrentStep(3);
                   }}
                   className="p-5 bg-[#1a1614] hover:bg-[#221c19] rounded-2xl border border-[#3f332c] hover:border-orange-500/50 cursor-pointer transition-all space-y-3 group"
@@ -636,6 +610,7 @@ export default function Library() {
                   key={mat.id}
                   onClick={() => {
                     setActiveMaterialId(mat.id);
+                    setSelectedAttachmentIdx(0);
                     setCurrentStep(3);
                   }}
                   className="p-4 bg-[#1a1614] hover:bg-[#221c19] rounded-2xl border border-[#3f332c] hover:border-orange-500/50 cursor-pointer transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
@@ -664,6 +639,7 @@ export default function Library() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveMaterialId(mat.id);
+                        setSelectedAttachmentIdx(0);
                         setCurrentStep(3);
                       }}
                       className="px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-md"
@@ -768,9 +744,9 @@ export default function Library() {
         </form>
       )}
 
-      {/* STEP 3 VIEW: DIRECT DOCUMENT VIEWER */}
+      {/* STEP 3 VIEW: DIRECT IN-APP DOCUMENT VIEWER */}
       {currentStep === 3 && (
-        <div className="bg-amber-50 dark:bg-[#2a221f] p-6 rounded-3xl border border-amber-200 dark:border-[#3f332c] space-y-6 shadow-xl transition-colors">
+        <div className="bg-amber-50 dark:bg-[#2a221f] p-5 sm:p-6 rounded-3xl border border-amber-200 dark:border-[#3f332c] space-y-6 shadow-xl transition-colors">
           {activeMaterial ? (
             <div className="space-y-6">
               {/* Document Header */}
@@ -779,41 +755,70 @@ export default function Library() {
                   <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 bg-orange-600/20 px-2.5 py-0.5 rounded-full border border-orange-500/20">
                     {(activeMaterial as any).groupName || 'General'}
                   </span>
-                  <h2 className="text-2xl font-black text-stone-900 dark:text-[#fef3c7] mt-2">{activeMaterial.title}</h2>
-                  <p className="text-xs text-stone-600 dark:text-orange-200/50">Uploaded on {new Date(activeMaterial.createdAt).toLocaleDateString()}</p>
+                  <h2 className="text-xl sm:text-2xl font-black text-stone-900 dark:text-[#fef3c7] mt-2">{activeMaterial.title}</h2>
+                  <p className="text-xs text-stone-600 dark:text-orange-200/60">Uploaded on {new Date(activeMaterial.createdAt).toLocaleDateString()}</p>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {selectedAttachment && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setModalAttachment(selectedAttachment)}
+                        className="py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-md transition-all cursor-pointer active:scale-95"
+                      >
+                        <Maximize2 size={14} />
+                        <span>Fullscreen Reader</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSafeDownloadAttachment(selectedAttachment)}
+                        className="py-2 px-4 bg-white dark:bg-[#1a1614] hover:bg-orange-50 dark:hover:bg-[#342a25] text-stone-800 dark:text-orange-200 rounded-xl text-xs font-bold border border-stone-300 dark:border-[#3f332c] flex items-center space-x-1.5 transition-all cursor-pointer active:scale-95"
+                      >
+                        <Download size={14} />
+                        <span>Download File</span>
+                      </button>
+                    </>
+                  )}
                   <button 
                     onClick={() => setCurrentStep(1)}
-                    className="py-2 px-4 bg-stone-200/70 dark:bg-white/5 hover:bg-stone-300 dark:hover:bg-white/10 text-stone-800 dark:text-orange-300 rounded-xl text-xs font-bold border border-stone-300 dark:border-white/10 transition-all"
+                    className="py-2 px-4 bg-stone-200/70 dark:bg-white/5 hover:bg-stone-300 dark:hover:bg-white/10 text-stone-800 dark:text-orange-300 rounded-xl text-xs font-bold border border-stone-300 dark:border-white/10 transition-all cursor-pointer"
                   >
                     Back to Library
                   </button>
                 </div>
               </div>
 
-              {/* Single Primary Document Action Link */}
-              {mainAttachment ? (
-                <div className="p-5 bg-white dark:bg-[#1a1614] rounded-2xl border border-stone-200 dark:border-[#3f332c] flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-                  <div className="flex items-center space-x-3.5">
-                    <div className="p-3 bg-orange-100 dark:bg-orange-600/20 text-orange-600 dark:text-orange-400 rounded-2xl border border-orange-500/20 shrink-0">
-                      <FileText size={22} />
+              {/* Attachment Selector & Inline In-App Safe Reader */}
+              {allAttachments.length > 0 && selectedAttachment ? (
+                <div className="space-y-4">
+                  {allAttachments.length > 1 && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold text-stone-700 dark:text-orange-300 mr-1">Attached Files:</span>
+                      {allAttachments.map((att, idx) => (
+                        <button
+                          key={att.id || idx}
+                          type="button"
+                          onClick={() => setSelectedAttachmentIdx(idx)}
+                          className={`px-3.5 py-2 rounded-xl border text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
+                            idx === selectedAttachmentIdx
+                              ? 'bg-orange-600 text-white border-orange-500 shadow-md'
+                              : 'bg-white dark:bg-[#1a1614] text-stone-800 dark:text-orange-200 border-stone-200 dark:border-[#3f332c] hover:border-orange-500/40'
+                          }`}
+                        >
+                          <FileText size={14} />
+                          <span className="truncate max-w-[200px]">{att.name}</span>
+                        </button>
+                      ))}
                     </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-stone-900 dark:text-[#fef3c7]">{mainAttachment.name}</h4>
-                      <p className="text-xs text-stone-500 dark:text-orange-200/50">Attached Document — Direct Secure Browser View</p>
-                    </div>
-                  </div>
+                  )}
 
-                  <button 
-                    type="button"
-                    onClick={() => handleOpenDocumentInBrowser(mainAttachment)}
-                    className="w-full sm:w-auto px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-md transition-all shrink-0 cursor-pointer active:scale-95"
-                  >
-                    <ExternalLink size={15} />
-                    <span>Open Document in Browser</span>
-                  </button>
+                  {/* Direct In-App Document Reader (Never blocked by Google Chrome or Sandbox) */}
+                  <DocumentViewer
+                    attachment={selectedAttachment}
+                    title={activeMaterial.title}
+                    notes={activeMaterial.content}
+                  />
                 </div>
               ) : null}
 
@@ -828,26 +833,6 @@ export default function Library() {
                   {activeMaterial.content || 'No text notes attached to this document.'}
                 </div>
               </div>
-
-              {/* Other Reference Files (if additional attachments exist) */}
-              {otherAttachments.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="font-bold text-xs text-stone-700 dark:text-orange-300">Other Attached Files:</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {otherAttachments.map(att => (
-                      <button 
-                        key={att.id} 
-                        type="button"
-                        onClick={() => handleOpenDocumentInBrowser(att)}
-                        className="p-3 bg-white dark:bg-[#1a1614] hover:bg-stone-100 dark:hover:bg-[#221c19] rounded-xl border border-stone-200 dark:border-[#3f332c] flex items-center justify-between text-xs font-bold text-stone-800 dark:text-orange-200 text-left w-full cursor-pointer transition-all"
-                      >
-                        <span className="truncate">{att.name}</span>
-                        <ExternalLink size={14} className="text-orange-500 dark:text-orange-400 shrink-0" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           ) : (
             <div className="text-center py-12 text-stone-500 dark:text-orange-200/40 text-xs space-y-2">
@@ -862,6 +847,17 @@ export default function Library() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Fullscreen Modal Reader when requested */}
+      {modalAttachment && (
+        <DocumentViewer
+          attachment={modalAttachment}
+          title={activeMaterial?.title}
+          notes={activeMaterial?.content}
+          isModal={true}
+          onClose={() => setModalAttachment(null)}
+        />
       )}
 
     </div>

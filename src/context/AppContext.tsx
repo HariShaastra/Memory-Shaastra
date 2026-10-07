@@ -474,8 +474,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [studyMaterials, setStudyMaterials] = useState<StudyMaterial[]>(() => {
-    const saved = localStorage.getItem('ms_study_materials');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('ms_study_materials');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.warn('Error reading study materials:', e);
+    }
+    const sampleGuideText = `MEMORY SHAASTRA — SCIENTIFIC STUDY & RECALL REFERENCE GUIDE
+====================================================================
+
+1. SPACED REPETITION (SM-2 INTERVALS)
+   - Review 1: +1 Day after initial learning
+   - Review 2: +3 Days after initial learning
+   - Review 3: +7 Days after initial learning
+   - Review 4: +14 Days after initial learning
+   - Review 5: +30 Days after initial learning
+
+2. CORE VISUAL MEMORY PEGS
+   - Method of Loci (Memory Palace): Anchor abstract concepts to familiar physical rooms.
+   - Link & Story Method: Chain sequential exam points into vivid, unforgettable narratives.
+   - First-Letter Mnemonics: Condense multi-part definitions into rapid-recall acronyms.`;
+
+    return [
+      {
+        id: 'sample_doc_1',
+        title: 'Memory Shaastra Core Study & Recall Reference Guide',
+        content: 'Complete summary of SM-2 spaced repetition intervals (1d, 3d, 7d, 14d, 30d), Method of Loci (Memory Palace), Associative Linking Chains, and Feynman Simplification strategies.',
+        groupName: 'Science & Medical',
+        subgroupName: 'Physics',
+        createdAt: new Date().toISOString(),
+        attachments: [
+          {
+            id: 'att_sample_1',
+            name: 'Memory_Shaastra_Reference_Guide.txt',
+            type: 'file',
+            url: 'data:text/plain;base64,' + btoa(sampleGuideText),
+            size: sampleGuideText.length
+          }
+        ]
+      } as any
+    ];
   });
 
   const [memoryLinks, setMemoryLinks] = useState<MemoryLink[]>(() => {
@@ -762,73 +803,82 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Safe LocalStorage Helper (prevents QuotaExceededError from crashing the app when large PDFs are attached)
+  const safeSaveToStorage = (key: string, value: unknown) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (err) {
+      console.warn(`LocalStorage quota reached while saving ${key}; keeping data in active memory session.`, err);
+    }
+  };
+
   // Persisting to Local Storage
   useEffect(() => {
-    localStorage.setItem('ms_user', JSON.stringify(user));
+    safeSaveToStorage('ms_user', user);
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem('ms_revision_intervals', JSON.stringify(revisionIntervals));
+    safeSaveToStorage('ms_revision_intervals', revisionIntervals);
   }, [revisionIntervals]);
 
   useEffect(() => {
-    localStorage.setItem('ms_activity_events', JSON.stringify(activityEvents));
+    safeSaveToStorage('ms_activity_events', activityEvents);
   }, [activityEvents]);
 
   useEffect(() => {
-    localStorage.setItem('ms_scheduled_revisions', JSON.stringify(scheduledRevisions));
+    safeSaveToStorage('ms_scheduled_revisions', scheduledRevisions);
   }, [scheduledRevisions]);
 
   useEffect(() => {
-    localStorage.setItem('ms_personalization', JSON.stringify(personalization));
+    safeSaveToStorage('ms_personalization', personalization);
   }, [personalization]);
 
   useEffect(() => {
-    localStorage.setItem('ms_study_tasks', JSON.stringify(studyTasks));
+    safeSaveToStorage('ms_study_tasks', studyTasks);
   }, [studyTasks]);
 
   useEffect(() => {
-    localStorage.setItem('ms_mnemonics', JSON.stringify(mnemonics));
+    safeSaveToStorage('ms_mnemonics', mnemonics);
   }, [mnemonics]);
 
   useEffect(() => {
-    localStorage.setItem('ms_memory_palaces', JSON.stringify(memoryPalaces));
+    safeSaveToStorage('ms_memory_palaces', memoryPalaces);
   }, [memoryPalaces]);
 
   useEffect(() => {
-    localStorage.setItem('ms_link_chains', JSON.stringify(linkChains));
+    safeSaveToStorage('ms_link_chains', linkChains);
   }, [linkChains]);
 
   useEffect(() => {
-    localStorage.setItem('ms_story_chains', JSON.stringify(storyChains));
+    safeSaveToStorage('ms_story_chains', storyChains);
   }, [storyChains]);
 
   useEffect(() => {
-    localStorage.setItem('ms_first_letter', JSON.stringify(firstLetterEntries));
+    safeSaveToStorage('ms_first_letter', firstLetterEntries);
   }, [firstLetterEntries]);
 
   useEffect(() => {
-    localStorage.setItem('ms_flashcards', JSON.stringify(flashcards));
+    safeSaveToStorage('ms_flashcards', flashcards);
   }, [flashcards]);
 
   useEffect(() => {
-    localStorage.setItem('ms_revisions', JSON.stringify(revisions));
+    safeSaveToStorage('ms_revisions', revisions);
   }, [revisions]);
 
   useEffect(() => {
-    localStorage.setItem('ms_exam_plans', JSON.stringify(examPlans));
+    safeSaveToStorage('ms_exam_plans', examPlans);
   }, [examPlans]);
 
   useEffect(() => {
-    localStorage.setItem('ms_study_materials', JSON.stringify(studyMaterials));
+    safeSaveToStorage('ms_study_materials', studyMaterials);
   }, [studyMaterials]);
 
   useEffect(() => {
-    localStorage.setItem('ms_memory_links', JSON.stringify(memoryLinks));
+    safeSaveToStorage('ms_memory_links', memoryLinks);
   }, [memoryLinks]);
 
   useEffect(() => {
-    localStorage.setItem('ms_notifications', JSON.stringify(notifications));
+    safeSaveToStorage('ms_notifications', notifications);
   }, [notifications]);
 
   return (
