@@ -62,12 +62,19 @@ interface AppContextType {
   setStudyMaterials: React.Dispatch<React.SetStateAction<StudyMaterial[]>>;
   handleFileUpload: (file: File) => Promise<FileAttachment>;
   memoryLinks: MemoryLink[];
+  setMemoryLinks: React.Dispatch<React.SetStateAction<MemoryLink[]>>;
   addMemoryLink: (sourceId: string, sourceType: MemoryLink['sourceType'], targetId: string, targetType: MemoryLink['targetType']) => void;
   removeMemoryLink: (id: string) => void;
   rateRecall: (id: string, type: 'flashcard' | 'revision', performance: 'forgot' | 'partial' | 'remembered' | 1 | 2 | 3 | 4) => void;
   theme: 'dark' | 'light';
   setTheme: (theme: 'dark' | 'light') => void;
   
+  // Gamification & Streaks
+  xp: number;
+  streak: number;
+  addXp: (amount: number) => void;
+  updateStreak: () => void;
+
   // Subjects & Auto Schedule
   allSubjects: string[];
   getChaptersForSubject: (subjectName?: string) => string[];
@@ -88,6 +95,8 @@ interface AppContextType {
   ) => void;
   toggleScheduledRevision: (id: string) => void;
   deleteScheduledRevision: (id: string) => void;
+  updateScheduledRevision: (id: string, updated: Partial<ScheduledRevisionTask>) => void;
+  addScheduledRevision: (taskData: Partial<ScheduledRevisionTask>) => void;
 
   // Study Now Direct Focus Timer
   activeFocusTask: ActiveFocusTask | null;
@@ -104,7 +113,12 @@ interface AppContextType {
   // Notifications
   notifications: AppNotification[];
   setNotifications: React.Dispatch<React.SetStateAction<AppNotification[]>>;
-  addNotification: (title: string, message: string, type?: AppNotification['type'], priority?: AppNotification['priority']) => void;
+  addNotification: (
+    titleOrObj: string | { title: string; message: string; type?: AppNotification['type']; priority?: AppNotification['priority'] }, 
+    message?: string, 
+    type?: AppNotification['type'], 
+    priority?: AppNotification['priority']
+  ) => void;
   markAsRead: (id: string) => void;
   clearAllNotifications: () => void;
 }
@@ -171,10 +185,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const setTheme = (t: 'dark' | 'light') => {
     setThemeState(t);
-    localStorage.setItem('ms_theme', t);
+    try {
+      localStorage.setItem('ms_theme', t);
+    } catch (e) {
+      console.warn(e);
+    }
     if (t === 'light') {
       document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
     } else {
+      document.documentElement.classList.add('dark');
       document.documentElement.classList.remove('light');
     }
   };
@@ -182,7 +202,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (theme === 'light') {
       document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
     } else {
+      document.documentElement.classList.add('dark');
       document.documentElement.classList.remove('light');
     }
   }, [theme]);
@@ -297,20 +319,55 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ])
   );
 
+  // XP and Streak Gamification State
+  const [xp, setXp] = useState<number>(() => safeLoadFromStorage<number>('ms_xp', 120));
+  const [streak, setStreak] = useState<number>(() => safeLoadFromStorage<number>('ms_streak', 3));
+
+  const addXp = (amount: number) => {
+    setXp(prev => {
+      const next = prev + amount;
+      safeSaveToStorage('ms_xp', next);
+      return next;
+    });
+  };
+
+  const updateStreak = () => {
+    setStreak(prev => {
+      const next = prev + 1;
+      safeSaveToStorage('ms_streak', next);
+      return next;
+    });
+  };
+
   const addNotification = (
-    title: string, 
-    message: string, 
+    titleOrObj: string | { title: string; message: string; type?: AppNotification['type']; priority?: AppNotification['priority'] }, 
+    message?: string, 
     type: AppNotification['type'] = 'reminder', 
     priority: AppNotification['priority'] = 'medium'
   ) => {
+    let t = '';
+    let m = '';
+    let ty = type;
+    let pr = priority;
+
+    if (typeof titleOrObj === 'object') {
+      t = titleOrObj.title;
+      m = titleOrObj.message;
+      if (titleOrObj.type) ty = titleOrObj.type;
+      if (titleOrObj.priority) pr = titleOrObj.priority;
+    } else {
+      t = titleOrObj;
+      m = message || '';
+    }
+
     const newNotif: AppNotification = {
       id: 'notif_' + Math.random().toString(36).substr(2, 9),
-      title,
-      message,
-      type,
+      title: t,
+      message: m,
+      type: ty,
       timestamp: new Date().toISOString(),
       read: false,
-      priority
+      priority: pr
     };
     setNotifications(prev => [newNotif, ...prev]);
   };
@@ -891,8 +948,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       examPlans, setExamPlans,
       studyMaterials, setStudyMaterials,
       handleFileUpload,
-      memoryLinks, addMemoryLink, removeMemoryLink, rateRecall,
+      memoryLinks, setMemoryLinks, addMemoryLink, removeMemoryLink, rateRecall,
       theme, setTheme,
+      xp, streak, addXp, updateStreak,
       allSubjects,
       getChaptersForSubject,
       autoCreateSM2ScheduleForSubject,

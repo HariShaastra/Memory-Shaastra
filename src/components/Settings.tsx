@@ -39,6 +39,8 @@ export default function Settings() {
     memoryLinks, setMemoryLinks
   } = useApp();
 
+  const isLight = theme === 'light';
+
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
   const [editEmail, setEditEmail] = useState(user?.email || '');
@@ -309,22 +311,36 @@ export default function Settings() {
       </section>
 
       {/* Visual Workspace Customization */}
-      <section className="bg-[#2a221f] border border-[#3f332c] rounded-[3.5rem] p-10 shadow-lg space-y-6">
+      <section className={`rounded-[3.5rem] p-8 sm:p-10 shadow-lg space-y-6 border transition-colors ${
+        isLight ? 'bg-white border-orange-200 shadow-orange-500/5' : 'bg-[#2a221f] border-[#3f332c]'
+      }`}>
         <div>
-          <h3 className="text-lg font-black text-orange-100 italic uppercase">Theme Customization</h3>
-          <p className="text-orange-200/30 text-[9px] uppercase tracking-wider font-bold">Select visual aesthetic parameters</p>
+          <h3 className={`text-lg font-black italic uppercase ${isLight ? 'text-stone-900' : 'text-orange-100'}`}>
+            Theme Customization
+          </h3>
+          <p className={`text-[10px] uppercase tracking-wider font-bold ${isLight ? 'text-stone-500' : 'text-orange-200/50'}`}>
+            Select visual aesthetic parameters for maximum readability
+          </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 bg-[#1a1614] p-6 rounded-[2.5rem] border border-[#3f332c]/60">
-          <span className="text-xs font-black text-orange-200/60 uppercase tracking-widest flex-1">Workspace Brightness</span>
+        <div className={`flex flex-col sm:flex-row items-center gap-4 p-6 rounded-[2.5rem] border ${
+          isLight ? 'bg-orange-50/70 border-orange-200' : 'bg-[#1a1614] border-[#3f332c]/60'
+        }`}>
+          <span className={`text-xs font-black uppercase tracking-widest flex-1 ${
+            isLight ? 'text-stone-800' : 'text-orange-200/70'
+          }`}>
+            Workspace Brightness
+          </span>
           
-          <div className="flex bg-[#2a221f] p-1.5 rounded-2xl border border-[#3f332c] gap-1">
+          <div className={`flex p-1.5 rounded-2xl border gap-1 ${
+            isLight ? 'bg-white border-orange-200' : 'bg-[#2a221f] border-[#3f332c]'
+          }`}>
             <button
               onClick={() => setTheme('dark')}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${
                 theme === 'dark' 
                   ? 'bg-orange-600 text-white shadow-md' 
-                  : 'text-orange-200/40 hover:text-orange-300'
+                  : isLight ? 'text-stone-600 hover:text-stone-900' : 'text-orange-200/40 hover:text-orange-300'
               }`}
             >
               <Moon size={14} />
@@ -333,10 +349,10 @@ export default function Settings() {
             
             <button
               onClick={() => setTheme('light')}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${
                 theme === 'light' 
                   ? 'bg-orange-600 text-white shadow-md' 
-                  : 'text-orange-200/40 hover:text-orange-300'
+                  : isLight ? 'text-stone-600 hover:text-stone-900' : 'text-orange-200/40 hover:text-orange-300'
               }`}
             >
               <Sun size={14} />
@@ -346,19 +362,81 @@ export default function Settings() {
         </div>
       </section>
 
-      {/* Data Safety, Export & Import Backups */}
-      <section className="bg-[#2a221f] border border-[#3f332c] rounded-[3.5rem] p-10 shadow-lg space-y-8">
+      {/* Distraction Protection & Focus Guide Section */}
+      <section className={`rounded-[3.5rem] p-8 sm:p-10 shadow-lg space-y-6 border transition-colors ${
+        isLight ? 'bg-white border-orange-200 shadow-orange-500/5' : 'bg-[#2a221f] border-[#3f332c]'
+      }`}>
         <div>
-          <h3 className="text-lg font-black text-orange-100 italic uppercase">Local Data Safety Control</h3>
-          <p className="text-orange-200/30 text-[9px] uppercase tracking-wider font-bold">Export, import, and restore memory modules completely offline</p>
+          <h3 className={`text-lg font-black italic uppercase ${isLight ? 'text-stone-900' : 'text-orange-100'}`}>
+            Distraction Protection & Device Limits
+          </h3>
+          <p className={`text-[10px] uppercase tracking-wider font-bold ${isLight ? 'text-stone-500' : 'text-orange-200/50'}`}>
+            Understanding in-app focus controls versus device-level app blocking
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={`p-5 rounded-2xl border space-y-2 ${
+            isLight ? 'bg-orange-50/70 border-orange-200 text-stone-900' : 'bg-[#1a1614] border-[#3f332c] text-orange-100'
+          }`}>
+            <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400">1. In-App Focus Shield</span>
+            <h4 className="text-xs font-bold">Memory Shaastra Workspace</h4>
+            <p className="text-[11px] text-stone-600 dark:text-orange-200/70 leading-relaxed">
+              Silences incoming study toast alerts, suppresses external notifications, and hides non-essential dashboard elements during Study Bubble sessions.
+            </p>
+            <span className="inline-block text-[10px] font-black text-emerald-600 dark:text-emerald-400">
+              ✓ Verified & Active
+            </span>
+          </div>
+
+          <div className={`p-5 rounded-2xl border space-y-2 ${
+            isLight ? 'bg-orange-50/70 border-orange-200 text-stone-900' : 'bg-[#1a1614] border-[#3f332c] text-orange-100'
+          }`}>
+            <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400">2. Device-Level Restrictions</span>
+            <h4 className="text-xs font-bold">OS App Blocking</h4>
+            <p className="text-[11px] text-stone-600 dark:text-orange-200/70 leading-relaxed">
+              Standard web apps cannot forcibly close or block other native phone apps. Use your device's built-in Focus Mode (Android Digital Wellbeing, iOS Focus, Windows Focus) for system-wide blocking.
+            </p>
+            <span className="inline-block text-[10px] font-black text-amber-600 dark:text-amber-400">
+              ℹ Setup via Device Settings
+            </span>
+          </div>
+
+          <div className={`p-5 rounded-2xl border space-y-2 ${
+            isLight ? 'bg-orange-50/70 border-orange-200 text-stone-900' : 'bg-[#1a1614] border-[#3f332c] text-orange-100'
+          }`}>
+            <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400">3. Screen-Time Tracking</span>
+            <h4 className="text-xs font-bold">Digital Wellbeing Dashboard</h4>
+            <p className="text-[11px] text-stone-600 dark:text-orange-200/70 leading-relaxed">
+              Memory Shaastra tracks study learning outcomes, retention rates, and recall consistency, not total device hours. Check your OS screen-time settings for full phone usage logs.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Data Safety, Export & Import Backups */}
+      <section className={`rounded-[3.5rem] p-8 sm:p-10 shadow-lg space-y-8 border transition-colors ${
+        isLight ? 'bg-white border-orange-200 shadow-orange-500/5' : 'bg-[#2a221f] border-[#3f332c]'
+      }`}>
+        <div>
+          <h3 className={`text-lg font-black italic uppercase ${isLight ? 'text-stone-900' : 'text-orange-100'}`}>
+            Local Data Safety Control
+          </h3>
+          <p className={`text-[10px] uppercase tracking-wider font-bold ${isLight ? 'text-stone-500' : 'text-orange-200/50'}`}>
+            Export, import, and restore memory modules completely offline
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Complete System JSON Backup */}
-          <div className="bg-[#1a1614] border border-[#3f332c] rounded-[2.5rem] p-6 flex flex-col justify-between space-y-6">
+          <div className={`border rounded-[2.5rem] p-6 flex flex-col justify-between space-y-6 ${
+            isLight ? 'bg-amber-50/50 border-orange-200 shadow-sm' : 'bg-[#1a1614] border-[#3f332c]'
+          }`}>
             <div className="space-y-2">
-              <span className="text-[10px] font-black uppercase text-orange-500 tracking-wider">Full System Backup (JSON)</span>
-              <p className="text-[10px] text-orange-200/40 font-bold leading-relaxed uppercase">
+              <span className="text-[10px] font-black uppercase text-orange-600 tracking-wider">Full System Backup (JSON)</span>
+              <p className={`text-[10px] font-bold leading-relaxed uppercase ${
+                isLight ? 'text-stone-600' : 'text-orange-200/40'
+              }`}>
                 Encodes all study decks, memory palaces, mnemonics, study documents, revisions, and status logs into a single compact file.
               </p>
             </div>
@@ -372,7 +450,11 @@ export default function Settings() {
                 <span>Export System Backup</span>
               </button>
 
-              <label className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-[#2a221f] hover:bg-[#342a27] border border-[#3f332c] hover:border-orange-500/20 text-orange-400 hover:text-white rounded-2xl text-[9px] font-black uppercase tracking-widest cursor-pointer transition-all active:scale-95">
+              <label className={`w-full flex items-center justify-center gap-2 px-6 py-3.5 border rounded-2xl text-[9px] font-black uppercase tracking-widest cursor-pointer transition-all active:scale-95 ${
+                isLight 
+                  ? 'bg-white hover:bg-orange-50 border-orange-200 text-orange-700' 
+                  : 'bg-[#2a221f] hover:bg-[#342a27] border-[#3f332c] hover:border-orange-500/20 text-orange-400 hover:text-white'
+              }`}>
                 <Upload size={14} />
                 <span>Restore System Backup</span>
                 <input
@@ -387,10 +469,14 @@ export default function Settings() {
           </div>
 
           {/* Flashcard Spreadsheet Exchange */}
-          <div className="bg-[#1a1614] border border-[#3f332c] rounded-[2.5rem] p-6 flex flex-col justify-between space-y-6">
+          <div className={`border rounded-[2.5rem] p-6 flex flex-col justify-between space-y-6 ${
+            isLight ? 'bg-amber-50/50 border-orange-200 shadow-sm' : 'bg-[#1a1614] border-[#3f332c]'
+          }`}>
             <div className="space-y-2">
-              <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider">Flashcard CSV Exchange</span>
-              <p className="text-[10px] text-orange-200/40 font-bold leading-relaxed uppercase">
+              <span className="text-[10px] font-black uppercase text-amber-600 tracking-wider">Flashcard CSV Exchange</span>
+              <p className={`text-[10px] font-bold leading-relaxed uppercase ${
+                isLight ? 'text-stone-600' : 'text-orange-200/40'
+              }`}>
                 Import or export flashcard decks specifically as standard CSV tables, compatible with Excel, Google Sheets, or any external study setups.
               </p>
             </div>
@@ -398,13 +484,17 @@ export default function Settings() {
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleExportCSV}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-amber-500/10 hover:bg-amber-500 text-amber-600 hover:text-white border border-amber-500/20 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95"
               >
                 <FileSpreadsheet size={14} />
                 <span>Export Flashcards to CSV</span>
               </button>
 
-              <label className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-[#2a221f] hover:bg-[#342a27] border border-[#3f332c] hover:border-orange-500/20 text-orange-300 hover:text-white rounded-2xl text-[9px] font-black uppercase tracking-widest cursor-pointer transition-all active:scale-95">
+              <label className={`w-full flex items-center justify-center gap-2 px-6 py-3.5 border rounded-2xl text-[9px] font-black uppercase tracking-widest cursor-pointer transition-all active:scale-95 ${
+                isLight 
+                  ? 'bg-white hover:bg-amber-50 border-orange-200 text-stone-700' 
+                  : 'bg-[#2a221f] hover:bg-[#342a27] border-[#3f332c] hover:border-orange-500/20 text-orange-300 hover:text-white'
+              }`}>
                 <Upload size={14} />
                 <span>Import Flashcards from CSV</span>
                 <input
@@ -421,14 +511,16 @@ export default function Settings() {
       </section>
 
       {/* Danger Zone */}
-      <section className="bg-rose-950/10 border border-rose-500/15 rounded-[3.5rem] p-10 relative overflow-hidden group">
+      <section className={`border rounded-[3.5rem] p-10 relative overflow-hidden group ${
+        isLight ? 'bg-rose-50 border-rose-200' : 'bg-rose-950/10 border-rose-500/15'
+      }`}>
         <div className="absolute inset-0 bg-rose-900/5 opacity-0 group-hover:opacity-100 transition-opacity" />
         <h3 className="text-[10px] font-black text-rose-500 mb-8 uppercase tracking-[0.4em] italic relative z-10">System Safety Overrides</h3>
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div>
-            <p className="text-sm font-black text-orange-100 uppercase italic tracking-tighter">Purge Local Database Storage</p>
-            <p className="text-[10px] text-orange-200/20 font-black uppercase tracking-[0.1em] mt-1">This will erase all levels, study logs, mnemonics, cards, and documents forever.</p>
+            <p className={`text-sm font-black uppercase italic tracking-tighter ${isLight ? 'text-rose-900' : 'text-orange-100'}`}>Purge Local Database Storage</p>
+            <p className={`text-[10px] font-black uppercase tracking-[0.1em] mt-1 ${isLight ? 'text-rose-700/60' : 'text-orange-200/20'}`}>This will erase all levels, study logs, mnemonics, cards, and documents forever.</p>
           </div>
           <button 
             onClick={handleClearAllData}

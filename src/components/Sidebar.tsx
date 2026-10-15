@@ -68,6 +68,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
 
   const mainItems = [
     { id: 'dashboard', label: t.home, icon: Home },
+    { id: 'study-bubble', label: 'Study Bubble', icon: Target },
     { id: 'focus', label: 'Study Timer', icon: Timer },
     { id: 'rescue-queue', label: 'Active Recall', icon: Heart },
     { id: 'calendar', label: 'Calendar', icon: Calendar },

@@ -34,8 +34,14 @@ type DailyBoostTab = 'inner-blaze' | 'zip' | 'sudoku';
 type BlazeState = 'idle' | 'playing' | 'result';
 
 export const MemoryBoost: React.FC = () => {
-  const { goBack, updateStreak, addXp } = useAppContext();
+  const { goBack, updateStreak, addXp, theme } = useAppContext();
+  const isLight = theme === 'light';
   const [activeTab, setActiveTab] = useState<DailyBoostTab>('zip');
+
+  // ZIP drag tracing without lifting mouse / touch
+  const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = React.useRef(false);
+  const gridContainerRef = React.useRef<HTMLDivElement>(null);
 
   // ==========================================
   // 1. INNER BLAZE STATE (Flash Digit Recall)
@@ -144,76 +150,142 @@ export const MemoryBoost: React.FC = () => {
     return highestVisitedCp + 1;
   };
 
-  // Handle cell click / interaction in ZIP
-  const handleZipCellClick = (r: number, c: number) => {
+  // Clean up global drag listeners on unmount
+  useEffect(() => {
+    const handleGlobalPointerUp = () => {
+      isDraggingRef.current = false;
+      setIsDragging(false);
+    };
+    window.addEventListener('pointerup', handleGlobalPointerUp);
+    window.addEventListener('mouseup', handleGlobalPointerUp);
+    window.addEventListener('touchend', handleGlobalPointerUp);
+    window.addEventListener('touchcancel', handleGlobalPointerUp);
+    return () => {
+      window.removeEventListener('pointerup', handleGlobalPointerUp);
+      window.removeEventListener('mouseup', handleGlobalPointerUp);
+      window.removeEventListener('touchend', handleGlobalPointerUp);
+      window.removeEventListener('touchcancel', handleGlobalPointerUp);
+    };
+  }, []);
+
+  // Handle cell click / drag interaction in ZIP (without lifting mouse or finger)
+  const handleZipCellInteraction = useCallback((r: number, c: number, isInitialPress: boolean = false) => {
     if (zipSolved) return;
 
-    const existingIndex = getPathIndex(r, c);
-    
-    // If clicked on an existing cell in the path, rewind path to that cell
-    if (existingIndex >= 0) {
-      if (existingIndex < zipPath.length - 1) {
-        const truncated = zipPath.slice(0, existingIndex + 1);
-        setZipPath(truncated);
-        setZipMessage(`Rewound to step ${existingIndex + 1}.`);
+    setZipPath(prevPath => {
+      const existingIndex = prevPath.findIndex(p => p.r === r && p.c === c);
+
+      // 1. If path is empty, must start on checkpoint 1 / startCoord
+      if (prevPath.length === 0) {
+        if (r === zipPuzzle.startCoord.r && c === zipPuzzle.startCoord.c) {
+          setZipMessage('Connected step 1! Drag to neighboring cells without lifting your mouse.');
+          return [{ r, c }];
+        }
+        return prevPath;
       }
-      return;
-    }
 
-    // Cell is not in path yet. Must be adjacent to last cell in path
-    const lastCell = zipPath[zipPath.length - 1];
-    if (!lastCell) {
-      // If path is empty, must click start cell (checkpoint 1)
-      if (r === zipPuzzle.startCoord.r && c === zipPuzzle.startCoord.c) {
-        setZipPath([{ r, c }]);
-        setZipMessage('Connected step 1! Move to neighbor cells.');
+      const lastCell = prevPath[prevPath.length - 1];
+
+      // 2. Already on current head
+      if (lastCell.r === r && lastCell.c === c) {
+        return prevPath;
       }
-      return;
-    }
 
-    if (!isOrthogonalNeighbor(lastCell, { r, c })) {
-      setZipMessage('Must move to an adjacent neighboring cell (horizontal or vertical)!');
-      return;
-    }
-
-    // Check if cell is a checkpoint
-    const cp = getCheckpoint(r, c);
-    if (cp) {
-      const expectedCp = getNextRequiredCheckpointNumber(zipPath);
-      if (cp.number !== expectedCp) {
-        setZipMessage(`Must connect checkpoint ${expectedCp} before checkpoint ${cp.number}!`);
-        return;
+      // 3. User dragging backwards to previous step (backtracking without lifting mouse)
+      if (prevPath.length > 1 && prevPath[prevPath.length - 2].r === r && prevPath[prevPath.length - 2].c === c) {
+        const truncated = prevPath.slice(0, prevPath.length - 1);
+        setZipMessage(`Backtracked to step ${truncated.length}.`);
+        return truncated;
       }
-    }
 
-    // Valid next move!
-    const newPath = [...zipPath, { r, c }];
-    setZipPath(newPath);
+      // 4. If already in path at an earlier position, rewind path to that cell
+      if (existingIndex >= 0) {
+        if (existingIndex < prevPath.length - 1) {
+          const truncated = prevPath.slice(0, existingIndex + 1);
+          setZipMessage(`Rewound to step ${existingIndex + 1}.`);
+          return truncated;
+        }
+        return prevPath;
+      }
 
-    // Check if puzzle completed
-    if (newPath.length === zipPuzzle.totalCells) {
-      // Check if all checkpoints visited
-      const allCpNumbers = zipPuzzle.checkpoints.map(chk => chk.number);
-      const visitedCpNumbers = newPath
-        .map(cell => getCheckpoint(cell.r, cell.c)?.number)
-        .filter((num): num is number => num !== undefined);
+      // 5. Must be an orthogonal neighbor (horizontal or vertical) to the current head
+      if (!isOrthogonalNeighbor(lastCell, { r, c })) {
+        if (isInitialPress) {
+          setZipMessage('Must connect to an adjacent cell (up, down, left, right)!');
+        }
+        return prevPath;
+      }
 
-      const allVisitedInOrder = allCpNumbers.every((num, idx) => visitedCpNumbers[idx] === num);
-      if (allVisitedInOrder) {
-        setZipSolved(true);
-        setZipTimerRunning(false);
-        setZipMessage('🎉 ZIPPED! You connected all checkpoints and covered 100% of the grid!');
-        if (updateStreak) updateStreak();
-        if (addXp) addXp(50);
+      // 6. Checkpoint sequencing constraint: must connect in numerical order
+      const cp = getCheckpoint(r, c);
+      if (cp) {
+        const expectedCp = getNextRequiredCheckpointNumber(prevPath);
+        if (cp.number !== expectedCp) {
+          setZipMessage(`Must connect checkpoint ${expectedCp} before checkpoint ${cp.number}!`);
+          return prevPath;
+        }
+      }
+
+      // 7. Valid continuous next step!
+      const newPath = [...prevPath, { r, c }];
+
+      // Check if puzzle completed
+      if (newPath.length === zipPuzzle.totalCells) {
+        const allCpNumbers = zipPuzzle.checkpoints.map(chk => chk.number);
+        const visitedCpNumbers = newPath
+          .map(cell => getCheckpoint(cell.r, cell.c)?.number)
+          .filter((num): num is number => num !== undefined);
+
+        const allVisitedInOrder = allCpNumbers.every((num, idx) => visitedCpNumbers[idx] === num);
+        if (allVisitedInOrder) {
+          setZipSolved(true);
+          setZipTimerRunning(false);
+          setZipMessage('🎉 ZIPPED! You connected all checkpoints and covered 100% of the grid without lifting mouse!');
+          if (updateStreak) updateStreak();
+          if (addXp) addXp(50);
+        } else {
+          setZipMessage('All cells visited, but check your checkpoint sequence order!');
+        }
       } else {
-        setZipMessage('All cells visited, but check your checkpoint sequence order!');
+        const nextCp = getNextRequiredCheckpointNumber(newPath);
+        if (nextCp <= zipPuzzle.checkpoints.length) {
+          setZipMessage(`Drag towards Checkpoint ${nextCp}... (${newPath.length}/${zipPuzzle.totalCells} cells)`);
+        } else {
+          setZipMessage(`Cover all remaining cells to finish! (${newPath.length}/${zipPuzzle.totalCells} cells)`);
+        }
       }
-    } else {
-      const nextCp = getNextRequiredCheckpointNumber(newPath);
-      if (nextCp <= zipPuzzle.checkpoints.length) {
-        setZipMessage(`Heading towards Checkpoint ${nextCp}... (${newPath.length}/${zipPuzzle.totalCells} cells)`);
-      } else {
-        setZipMessage(`Fill the remaining cells to finish! (${newPath.length}/${zipPuzzle.totalCells} cells)`);
+
+      return newPath;
+    });
+  }, [zipSolved, zipPuzzle, updateStreak, addXp]);
+
+  const handlePointerDown = (r: number, c: number, e: React.PointerEvent) => {
+    if (zipSolved) return;
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    handleZipCellInteraction(r, c, true);
+  };
+
+  const handlePointerEnter = (r: number, c: number) => {
+    if (zipSolved) return;
+    if (isDraggingRef.current) {
+      handleZipCellInteraction(r, c, false);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (zipSolved || !isDraggingRef.current) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!target) return;
+    const cellCoord = target.getAttribute('data-cell-coord') || target.closest('[data-cell-coord]')?.getAttribute('data-cell-coord');
+    if (cellCoord) {
+      const [rStr, cStr] = cellCoord.split('-');
+      const r = parseInt(rStr, 10);
+      const c = parseInt(cStr, 10);
+      if (!isNaN(r) && !isNaN(c)) {
+        handleZipCellInteraction(r, c, false);
       }
     }
   };
@@ -232,7 +304,7 @@ export const MemoryBoost: React.FC = () => {
     const currentLen = zipPath.length;
     if (currentLen < zipPuzzle.hamiltonianPath.length) {
       const nextStep = zipPuzzle.hamiltonianPath[currentLen];
-      handleZipCellClick(nextStep.r, nextStep.c);
+      handleZipCellInteraction(nextStep.r, nextStep.c, true);
     }
   };
 
@@ -368,29 +440,37 @@ export const MemoryBoost: React.FC = () => {
         <div className="flex items-center gap-4">
           <button 
             onClick={goBack} 
-            className="p-3 sm:p-4 bg-[#2a221f] rounded-2xl shadow-sm border border-[#3f332c] hover:text-orange-500 transition-all cursor-pointer"
+            className={`p-3 sm:p-4 rounded-2xl shadow-sm border transition-all cursor-pointer ${
+              isLight ? 'bg-white border-orange-200 text-stone-800 hover:text-orange-600' : 'bg-[#2a221f] border-[#3f332c] text-orange-200 hover:text-orange-500'
+            }`}
             title="Go back"
           >
             <ChevronLeft size={22} />
           </button>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight italic text-orange-100 uppercase">
+            <h1 className={`text-2xl sm:text-3xl font-black tracking-tight italic uppercase ${
+              isLight ? 'text-stone-900' : 'text-orange-100'
+            }`}>
               Daily Boost
             </h1>
-            <p className="text-orange-200/50 text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] mt-0.5">
+            <p className={`text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] mt-0.5 ${
+              isLight ? 'text-stone-600' : 'text-orange-200/50'
+            }`}>
               Cognitive Sharpeners: ZIP • Mini Sudoku • Inner Blaze
             </p>
           </div>
         </div>
 
         {/* Global Facility Switcher Pills */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 p-1 bg-[#2a221f] rounded-2xl border border-[#3f332c] w-full sm:w-auto">
+        <div className={`flex flex-wrap items-center justify-center gap-1.5 p-1 rounded-2xl border w-full sm:w-auto transition-colors ${
+          isLight ? 'bg-orange-100/70 border-orange-200' : 'bg-[#2a221f] border-[#3f332c]'
+        }`}>
           <button
             onClick={() => setActiveTab('zip')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'zip'
                 ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md'
-                : 'text-orange-200/60 hover:text-orange-100 hover:bg-white/5'
+                : isLight ? 'text-stone-700 hover:text-stone-950 hover:bg-white/60' : 'text-orange-200/60 hover:text-orange-100 hover:bg-white/5'
             }`}
           >
             <Zap size={14} className="fill-current" />
@@ -402,7 +482,7 @@ export const MemoryBoost: React.FC = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'sudoku'
                 ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md'
-                : 'text-orange-200/60 hover:text-orange-100 hover:bg-white/5'
+                : isLight ? 'text-stone-700 hover:text-stone-950 hover:bg-white/60' : 'text-orange-200/60 hover:text-orange-100 hover:bg-white/5'
             }`}
           >
             <Grid3X3 size={14} />
@@ -414,7 +494,7 @@ export const MemoryBoost: React.FC = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'inner-blaze'
                 ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md'
-                : 'text-orange-200/60 hover:text-orange-100 hover:bg-white/5'
+                : isLight ? 'text-stone-700 hover:text-stone-950 hover:bg-white/60' : 'text-orange-200/60 hover:text-orange-100 hover:bg-white/5'
             }`}
           >
             <Flame size={14} />
@@ -429,39 +509,49 @@ export const MemoryBoost: React.FC = () => {
       {activeTab === 'zip' && (
         <div className="space-y-6">
           {/* Guide Banner */}
-          <div className="bg-[#2a221f]/70 p-5 rounded-3xl border border-[#3f332c] flex items-start gap-3.5 text-xs">
-            <div className="p-2 bg-orange-600/20 text-orange-400 rounded-xl border border-orange-500/30 shrink-0 mt-0.5">
+          <div className={`p-5 rounded-3xl border flex items-start gap-3.5 text-xs transition-colors ${
+            isLight ? 'bg-orange-50 border-orange-200 text-stone-800 shadow-sm' : 'bg-[#2a221f]/70 border-[#3f332c] text-orange-100/90'
+          }`}>
+            <div className="p-2 bg-orange-600/20 text-orange-500 rounded-xl border border-orange-500/30 shrink-0 mt-0.5">
               <Zap size={18} className="fill-current" />
             </div>
             <div className="space-y-1 flex-1">
-              <h3 className="font-black uppercase tracking-wider text-orange-200 text-xs flex items-center justify-between">
-                <span>ZIP Brain Path Game</span>
-                <span className="text-[10px] text-orange-400 font-bold">Spatial & Sequential Focus</span>
+              <h3 className="font-black uppercase tracking-wider text-xs flex items-center justify-between">
+                <span className={isLight ? 'text-stone-900 font-black' : 'text-orange-200'}>ZIP Continuous Number Connector</span>
+                <span className="text-[10px] text-orange-500 font-bold">Trace Without Lifting Mouse</span>
               </h3>
-              <p className="text-orange-100/90 leading-relaxed">
-                <strong>Goal:</strong> Draw a continuous single line starting at <strong>1</strong> that visits checkpoints <strong>2, 3...</strong> in numerical order while covering <strong>100% of every grid tile</strong> without crossing or skipping!
+              <p className={isLight ? 'text-stone-700 leading-relaxed' : 'text-orange-100/90 leading-relaxed'}>
+                <strong>How to play:</strong> Click and drag your mouse (or drag your finger on phone/tablet) starting from <strong>1</strong> to connect <strong>2, 3...</strong> in numerical order without lifting your cursor, covering <strong>100% of the grid</strong>!
               </p>
-              <p className="text-[11px] text-orange-200/60 font-medium">
-                <em>Tip:</em> Tap adjacent tiles to extend your line. Tap any earlier point in your path to rewind back.
+              <p className={isLight ? 'text-[11px] text-stone-600 font-medium' : 'text-[11px] text-orange-200/60 font-medium'}>
+                <em>Intuitive Dragging:</em> Drag backwards into an earlier cell to erase or backtrack your path smoothly at any time.
               </p>
             </div>
           </div>
 
           {/* Game Canvas Container */}
-          <div className="bg-[#2a221f] p-6 sm:p-8 rounded-[3rem] border border-[#3f332c] shadow-2xl space-y-6 flex flex-col items-center">
+          <div className={`p-6 sm:p-8 rounded-[3rem] border shadow-2xl space-y-6 flex flex-col items-center transition-colors ${
+            isLight ? 'bg-white border-orange-200 shadow-orange-500/10' : 'bg-[#2a221f] border-[#3f332c]'
+          }`}>
             {/* Top Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-4 w-full max-w-md">
-              <div className="flex items-center gap-2 bg-[#1a1614] px-4 py-2 rounded-2xl border border-[#3f332c]">
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl border ${
+                isLight ? 'bg-orange-50/80 border-orange-200 text-stone-900' : 'bg-[#1a1614] border-[#3f332c] text-orange-100'
+              }`}>
                 <Timer size={16} className="text-orange-500" />
-                <span className="font-mono font-bold text-orange-100 text-sm">{zipTimer}s</span>
+                <span className="font-mono font-bold text-sm">{zipTimer}s</span>
               </div>
 
               {/* Grid Size Switcher */}
-              <div className="flex items-center gap-1 bg-[#1a1614] p-1 rounded-2xl border border-[#3f332c] text-xs font-bold">
+              <div className={`flex items-center gap-1 p-1 rounded-2xl border text-xs font-bold ${
+                isLight ? 'bg-orange-50/80 border-orange-200' : 'bg-[#1a1614] border-[#3f332c]'
+              }`}>
                 <button
                   onClick={() => setZipSize(4)}
                   className={`px-3 py-1.5 rounded-xl cursor-pointer transition-all ${
-                    zipSize === 4 ? 'bg-orange-600 text-white shadow' : 'text-orange-200/60 hover:text-white'
+                    zipSize === 4 
+                      ? 'bg-orange-600 text-white shadow' 
+                      : isLight ? 'text-stone-600 hover:text-stone-950' : 'text-orange-200/60 hover:text-white'
                   }`}
                 >
                   4×4 (16 tiles)
@@ -469,7 +559,9 @@ export const MemoryBoost: React.FC = () => {
                 <button
                   onClick={() => setZipSize(5)}
                   className={`px-3 py-1.5 rounded-xl cursor-pointer transition-all ${
-                    zipSize === 5 ? 'bg-orange-600 text-white shadow' : 'text-orange-200/60 hover:text-white'
+                    zipSize === 5 
+                      ? 'bg-orange-600 text-white shadow' 
+                      : isLight ? 'text-stone-600 hover:text-stone-950' : 'text-orange-200/60 hover:text-white'
                   }`}
                 >
                   5×5 (25 tiles)
@@ -481,7 +573,11 @@ export const MemoryBoost: React.FC = () => {
                 <button
                   onClick={handleZipUndo}
                   disabled={zipPath.length <= 1 || zipSolved}
-                  className="p-2.5 bg-[#1a1614] hover:bg-[#3f332c] disabled:opacity-40 text-orange-300 rounded-xl border border-[#3f332c] cursor-pointer transition-all"
+                  className={`p-2.5 rounded-xl border cursor-pointer transition-all disabled:opacity-40 ${
+                    isLight 
+                      ? 'bg-orange-50 hover:bg-orange-100 text-stone-800 border-orange-200' 
+                      : 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-300 border-[#3f332c]'
+                  }`}
                   title="Undo last step"
                 >
                   <RotateCcw size={16} />
@@ -489,7 +585,11 @@ export const MemoryBoost: React.FC = () => {
                 <button
                   onClick={handleZipHint}
                   disabled={zipSolved}
-                  className="p-2.5 bg-[#1a1614] hover:bg-[#3f332c] disabled:opacity-40 text-amber-400 rounded-xl border border-[#3f332c] cursor-pointer transition-all"
+                  className={`p-2.5 rounded-xl border cursor-pointer transition-all disabled:opacity-40 ${
+                    isLight 
+                      ? 'bg-orange-50 hover:bg-orange-100 text-amber-700 border-orange-200' 
+                      : 'bg-[#1a1614] hover:bg-[#3f332c] text-amber-400 border-[#3f332c]'
+                  }`}
                   title="Next step hint"
                 >
                   <Lightbulb size={16} />
@@ -504,76 +604,124 @@ export const MemoryBoost: React.FC = () => {
               </div>
             </div>
 
-            {/* Interactive ZIP Grid */}
+            {/* Interactive ZIP Grid with continuous SVG connector path & touch tracing */}
             <div 
-              className="grid gap-2.5 sm:gap-3.5 p-4 sm:p-5 bg-[#1a1614] rounded-3xl border border-[#3f332c] shadow-inner select-none"
+              ref={gridContainerRef}
+              onTouchMove={handleTouchMove}
+              className={`relative grid gap-2.5 sm:gap-3.5 p-4 sm:p-5 rounded-3xl border shadow-inner select-none transition-colors ${
+                isLight ? 'bg-orange-50/70 border-orange-200' : 'bg-[#1a1614] border-[#3f332c]'
+              }`}
               style={{
                 gridTemplateColumns: `repeat(${zipPuzzle.cols}, minmax(0, 1fr))`,
                 width: zipPuzzle.cols === 4 ? '320px' : '360px',
-                height: zipPuzzle.rows === 4 ? '320px' : '360px'
+                height: zipPuzzle.rows === 4 ? '320px' : '360px',
+                touchAction: 'none'
               }}
             >
+              {/* Dynamic SVG connecting line overlay tracing the active path */}
+              <svg 
+                className="absolute inset-0 w-full h-full pointer-events-none z-10"
+                style={{ overflow: 'visible' }}
+              >
+                {zipPath.map((cell, idx) => {
+                  if (idx === zipPath.length - 1) return null;
+                  const nextCell = zipPath[idx + 1];
+                  const x1 = ((cell.c + 0.5) / zipPuzzle.cols) * 100;
+                  const y1 = ((cell.r + 0.5) / zipPuzzle.rows) * 100;
+                  const x2 = ((nextCell.c + 0.5) / zipPuzzle.cols) * 100;
+                  const y2 = ((nextCell.r + 0.5) / zipPuzzle.rows) * 100;
+                  return (
+                    <line
+                      key={`line-${idx}`}
+                      x1={`${x1}%`}
+                      y1={`${y1}%`}
+                      x2={`${x2}%`}
+                      y2={`${y2}%`}
+                      stroke="#f97316"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      opacity="0.85"
+                      className="transition-all duration-150"
+                    />
+                  );
+                })}
+              </svg>
+
               {Array.from({ length: zipPuzzle.rows }).map((_, r) =>
                 Array.from({ length: zipPuzzle.cols }).map((_, c) => {
                   const cp = getCheckpoint(r, c);
                   const pathIdx = getPathIndex(r, c);
                   const isVisited = pathIdx >= 0;
                   const isHead = isVisited && pathIdx === zipPath.length - 1;
-                  const isStart = r === zipPuzzle.startCoord.r && c === zipPuzzle.startCoord.c;
 
                   return (
-                    <motion.button
+                    <motion.div
                       key={`${r}-${c}`}
-                      whileTap={{ scale: 0.94 }}
-                      onClick={() => handleZipCellClick(r, c)}
-                      className={`relative rounded-2xl flex items-center justify-center font-black text-sm sm:text-base transition-all duration-200 cursor-pointer shadow-sm border ${
+                      data-cell-coord={`${r}-${c}`}
+                      onPointerDown={(e) => handlePointerDown(r, c, e)}
+                      onPointerEnter={() => handlePointerEnter(r, c)}
+                      className={`relative rounded-2xl flex items-center justify-center font-black text-sm sm:text-base transition-all duration-150 cursor-pointer shadow-sm border select-none ${
                         isHead
-                          ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 border-amber-300 ring-4 ring-orange-500/40 scale-105 z-10'
+                          ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 border-amber-300 ring-4 ring-orange-500/40 scale-105 z-20'
                           : isVisited
-                          ? 'bg-orange-600/30 text-orange-200 border-orange-500/40 hover:bg-orange-600/40'
+                          ? isLight 
+                            ? 'bg-orange-200/90 text-orange-950 border-orange-400 z-10' 
+                            : 'bg-orange-600/40 text-orange-100 border-orange-500/50 z-10'
                           : cp
-                          ? 'bg-[#2a221f] text-amber-300 border-amber-500/50 hover:border-amber-400'
+                          ? isLight
+                            ? 'bg-amber-100/90 text-amber-900 border-amber-400 hover:border-amber-500 z-10'
+                            : 'bg-[#2a221f] text-amber-300 border-amber-500/50 hover:border-amber-400 z-10'
+                          : isLight
+                          ? 'bg-white text-stone-400 border-orange-100 hover:border-orange-300'
                           : 'bg-[#241c19] text-orange-200/20 border-[#3f332c] hover:border-orange-500/30'
                       }`}
                     >
-                      {/* Checkpoint Badge or Step Number */}
+                      {/* Checkpoint Badge or Step Indicator */}
                       {cp ? (
-                        <div className="flex flex-col items-center">
+                        <div className="flex flex-col items-center pointer-events-none">
                           <span className={`text-base sm:text-lg font-black tracking-tight ${
-                            isHead ? 'text-slate-950' : 'text-amber-300'
+                            isHead 
+                              ? 'text-slate-950' 
+                              : isLight ? 'text-amber-950' : 'text-amber-300'
                           }`}>
                             {cp.number}
                           </span>
                           <span className={`text-[8px] font-bold uppercase tracking-tighter -mt-1 ${
-                            isHead ? 'text-slate-900' : 'text-amber-400/70'
+                            isHead 
+                              ? 'text-slate-900' 
+                              : isLight ? 'text-amber-800' : 'text-amber-400/80'
                           }`}>
                             NODE
                           </span>
                         </div>
                       ) : isVisited ? (
-                        <div className="w-2.5 h-2.5 rounded-full bg-orange-400/80 shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+                        <div className="w-3 h-3 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.9)] pointer-events-none" />
                       ) : (
-                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500/20" />
+                        <div className={`w-1.5 h-1.5 rounded-full pointer-events-none ${
+                          isLight ? 'bg-orange-300' : 'bg-orange-500/20'
+                        }`} />
                       )}
 
-                      {/* Small Order Badge when visited */}
+                      {/* Small Order Step Badge when visited */}
                       {isVisited && (
-                        <span className={`absolute bottom-1 right-1 text-[8px] font-mono font-bold ${
-                          isHead ? 'text-slate-900' : 'text-orange-300/60'
+                        <span className={`absolute bottom-1 right-1 text-[8px] font-mono font-bold pointer-events-none ${
+                          isHead ? 'text-slate-900' : isLight ? 'text-stone-800' : 'text-orange-300/70'
                         }`}>
                           {pathIdx + 1}
                         </span>
                       )}
-                    </motion.button>
+                    </motion.div>
                   );
                 })
               )}
             </div>
 
             {/* Status / Instruction text */}
-            <div className={`text-xs font-bold text-center px-4 py-2 rounded-xl transition-all max-w-md ${
+            <div className={`text-xs font-bold text-center px-4 py-2.5 rounded-xl transition-all max-w-md ${
               zipSolved 
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-lg' 
+                ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 shadow-lg' 
+                : isLight
+                ? 'text-stone-800 bg-orange-50 border border-orange-200'
                 : 'text-orange-200/80 bg-[#1a1614] border border-[#3f332c]'
             }`}>
               {zipMessage}

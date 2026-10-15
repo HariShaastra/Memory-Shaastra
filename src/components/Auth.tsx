@@ -27,8 +27,13 @@ export default function Auth() {
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
       if (fbUser) {
         // If fbUser has displayName or if we already have saved user name
-        const savedUserJson = localStorage.getItem('ms_user');
-        const savedUser = savedUserJson ? JSON.parse(savedUserJson) : null;
+        let savedUser: any = null;
+        try {
+          const savedUserJson = localStorage.getItem('ms_user');
+          savedUser = savedUserJson ? JSON.parse(savedUserJson) : null;
+        } catch (e) {
+          console.warn('Error reading saved user:', e);
+        }
         const displayName = fbUser.displayName || (savedUser && savedUser.id === fbUser.uid ? savedUser.name : '') || fbUser.email?.split('@')[0] || 'Learner';
 
         setUser({

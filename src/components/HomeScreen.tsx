@@ -323,6 +323,7 @@ export const HomeScreen: React.FC = () => {
 
   // Line of Quick Shortcut Buttons to Every Facility of the App
   const quickFacilityShortcuts = [
+    { id: 'study-bubble' as AppView, label: 'Study Bubble', icon: Target },
     { id: 'focus' as AppView, label: 'Timer', icon: Timer },
     { id: 'planner' as AppView, label: 'Schedule', icon: CalendarIcon },
     { id: 'scheduler' as AppView, label: 'Revision Hall', icon: Layers },
@@ -480,11 +481,11 @@ export const HomeScreen: React.FC = () => {
       {/* 3. HERO DUAL CALL-TO-ACTION BUTTONS: "Study Now" and "Daily Boost"       */}
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* BIG BUTTON 1: Study Now */}
+        {/* BIG BUTTON 1: Study Bubble & Study Now */}
         <motion.button
           whileHover={{ scale: 1.02, y: -4 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => setView('focus')}
+          onClick={() => setView('study-bubble')}
           className={`relative group overflow-hidden p-6 sm:p-8 rounded-[2.5rem] text-left transition-all flex flex-col justify-between min-h-[220px] border cursor-pointer ${
             isLight
               ? 'bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 text-slate-950 border-orange-400 shadow-xl shadow-orange-500/20'
@@ -498,8 +499,8 @@ export const HomeScreen: React.FC = () => {
               ? 'bg-slate-950/15 text-slate-950 border-slate-950/20' 
               : 'bg-white/15 text-white border-white/20'
           }`}>
-            <Clock size={14} className={isLight ? 'text-slate-950' : 'text-amber-300'} />
-            <span>Study Timer Mode</span>
+            <Target size={14} className={isLight ? 'text-slate-950' : 'text-amber-300'} />
+            <span>Study Bubble Mode</span>
           </div>
 
           <div className="space-y-3 z-10">
@@ -512,13 +513,13 @@ export const HomeScreen: React.FC = () => {
               <h2 className={`text-2xl sm:text-3xl font-black tracking-tight flex items-center space-x-2 ${
                 isLight ? 'text-slate-950' : 'text-white'
               }`}>
-                <span>Study Now</span>
+                <span>Study Bubble</span>
                 <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform duration-300" />
               </h2>
               <p className={`text-xs font-medium mt-1 max-w-md ${
                 isLight ? 'text-slate-900/90' : 'text-orange-100/90'
               }`}>
-                Enter instant focus session. Set customizable timers, lock distractions, and start deep focus learning!
+                Dedicated distraction-minimised study workspace. Bring documents, flashcards, active recall & scratchpad together with offline study support!
               </p>
             </div>
           </div>
@@ -606,23 +607,31 @@ export const HomeScreen: React.FC = () => {
       {/* ========================================================================= */}
       {/* 4. PERSONALISED DASHBOARD                                                 */}
       {/* ========================================================================= */}
-      <div className="bg-[#2a221f] p-6 sm:p-8 rounded-3xl border border-[#3f332c] space-y-6 shadow-xl">
+      <div className={`p-6 sm:p-8 rounded-3xl border space-y-6 shadow-xl transition-colors ${
+        isLight ? 'bg-white border-orange-200 shadow-orange-500/5' : 'bg-[#2a221f] border-[#3f332c]'
+      }`}>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center space-x-3">
-              <span className="px-3.5 py-1 bg-orange-600/20 text-orange-400 text-[11px] font-black uppercase tracking-wider rounded-full border border-orange-500/30">
+              <span className="px-3.5 py-1 bg-orange-600/20 text-orange-600 dark:text-orange-400 text-[11px] font-black uppercase tracking-wider rounded-full border border-orange-500/30">
                 Personalised Dashboard
               </span>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-black text-[#fef3c7] tracking-tight">
-              Welcome back, <span className="text-orange-500">{(user?.name && !user.name.toLowerCase().includes('explorer')) ? user.name : 'Learner'}</span>!
+            <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${
+              isLight ? 'text-stone-900' : 'text-[#fef3c7]'
+            }`}>
+              Welcome back, <span className="text-orange-600 dark:text-orange-500">{(user?.name && !user.name.toLowerCase().includes('explorer')) ? user.name : 'Learner'}</span>!
             </h1>
             {targetExamTitle ? (
-              <p className="text-xs sm:text-sm text-stone-700 dark:text-orange-200/80 max-w-xl font-medium">
-                Target Exam: <strong className="text-orange-500 dark:text-orange-300 font-bold">{targetExamTitle}</strong>
+              <p className={`text-xs sm:text-sm max-w-xl font-medium ${
+                isLight ? 'text-stone-700' : 'text-orange-200/80'
+              }`}>
+                Target Exam: <strong className="text-orange-600 dark:text-orange-300 font-bold">{targetExamTitle}</strong>
               </p>
             ) : (
-              <p className="text-xs sm:text-sm text-stone-700 dark:text-orange-200/80 max-w-xl font-medium">
+              <p className={`text-xs sm:text-sm max-w-xl font-medium ${
+                isLight ? 'text-stone-700' : 'text-orange-200/80'
+              }`}>
                 Ready to review and commit concepts to permanent long-term memory?
               </p>
             )}
@@ -631,10 +640,14 @@ export const HomeScreen: React.FC = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={handleDownloadDoc}
-              className="px-4 py-3 bg-[#1a1614] hover:bg-[#342a27] text-orange-200 text-xs font-bold rounded-2xl border border-[#3f332c] hover:border-orange-500/40 transition-all flex items-center space-x-2 cursor-pointer shadow"
+              className={`px-4 py-3 text-xs font-bold rounded-2xl border transition-all flex items-center space-x-2 cursor-pointer shadow ${
+                isLight 
+                  ? 'bg-orange-50 hover:bg-orange-100 text-stone-900 border-orange-200' 
+                  : 'bg-[#1a1614] hover:bg-[#342a27] text-orange-200 border-[#3f332c]'
+              }`}
               title="Download full progress report in Word (.docx) format"
             >
-              <Download size={16} className="text-orange-400" />
+              <Download size={16} className="text-orange-500" />
               <span>Export Word Doc</span>
             </button>
             <button
@@ -648,21 +661,31 @@ export const HomeScreen: React.FC = () => {
         </div>
 
         {/* Quick Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-[#3f332c]">
-          <div className="bg-[#1a1614] p-4 rounded-2xl border border-[#3f332c]">
-            <p className="text-[10px] uppercase font-black tracking-wider text-stone-700 dark:text-orange-200/80">Active Flashcards</p>
+        <div className={`grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t ${
+          isLight ? 'border-orange-100' : 'border-[#3f332c]'
+        }`}>
+          <div className={`p-4 rounded-2xl border ${
+            isLight ? 'bg-orange-50/70 border-orange-200' : 'bg-[#1a1614] border-[#3f332c]'
+          }`}>
+            <p className="text-[10px] uppercase font-black tracking-wider text-stone-600 dark:text-orange-200/80">Active Flashcards</p>
             <p className="text-xl sm:text-2xl font-black text-orange-600 dark:text-orange-400 mt-1">{flashcards.length}</p>
           </div>
-          <div className="bg-[#1a1614] p-4 rounded-2xl border border-[#3f332c]">
-            <p className="text-[10px] uppercase font-black tracking-wider text-stone-700 dark:text-orange-200/80">Memory Aids</p>
+          <div className={`p-4 rounded-2xl border ${
+            isLight ? 'bg-orange-50/70 border-orange-200' : 'bg-[#1a1614] border-[#3f332c]'
+          }`}>
+            <p className="text-[10px] uppercase font-black tracking-wider text-stone-600 dark:text-orange-200/80">Memory Aids</p>
             <p className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">{mnemonics.length + linkChains.length + storyChains.length}</p>
           </div>
-          <div className="bg-[#1a1614] p-4 rounded-2xl border border-[#3f332c]">
-            <p className="text-[10px] uppercase font-black tracking-wider text-stone-700 dark:text-orange-200/80">Scheduled Tasks</p>
+          <div className={`p-4 rounded-2xl border ${
+            isLight ? 'bg-orange-50/70 border-orange-200' : 'bg-[#1a1614] border-[#3f332c]'
+          }`}>
+            <p className="text-[10px] uppercase font-black tracking-wider text-stone-600 dark:text-orange-200/80">Scheduled Tasks</p>
             <p className="text-xl sm:text-2xl font-black text-sky-600 dark:text-sky-400 mt-1">{studyTasks.length}</p>
           </div>
-          <div className="bg-[#1a1614] p-4 rounded-2xl border border-[#3f332c]">
-            <p className="text-[10px] uppercase font-black tracking-wider text-stone-700 dark:text-orange-200/80">Days to Exam</p>
+          <div className={`p-4 rounded-2xl border ${
+            isLight ? 'bg-orange-50/70 border-orange-200' : 'bg-[#1a1614] border-[#3f332c]'
+          }`}>
+            <p className="text-[10px] uppercase font-black tracking-wider text-stone-600 dark:text-orange-200/80">Days to Exam</p>
             <p className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{daysToGo !== null ? `${daysToGo}d` : 'Set in Exam'}</p>
           </div>
         </div>
@@ -672,19 +695,31 @@ export const HomeScreen: React.FC = () => {
       {/* 5. TODAY'S STUDY & REVISION AGENDA                                       */}
       {/* ========================================================================= */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between border-b border-[#3f332c] pb-3">
+        <div className={`flex items-center justify-between border-b pb-3 ${
+          isLight ? 'border-orange-200' : 'border-[#3f332c]'
+        }`}>
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 bg-orange-600/20 text-orange-400 rounded-xl border border-orange-500/20">
+            <div className="p-2.5 bg-orange-600/20 text-orange-500 rounded-xl border border-orange-500/20">
               <CalendarIcon size={22} />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-[#fef3c7] tracking-tight">Today's Schedule & Due Revisions</h2>
-              <p className="text-xs text-orange-200/60">Active tasks and spaced revisions due today ({new Date().toLocaleDateString()})</p>
+              <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${
+                isLight ? 'text-stone-900' : 'text-[#fef3c7]'
+              }`}>
+                Today's Schedule & Due Revisions
+              </h2>
+              <p className={`text-xs ${isLight ? 'text-stone-600' : 'text-orange-200/60'}`}>
+                Active tasks and spaced revisions due today ({new Date().toLocaleDateString()})
+              </p>
             </div>
           </div>
           <button 
             onClick={() => setView('planner')}
-            className="px-4 py-2 bg-orange-600/20 hover:bg-orange-600/30 text-orange-300 text-xs font-bold rounded-xl border border-orange-500/30 transition-all flex items-center space-x-1.5 cursor-pointer"
+            className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all flex items-center space-x-1.5 cursor-pointer ${
+              isLight 
+                ? 'bg-orange-50 hover:bg-orange-100 text-orange-950 border-orange-300' 
+                : 'bg-orange-600/20 hover:bg-orange-600/30 text-orange-300 border-orange-500/30'
+            }`}
           >
             <span>Manage Schedule</span>
             <ChevronRight size={14} />
@@ -692,8 +727,12 @@ export const HomeScreen: React.FC = () => {
         </div>
 
         {todayTasks.length === 0 && todayRevisions.length === 0 ? (
-          <div className="p-6 bg-[#1a1614] rounded-2xl border border-[#3f332c] text-center space-y-3">
-            <p className="text-xs text-orange-200/70 font-semibold">No specific tasks or revisions due for today.</p>
+          <div className={`p-6 rounded-2xl border text-center space-y-3 ${
+            isLight ? 'bg-white border-orange-200 text-stone-900' : 'bg-[#1a1614] border-[#3f332c] text-orange-200'
+          }`}>
+            <p className={`text-xs font-semibold ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
+              No specific tasks or revisions due for today.
+            </p>
             <div className="flex flex-wrap justify-center gap-3">
               <button 
                 onClick={() => setView('planner')}
@@ -702,30 +741,36 @@ export const HomeScreen: React.FC = () => {
                 + Add Activity / Revision
               </button>
               <button 
-                onClick={() => startStudyNow('Active Focus Study', 25)}
-                className="px-4 py-2 bg-amber-600/20 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold hover:bg-amber-600/30 transition-all flex items-center space-x-1.5 cursor-pointer"
+                onClick={() => setView('study-bubble')}
+                className={`px-4 py-2 border rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
+                  isLight 
+                    ? 'bg-amber-100 text-amber-950 border-amber-300 hover:bg-amber-200' 
+                    : 'bg-amber-600/20 text-amber-300 border-amber-500/30 hover:bg-amber-600/30'
+                }`}
               >
                 <Play size={14} />
-                <span>Start Focus Session</span>
+                <span>Start Study Bubble Session</span>
               </button>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {todayTasks.map(task => (
-              <div key={task.id} className="p-4 bg-[#1a1614] rounded-2xl border border-[#3f332c] flex items-center justify-between gap-4">
+              <div key={task.id} className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
+                isLight ? 'bg-white border-orange-200 text-stone-900 shadow-sm' : 'bg-[#1a1614] border-[#3f332c] text-orange-100'
+              }`}>
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <span className="px-2 py-0.5 bg-orange-600/20 text-orange-400 text-[10px] font-black rounded uppercase">
+                    <span className="px-2 py-0.5 bg-orange-600/20 text-orange-600 dark:text-orange-400 text-[10px] font-black rounded uppercase">
                       {task.subject || 'General'}
                     </span>
                     {task.estimatedTime ? (
-                      <span className="text-[10px] text-orange-200/50 font-bold">{task.estimatedTime}</span>
+                      <span className={`text-[10px] font-bold ${isLight ? 'text-stone-500' : 'text-orange-200/50'}`}>{task.estimatedTime}</span>
                     ) : (
-                      <span className="text-[10px] text-orange-200/40 font-bold">Flexible</span>
+                      <span className={`text-[10px] font-bold ${isLight ? 'text-stone-400' : 'text-orange-200/40'}`}>Flexible</span>
                     )}
                   </div>
-                  <h4 className="font-bold text-sm text-orange-100">{task.topic}</h4>
+                  <h4 className={`font-bold text-sm ${isLight ? 'text-stone-900' : 'text-orange-100'}`}>{task.topic}</h4>
                 </div>
                 <button
                   onClick={() => {
@@ -741,19 +786,21 @@ export const HomeScreen: React.FC = () => {
             ))}
 
             {todayRevisions.map(rev => (
-              <div key={rev.id} className="p-4 bg-[#1a1614] rounded-2xl border border-[#3f332c] flex items-center justify-between gap-4">
+              <div key={rev.id} className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
+                isLight ? 'bg-white border-orange-200 text-stone-900 shadow-sm' : 'bg-[#1a1614] border-[#3f332c] text-orange-100'
+              }`}>
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 text-[10px] font-black rounded uppercase">
+                    <span className="px-2 py-0.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-black rounded uppercase">
                       Revision (Interval {rev.intervalDays}d)
                     </span>
                     {rev.durationMinutes ? (
-                      <span className="text-[10px] text-orange-200/50 font-bold">{rev.durationMinutes} mins</span>
+                      <span className={`text-[10px] font-bold ${isLight ? 'text-stone-500' : 'text-orange-200/50'}`}>{rev.durationMinutes} mins</span>
                     ) : (
-                      <span className="text-[10px] text-orange-200/40 font-bold">Flexible</span>
+                      <span className={`text-[10px] font-bold ${isLight ? 'text-stone-400' : 'text-orange-200/40'}`}>Flexible</span>
                     )}
                   </div>
-                  <h4 className="font-bold text-sm text-orange-100">{rev.itemTitle}</h4>
+                  <h4 className={`font-bold text-sm ${isLight ? 'text-stone-900' : 'text-orange-100'}`}>{rev.itemTitle}</h4>
                 </div>
                 <button
                   onClick={() => startStudyNow(rev.itemTitle, rev.durationMinutes || 25)}

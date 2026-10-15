@@ -22,6 +22,7 @@ import AiTester from './components/AiTester';
 import ConceptSimplifier from './components/ConceptSimplifier';
 import MemoryDna from './components/MemoryDna';
 import StudyWellbeingCoach from './components/StudyWellbeingCoach';
+import StudyBubble from './components/StudyBubble';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Menu, Sparkles, LogOut, LogIn, User as UserIcon, Play, Shield, Brain, Info, CheckCircle2, X, BellOff, Lock, Home, Calendar as CalendarIcon, BookOpen, Book, Target, LayoutGrid } from 'lucide-react';
 import { t } from './utils/translations';
@@ -63,7 +64,8 @@ function AppContent() {
   const renderView = () => {
     switch (currentView) {
       case 'dashboard': return <HomeScreen />;
-      case 'focus': return <MonkModeTimer />;
+      case 'focus': return <StudyBubble />;
+      case 'study-bubble': return <StudyBubble />;
       case 'flashcards': return <FlashcardDeck />;
       case 'mnemonics': return <Mnemonics />;
       case 'palace': return <MemoryPalace />;

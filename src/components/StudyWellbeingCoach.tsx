@@ -6,7 +6,8 @@ import { aiGetWellbeingAdvice } from '../utils/aiClient';
 import { triggerCompletionCelebration } from '../utils/confetti';
 
 export default function StudyWellbeingCoach() {
-  const { goBack } = useAppContext();
+  const { goBack, theme } = useAppContext();
+  const isLight = theme === 'light';
 
   const [sessionMinutes, setSessionMinutes] = useState(45);
   const [recallAccuracy, setRecallAccuracy] = useState(85);
@@ -37,53 +38,70 @@ export default function StudyWellbeingCoach() {
       <div className="flex items-center justify-between">
         <button 
           onClick={goBack}
-          className="flex items-center space-x-2 text-orange-400 hover:text-orange-300 transition-colors font-bold text-xs uppercase tracking-wider"
+          className={`flex items-center space-x-2 transition-colors font-bold text-xs uppercase tracking-wider cursor-pointer ${
+            isLight ? 'text-orange-700 hover:text-orange-900' : 'text-orange-400 hover:text-orange-300'
+          }`}
         >
           <ChevronLeft size={18} />
           <span>Back to Dashboard</span>
         </button>
-        <span className="px-3 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5">
+        <span className="px-3 py-1 bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5">
           <HeartHandshake size={12} />
           <span>Study Wellbeing Coach</span>
         </span>
       </div>
 
       {/* Main Header */}
-      <div className="bg-[#2a221f] p-8 rounded-[2.5rem] border border-[#3f332c] space-y-4 shadow-2xl">
+      <div className={`p-6 sm:p-8 rounded-[2.5rem] border space-y-4 shadow-xl transition-colors ${
+        isLight ? 'bg-white border-orange-200 shadow-orange-500/10' : 'bg-[#2a221f] border-[#3f332c] shadow-2xl'
+      }`}>
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400">
+          <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-500 shrink-0">
             <HeartHandshake size={28} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-amber-100 italic tracking-tight">
+            <h1 className={`text-2xl sm:text-3xl font-black italic tracking-tight ${
+              isLight ? 'text-stone-900' : 'text-amber-100'
+            }`}>
               AI Study Wellbeing Coach
             </h1>
-            <p className="text-xs text-orange-200/60">
-              Monitors cognitive fatigue, session duration, and recall accuracy to help you maintain healthy study habits and prevent burnout.
+            <p className={`text-xs mt-0.5 leading-relaxed ${
+              isLight ? 'text-stone-600' : 'text-orange-200/60'
+            }`}>
+              <strong>Problem:</strong> Pushing through hours of study while exhausted triggers cognitive burnout and zero retention. <br className="hidden sm:inline" />
+              <strong>Solution:</strong> Checks fatigue levels, study pace, and memory accuracy to provide evidence-based recovery and focus recommendations.
             </p>
           </div>
         </div>
 
-        {/* Mandatory Disclaimer */}
-        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start space-x-3 text-amber-300 text-xs">
-          <ShieldAlert size={20} className="shrink-0 text-amber-400 mt-0.5" />
+        {/* Notice */}
+        <div className={`p-4 rounded-2xl flex items-start space-x-3 text-xs border ${
+          isLight ? 'bg-amber-50 border-amber-300 text-stone-800' : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
+        }`}>
+          <ShieldAlert size={20} className="shrink-0 text-amber-500 mt-0.5" />
           <p className="leading-relaxed">
-            <strong>Important Notice:</strong> Memory Shaastra supports study wellbeing, not mental healthcare. The AI Study Wellbeing Coach provides evidence-based study pace recommendations and does not diagnose or treat medical or mental health conditions.
+            <strong>Wellbeing Guidance:</strong> Memory Shaastra supports academic endurance and healthy pacing. The AI Coach helps prevent study burnout and recommends optimal break rhythms.
           </p>
         </div>
       </div>
 
       {/* Check-In Form */}
-      <div className="bg-[#2a221f] p-8 rounded-[2.5rem] border border-[#3f332c] space-y-6 shadow-xl">
-        <h2 className="text-base font-black text-amber-100 uppercase tracking-wide flex items-center gap-2">
-          <Brain size={20} className="text-rose-400" />
+      <div className={`p-6 sm:p-8 rounded-[2.5rem] border space-y-6 shadow-xl transition-colors ${
+        isLight ? 'bg-white border-orange-200 shadow-orange-500/5' : 'bg-[#2a221f] border-[#3f332c]'
+      }`}>
+        <h2 className={`text-base font-black uppercase tracking-wide flex items-center gap-2 ${
+          isLight ? 'text-stone-900' : 'text-amber-100'
+        }`}>
+          <Brain size={20} className="text-rose-500" />
           <span>Current Study Check-In</span>
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-orange-200/50 block mb-2">
-              Today's Study Session Duration: {sessionMinutes} Mins
+            <label className={`text-[10px] font-black uppercase tracking-widest block mb-2 ${
+              isLight ? 'text-stone-700' : 'text-orange-200/60'
+            }`}>
+              Today's Study Session Duration: <strong>{sessionMinutes} Mins</strong>
             </label>
             <input 
               type="range" 
@@ -92,13 +110,15 @@ export default function StudyWellbeingCoach() {
               step={5}
               value={sessionMinutes}
               onChange={e => setSessionMinutes(Number(e.target.value))}
-              className="w-full accent-rose-500"
+              className="w-full accent-rose-500 cursor-pointer"
             />
           </div>
 
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-orange-200/50 block mb-2">
-              Active Recall Accuracy Rate: {recallAccuracy}%
+            <label className={`text-[10px] font-black uppercase tracking-widest block mb-2 ${
+              isLight ? 'text-stone-700' : 'text-orange-200/60'
+            }`}>
+              Active Recall Accuracy Rate: <strong>{recallAccuracy}%</strong>
             </label>
             <input 
               type="range" 
@@ -107,20 +127,24 @@ export default function StudyWellbeingCoach() {
               step={5}
               value={recallAccuracy}
               onChange={e => setRecallAccuracy(Number(e.target.value))}
-              className="w-full accent-emerald-500"
+              className="w-full accent-emerald-500 cursor-pointer"
             />
           </div>
         </div>
 
         {/* Mood Selector */}
         <div>
-          <label className="text-[10px] font-black uppercase tracking-widest text-orange-200/50 block mb-3">How are you feeling right now?</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest block mb-3 ${
+            isLight ? 'text-stone-700' : 'text-orange-200/60'
+          }`}>
+            How are you feeling right now?
+          </label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { id: 'focused', label: 'Energized & Focused', icon: Smile, color: 'emerald' },
-              { id: 'neutral', label: 'Balanced', icon: Meh, color: 'sky' },
-              { id: 'tired', label: 'Slightly Tired', icon: Coffee, color: 'amber' },
-              { id: 'stressed', label: 'Overwhelmed', icon: Frown, color: 'rose' }
+              { id: 'focused', label: 'Energized & Focused', icon: Smile },
+              { id: 'neutral', label: 'Balanced Pace', icon: Meh },
+              { id: 'tired', label: 'Slightly Tired', icon: Coffee },
+              { id: 'stressed', label: 'Overwhelmed', icon: Frown }
             ].map(m => {
               const Icon = m.icon;
               const isSel = mood === m.id;
@@ -128,9 +152,11 @@ export default function StudyWellbeingCoach() {
                 <button
                   key={m.id}
                   onClick={() => setMood(m.id as any)}
-                  className={`p-4 rounded-2xl border text-center transition-all space-y-2 ${
+                  className={`p-4 rounded-2xl border text-center transition-all space-y-2 cursor-pointer ${
                     isSel 
-                      ? 'bg-rose-500 text-slate-950 border-rose-400 font-black shadow-lg' 
+                      ? 'bg-rose-500 text-slate-950 border-rose-400 font-black shadow-md' 
+                      : isLight
+                      ? 'bg-orange-50/60 border-orange-200 text-stone-800 hover:border-orange-400'
                       : 'bg-[#1a1614] border-[#3f332c] text-orange-200/70 hover:border-rose-500/40'
                   }`}
                 >
@@ -143,7 +169,7 @@ export default function StudyWellbeingCoach() {
         </div>
 
         {error && (
-          <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-xs font-bold">
+          <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-600 dark:text-rose-400 text-xs font-bold">
             {error}
           </div>
         )}
@@ -151,7 +177,7 @@ export default function StudyWellbeingCoach() {
         <button
           onClick={handleConsultCoach}
           disabled={loading}
-          className="w-full py-5 bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-slate-950 font-black uppercase tracking-widest text-xs rounded-2xl transition-all shadow-xl shadow-rose-500/20 active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full py-4.5 bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-slate-950 font-black uppercase tracking-widest text-xs rounded-2xl transition-all shadow-xl shadow-rose-500/20 active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
         >
           {loading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
           <span>{loading ? 'Consulting Wellbeing Coach...' : 'Get Personalized Wellbeing Advice'}</span>
@@ -160,27 +186,39 @@ export default function StudyWellbeingCoach() {
 
       {/* Advice Result */}
       {advice && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-[#2a221f] p-8 rounded-[2.5rem] border border-[#3f332c] space-y-6 shadow-2xl">
-          <div className="flex items-center justify-between border-b border-[#3f332c] pb-4">
-            <span className="px-3.5 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase tracking-widest rounded-full">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className={`p-6 sm:p-8 rounded-[2.5rem] border space-y-6 shadow-xl transition-colors ${
+            isLight ? 'bg-white border-orange-200 shadow-orange-500/10' : 'bg-[#2a221f] border-[#3f332c] shadow-2xl'
+          }`}
+        >
+          <div className={`flex items-center justify-between border-b pb-4 ${
+            isLight ? 'border-orange-100' : 'border-[#3f332c]'
+          }`}>
+            <span className="px-3.5 py-1 bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase tracking-widest rounded-full">
               Status: {advice.status}
             </span>
           </div>
 
           <div className="space-y-4">
-            <p className="text-sm text-amber-100 leading-relaxed font-semibold p-5 bg-[#1a1614] border border-[#3f332c] rounded-2xl">
+            <p className={`text-sm leading-relaxed font-semibold p-5 rounded-2xl border ${
+              isLight ? 'bg-orange-50/60 border-orange-200 text-stone-900' : 'bg-[#1a1614] border-[#3f332c] text-amber-100'
+            }`}>
               "{advice.coachMessage}"
             </p>
 
-            <div className="p-5 bg-rose-500/10 border border-rose-500/20 rounded-2xl space-y-2">
-              <h3 className="text-xs font-black text-rose-400 uppercase tracking-wider flex items-center gap-2">
+            <div className={`p-5 rounded-2xl space-y-2 border ${
+              isLight ? 'bg-amber-50 border-amber-200 text-stone-900' : 'bg-rose-500/10 border-rose-500/20 text-rose-100'
+            }`}>
+              <h3 className="text-xs font-black text-rose-500 uppercase tracking-wider flex items-center gap-2">
                 <Coffee size={18} />
                 <span>Coach Recommendation</span>
               </h3>
-              <p className="text-xs text-rose-100 font-bold leading-relaxed">{advice.recommendation}</p>
+              <p className="text-xs font-bold leading-relaxed">{advice.recommendation}</p>
             </div>
 
-            <p className="text-[10px] text-orange-200/40 italic">
+            <p className={`text-[10px] italic ${isLight ? 'text-stone-400' : 'text-orange-200/40'}`}>
               {advice.disclaimer}
             </p>
           </div>

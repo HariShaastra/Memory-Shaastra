@@ -67,6 +67,7 @@ export interface MemoryPalace {
   id: string;
   name: string;
   locations: PalaceLocation[];
+  rooms?: PalaceLocation[];
   subject?: string;
   chapter?: string;
   libraryMaterialId?: string;
@@ -89,6 +90,8 @@ export interface FirstLetterAid {
   description: string;
   items: string[];
   mnemonic: string;
+  word?: string;
+  sentence?: string;
   subject?: string;
   chapter?: string;
   libraryMaterialId?: string;
@@ -172,6 +175,8 @@ export interface StudyMaterial {
   title: string;
   content: string;
   subject?: string;
+  groupName?: string;
+  subGroup?: string;
   attachments: FileAttachment[];
   createdAt: string;
 }
@@ -220,6 +225,7 @@ export type AppView =
   | 'auth' 
   | 'dashboard' 
   | 'focus' 
+  | 'study-bubble'
   | 'flashcards' 
   | 'mnemonics' 
   | 'palace' 
@@ -234,7 +240,10 @@ export type AppView =
   | 'ai-tester'
   | 'simplifier'
   | 'memory-dna'
-  | 'wellbeing';
+  | 'wellbeing'
+  | 'scheduler'
+  | 'memory-boost'
+  | 'rescue-queue';
 
 export interface QuestionPaperSpec {
   types: Array<'mcq' | 'fill-blank' | 'short' | 'long' | 'case' | 'true-false'>;

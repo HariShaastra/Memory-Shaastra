@@ -40,8 +40,16 @@ export default function Library() {
   } = useAppContext();
 
   const [groupings, setGroupings] = useState<Grouping[]>(() => {
-    const saved = localStorage.getItem('ms_library_groupings');
-    return saved ? JSON.parse(saved) : [
+    try {
+      const saved = localStorage.getItem('ms_library_groupings');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.warn('Error reading library groupings:', e);
+    }
+    return [
       { id: '1', name: 'Science & Medical', subgroups: ['Physics', 'Chemistry', 'Biology'] },
       { id: '2', name: 'Economics & Shaastra', subgroups: ['Macroeconomics', 'Finance', 'Trade'] },
       { id: '3', name: 'Humanities & Civics', subgroups: ['History', 'Philosophy', 'Law'] }
