@@ -16,10 +16,11 @@ import {
   LayoutList,
   RotateCcw 
 } from 'lucide-react';
-import { Mnemonic } from '../types';
+import { Mnemonic, FileAttachment } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
 import { MemoryLinker } from './MemoryLinker';
+import { UniversalAttachmentManager } from './UniversalAttachmentManager';
 
 export default function Mnemonics() {
   const { mnemonics, setMnemonics, goBack, allSubjects } = useAppContext();
@@ -34,6 +35,7 @@ export default function Mnemonics() {
   const [newActualInfo, setNewActualInfo] = useState('');
   const [newSubject, setNewSubject] = useState('');
   const [newChapter, setNewChapter] = useState('');
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'line' | 'flip'>('grid');
 
@@ -70,7 +72,8 @@ export default function Mnemonics() {
       phrase: newPhrase,
       actualInfo: newActualInfo || undefined,
       subject: newSubject || undefined,
-      chapter: newChapter || undefined
+      chapter: newChapter || undefined,
+      attachments
     };
     setMnemonics([item, ...mnemonics]);
     resetForm();
@@ -83,6 +86,7 @@ export default function Mnemonics() {
     setNewActualInfo(item.actualInfo || '');
     setNewSubject(item.subject || '');
     setNewChapter(item.chapter || '');
+    setAttachments(item.attachments || []);
     setIsAdding(true);
     scrollToForm();
   };
@@ -96,7 +100,8 @@ export default function Mnemonics() {
         phrase: newPhrase, 
         actualInfo: newActualInfo || undefined, 
         subject: newSubject || undefined,
-        chapter: newChapter || undefined
+        chapter: newChapter || undefined,
+        attachments
       } : m
     ));
     resetForm();
@@ -108,6 +113,7 @@ export default function Mnemonics() {
     setNewActualInfo('');
     setNewSubject('');
     setNewChapter('');
+    setAttachments([]);
     setIsAdding(false);
     setEditingId(null);
   };
@@ -415,6 +421,16 @@ export default function Mnemonics() {
                       className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-3 px-4 text-orange-100 font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all resize-none italic text-xs"
                     />
                   </div>
+
+                  {/* Multimedia Attachments */}
+                  <div className="pt-2">
+                    <UniversalAttachmentManager
+                      attachments={attachments}
+                      onChange={setAttachments}
+                      title="Multimedia Attachments (Voice note, Photos, Videos, Documents, Links)"
+                    />
+                  </div>
+
                   <div className="flex justify-end gap-3 pt-4">
                     <button onClick={resetForm} className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#3f332c] hover:text-orange-200/40">
                       Cancel
@@ -475,6 +491,16 @@ export default function Mnemonics() {
                         <p><strong className="text-orange-400">Concept:</strong> {activeFlipItem.title}</p>
                         {activeFlipItem.subject && <p><strong className="text-orange-400">Subject:</strong> {activeFlipItem.subject}</p>}
                       </div>
+                      {activeFlipItem.attachments && activeFlipItem.attachments.length > 0 && (
+                        <div className="pt-2 text-left" onClick={e => e.stopPropagation()}>
+                          <UniversalAttachmentManager
+                            attachments={activeFlipItem.attachments}
+                            onChange={() => {}}
+                            readOnly
+                            title="Attachments"
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
 

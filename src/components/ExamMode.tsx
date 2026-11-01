@@ -23,7 +23,9 @@ import {
   Check
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { ExamPlan, ExamSubject, ExamChapter, ExamTopic, ExamSubTopic } from '../types';
+import { ExamPlan, ExamSubject, ExamChapter, ExamTopic, ExamSubTopic, FileAttachment } from '../types';
+import { UniversalAttachmentManager } from './UniversalAttachmentManager';
+import { WellbeingCoachFooter } from './WellbeingCoachWidget';
 
 const MOTIVATIONAL_QUOTES = [
   "🔥 \"The key to success is to focus on goals, not obstacles. Step by step, chapter by chapter, you are conquering your future!\"",
@@ -191,6 +193,12 @@ export const ExamMode: React.FC = () => {
               />
             </div>
           </div>
+
+          <UniversalAttachmentManager 
+            attachments={editingPlan.attachments || []} 
+            onChange={att => setEditingPlan({ ...editingPlan, attachments: att })} 
+            title="Syllabus Reference Documents & Attachment Vault" 
+          />
 
           {/* Subjects */}
           <div className="space-y-4 pt-4 border-t border-[#3f332c]">
@@ -530,6 +538,17 @@ export const ExamMode: React.FC = () => {
             </div>
           </div>
 
+          {activePlan.attachments && activePlan.attachments.length > 0 && (
+            <div className="pt-2">
+              <UniversalAttachmentManager 
+                attachments={activePlan.attachments} 
+                onChange={() => {}} 
+                readOnly={true} 
+                title="Syllabus Reference Documents & Attachment Vault" 
+              />
+            </div>
+          )}
+
           {/* Subjects & Nested Topics rendered in GRID or LINE view */}
           {activePlan.subjects.length === 0 ? (
             <div className="text-center py-12 bg-white dark:bg-[#1a1614] rounded-3xl border border-stone-200 dark:border-[#3f332c] p-8 space-y-4 shadow-sm">
@@ -638,6 +657,11 @@ export const ExamMode: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Inline Wellbeing Coach Footer */}
+      <div className="pt-6 border-t border-orange-500/10">
+        <WellbeingCoachFooter />
+      </div>
     </div>
   );
 };

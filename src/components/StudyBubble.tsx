@@ -30,7 +30,8 @@ import {
   AlertCircle,
   Eye,
   Coffee,
-  HelpCircle
+  HelpCircle,
+  Timer
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { DocumentViewer, DocumentAttachment } from './DocumentViewer';
@@ -44,6 +45,7 @@ interface StudyBubbleSettings {
   goal: string;
   durationMinutes: number;
   studyMode: 'screen' | 'offline';
+  timerMode: 'countdown' | 'stopwatch';
 }
 
 interface ActiveBubbleState {
@@ -52,6 +54,7 @@ interface ActiveBubbleState {
   goal: string;
   durationMinutes: number;
   studyMode: 'screen' | 'offline';
+  timerMode: 'countdown' | 'stopwatch';
   remainingSeconds: number;
   elapsedSeconds: number;
   isActive: boolean;
@@ -74,7 +77,11 @@ export default function StudyBubble() {
     addXp, 
     logActivity, 
     theme,
-    allSubjects
+    allSubjects,
+    addStudySessionLog,
+    saveLastActiveSession,
+    lastActiveSession,
+    setView
   } = useAppContext();
 
   const isLight = theme === 'light';
@@ -109,13 +116,15 @@ export default function StudyBubble() {
       topic: 'Core Revision',
       goal: 'Revise key concepts and complete active recall session',
       durationMinutes: 25,
-      studyMode: 'screen'
+      studyMode: 'screen',
+      timerMode: 'countdown'
     };
   });
 
   // Custom minutes input state
   const [customMinutes, setCustomMinutes] = useState<string>('30');
   const [isCustomDuration, setIsCustomDuration] = useState(false);
+  const [isAdjustingTimeBeforeStart, setIsAdjustingTimeBeforeStart] = useState(false);
 
   // Active Session State
   const [activeSession, setActiveSession] = useState<ActiveBubbleState | null>(() => {
@@ -159,13 +168,21 @@ export default function StudyBubble() {
     }
   }, [activeSession]);
 
-  // Main countdown timer interval
+  // Main countdown / stopwatch timer interval
   useEffect(() => {
     let interval: any = null;
     if (activeSession && activeSession.isActive && !activeSession.isPausedOnBreak) {
       interval = setInterval(() => {
         setActiveSession(prev => {
           if (!prev) return null;
+          // Stopwatch mode: increments elapsedSeconds continuously
+          if (prev.timerMode === 'stopwatch') {
+            return {
+              ...prev,
+              elapsedSeconds: prev.elapsedSeconds + 1
+            };
+          }
+          // Countdown mode
           if (prev.remainingSeconds <= 1) {
             handleSessionCompleted(prev);
             return null;
@@ -188,15 +205,43 @@ export default function StudyBubble() {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
+  // Instant 3-Second Quick-Start
+  const handleQuick3SecondStart = (mode: 'countdown' | 'stopwatch' = 'countdown') => {
+    const subj = lastActiveSession?.subject || setupSettings.subject || allSubjects[0] || 'General Studies';
+    const top = lastActiveSession?.topic || setupSettings.topic || 'Active Revision';
+    const dur = mode === 'stopwatch' ? 0 : 25;
+
+    const newSession: ActiveBubbleState = {
+      subject: subj,
+      topic: top,
+      goal: setupSettings.goal || `Quick focus session on ${top}`,
+      durationMinutes: dur,
+      studyMode: setupSettings.studyMode,
+      timerMode: mode,
+      remainingSeconds: dur * 60,
+      elapsedSeconds: 0,
+      isActive: true,
+      isPausedOnBreak: false,
+      scratchpadNotes: '',
+      selectedMaterialId: studyMaterials[0]?.id || null,
+      startedAt: new Date().toISOString()
+    };
+
+    setActiveSession(newSession);
+    distractionShield.toggleShield();
+  };
+
   // Start a new session from entry workflow
-  const handleStartSession = () => {
-    const duration = isCustomDuration ? (parseInt(customMinutes, 10) || 25) : setupSettings.durationMinutes;
+  const handleStartSession = (forceStopwatch: boolean = false) => {
+    const timerMode = forceStopwatch || setupSettings.timerMode === 'stopwatch' ? 'stopwatch' : 'countdown';
+    const duration = timerMode === 'stopwatch' ? 0 : (isCustomDuration ? (parseInt(customMinutes, 10) || 25) : setupSettings.durationMinutes);
     const newSession: ActiveBubbleState = {
       subject: setupSettings.subject,
       topic: setupSettings.topic,
       goal: setupSettings.goal || 'Complete dedicated focus study',
       durationMinutes: duration,
       studyMode: setupSettings.studyMode,
+      timerMode,
       remainingSeconds: duration * 60,
       elapsedSeconds: 0,
       isActive: true,
@@ -208,7 +253,7 @@ export default function StudyBubble() {
 
     // Save as last settings
     try {
-      localStorage.setItem(STORAGE_LAST_SETTINGS, JSON.stringify(setupSettings));
+      localStorage.setItem(STORAGE_LAST_SETTINGS, JSON.stringify({ ...setupSettings, timerMode }));
     } catch (e) {
       console.warn(e);
     }
@@ -219,10 +264,39 @@ export default function StudyBubble() {
 
   // Session Completed handler
   const handleSessionCompleted = (sess: ActiveBubbleState) => {
-    const spentMinutes = Math.round(sess.elapsedSeconds / 60) || sess.durationMinutes;
+    const spentMinutes = Math.max(1, Math.round(sess.elapsedSeconds / 60)) || sess.durationMinutes;
     if (updateStreak) updateStreak();
-    if (addXp) addXp(sess.durationMinutes * 2);
+    if (addXp) addXp(spentMinutes * 2);
     if (logActivity) logActivity(`Completed Study Bubble session: ${sess.goal}`, 'study-task');
+
+    if (addStudySessionLog) {
+      addStudySessionLog({
+        date: new Date().toISOString().split('T')[0],
+        startTime: sess.startedAt,
+        endTime: new Date().toISOString(),
+        durationMinutes: spentMinutes,
+        durationSeconds: sess.elapsedSeconds,
+        subject: sess.subject,
+        topic: sess.topic,
+        goal: sess.goal,
+        completed: true,
+        mode: sess.studyMode === 'offline' ? 'offline' : (sess.timerMode === 'stopwatch' ? 'stopwatch' : 'timer'),
+        activitiesDone: [
+          `Dedicated ${sess.studyMode} session (${sess.timerMode})`,
+          sess.scratchpadNotes ? 'Saved scratchpad study notes' : '',
+          activeCardIndex > 0 ? `Practiced ${activeCardIndex + 1} flashcards` : ''
+        ].filter(Boolean),
+        notes: sess.scratchpadNotes ? sess.scratchpadNotes.slice(0, 100) : undefined
+      });
+    }
+
+    if (saveLastActiveSession) {
+      saveLastActiveSession({
+        subject: sess.subject,
+        topic: sess.topic,
+        durationMinutes: spentMinutes
+      });
+    }
 
     // Queue offline sync
     offlineSyncManager.enqueue('session_complete', {
@@ -270,6 +344,35 @@ export default function StudyBubble() {
   const handleEndSessionEarly = () => {
     if (!activeSession) return;
     const spentMinutes = Math.max(1, Math.round(activeSession.elapsedSeconds / 60));
+
+    if (addStudySessionLog) {
+      addStudySessionLog({
+        date: new Date().toISOString().split('T')[0],
+        startTime: activeSession.startedAt,
+        endTime: new Date().toISOString(),
+        durationMinutes: spentMinutes,
+        durationSeconds: activeSession.elapsedSeconds,
+        subject: activeSession.subject,
+        topic: activeSession.topic,
+        goal: activeSession.goal,
+        completed: false,
+        mode: activeSession.studyMode === 'offline' ? 'offline' : (activeSession.timerMode === 'stopwatch' ? 'stopwatch' : 'timer'),
+        activitiesDone: [
+          `Dedicated ${activeSession.studyMode} session (${activeSession.timerMode})`,
+          activeSession.scratchpadNotes ? 'Saved scratchpad study notes' : ''
+        ].filter(Boolean),
+        notes: activeSession.scratchpadNotes ? activeSession.scratchpadNotes.slice(0, 100) : undefined
+      });
+    }
+
+    if (saveLastActiveSession) {
+      saveLastActiveSession({
+        subject: activeSession.subject,
+        topic: activeSession.topic,
+        durationMinutes: spentMinutes
+      });
+    }
+
     setSummaryData({
       goal: activeSession.goal,
       spentMinutes,
@@ -319,46 +422,214 @@ export default function StudyBubble() {
             </div>
           </div>
 
-          {/* Hero Entry Card */}
-          <div className={`p-6 sm:p-8 rounded-[2.5rem] border shadow-2xl relative overflow-hidden transition-colors ${
+          {/* ========================================================================= */}
+          {/* SIMPLIFIED "STUDY NOW" FACILITY WITH PROMINENT CLICKABLE TIMER             */}
+          {/* ========================================================================= */}
+          <div className={`p-6 sm:p-10 rounded-3xl sm:rounded-[3rem] border shadow-2xl space-y-6 text-center transition-colors ${
             isLight 
-              ? 'bg-gradient-to-br from-amber-50 via-orange-50 to-orange-100/70 border-orange-300 shadow-orange-500/10 text-stone-900' 
-              : 'bg-gradient-to-br from-[#2a221f] via-[#221b18] to-[#1a1614] border-orange-500/40 text-amber-100 shadow-2xl'
+              ? 'bg-gradient-to-br from-amber-50 via-white to-orange-50/60 border-orange-200 text-stone-900 shadow-orange-500/10' 
+              : 'bg-gradient-to-br from-[#2a221f] via-[#221b18] to-[#1a1614] border-orange-500/30 text-amber-100 shadow-2xl'
           }`}>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="space-y-2">
-                <span className="px-3 py-1 bg-orange-600/20 text-orange-600 dark:text-orange-400 border border-orange-500/30 rounded-full text-[10px] font-black uppercase tracking-wider">
-                  Distraction-Minimised Study Bubble
+            <div className="space-y-1.5 max-w-xl mx-auto">
+              <span className="px-3 py-1 bg-orange-600/20 text-orange-600 dark:text-orange-400 border border-orange-500/30 rounded-full text-[11px] font-black uppercase tracking-wider inline-block">
+                Study Now Facility
+              </span>
+              <h2 className="text-xl sm:text-3xl font-black tracking-tight">
+                Immediate Focus Session
+              </h2>
+              <p className={`text-xs ${isLight ? 'text-stone-600' : 'text-orange-200/80'}`}>
+                Study immediately without selecting any subject. Click the big timer digits to change the duration before starting.
+              </p>
+            </div>
+
+            {/* Mode Switcher: Timer (Countdown) vs Stopwatch */}
+            <div className="flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSetupSettings(prev => ({ ...prev, timerMode: 'countdown' }))}
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                  setupSettings.timerMode === 'countdown'
+                    ? 'bg-orange-600 text-white shadow-md'
+                    : isLight ? 'bg-orange-100/60 text-stone-700 hover:bg-orange-100' : 'bg-white/5 text-orange-200 hover:bg-white/10'
+                }`}
+              >
+                <Clock size={14} />
+                <span>Countdown Timer</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSetupSettings(prev => ({ ...prev, timerMode: 'stopwatch' }))}
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                  setupSettings.timerMode === 'stopwatch'
+                    ? 'bg-orange-600 text-white shadow-md'
+                    : isLight ? 'bg-orange-100/60 text-stone-700 hover:bg-orange-100' : 'bg-white/5 text-orange-200 hover:bg-white/10'
+                }`}
+              >
+                <Timer size={14} />
+                <span>Open Stopwatch</span>
+              </button>
+            </div>
+
+            {/* THE TIMER: BIGGEST TEXT ON THE SCREEN • CLICKABLE BEFORE START */}
+            <div className="py-2 space-y-3">
+              <div 
+                onClick={() => {
+                  if (setupSettings.timerMode === 'countdown') {
+                    setIsAdjustingTimeBeforeStart(prev => !prev);
+                  }
+                }}
+                className={`inline-block select-none transition-all ${
+                  setupSettings.timerMode === 'countdown' 
+                    ? 'cursor-pointer hover:scale-105 group' 
+                    : 'cursor-default'
+                }`}
+                title={setupSettings.timerMode === 'countdown' ? 'Click to adjust study duration' : 'Stopwatch counts up from 00:00'}
+              >
+                <span className="text-7xl sm:text-8xl md:text-9xl font-mono font-black tracking-tight text-orange-600 dark:text-orange-400 drop-shadow-sm block">
+                  {setupSettings.timerMode === 'stopwatch' 
+                    ? '00:00' 
+                    : `${String(setupSettings.durationMinutes).padStart(2, '0')}:00`}
                 </span>
-                <h1 className={`text-2xl sm:text-3xl font-black italic tracking-tight ${
-                  isLight ? 'text-stone-900' : 'text-amber-100'
-                }`}>
-                  Enter Study Bubble
-                </h1>
-                <p className={`text-xs max-w-xl leading-relaxed ${
-                  isLight ? 'text-stone-700' : 'text-orange-200/80'
-                }`}>
-                  Bring your essential study materials, flashcards, active recall questions, and a scratchpad into one focused space. Optimise learning outcomes, study deeply, then step away.
-                </p>
+                {setupSettings.timerMode === 'countdown' && (
+                  <span className="text-[11px] font-black uppercase tracking-wider block opacity-75 group-hover:opacity-100 group-hover:underline text-orange-600 dark:text-orange-400 mt-1">
+                    ✏️ Click timer digits to modify duration ({setupSettings.durationMinutes}m)
+                  </span>
+                )}
               </div>
 
-              <div className="p-4 bg-orange-600/20 rounded-3xl border border-orange-500/30 text-orange-500 shrink-0 hidden sm:block">
-                <Target size={36} />
-              </div>
+              {/* Timing Modifier Panel (toggled on click before session starts) */}
+              {isAdjustingTimeBeforeStart && setupSettings.timerMode === 'countdown' && (
+                <div className={`max-w-md mx-auto p-4 rounded-2xl border space-y-3 animate-in fade-in zoom-in-95 duration-150 ${
+                  isLight ? 'bg-white border-orange-200 shadow-lg' : 'bg-[#1a1614] border-[#3f332c]'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase tracking-wider">Select Sprint Timing</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsAdjustingTimeBeforeStart(false)}
+                      className="text-xs font-bold text-stone-500 hover:text-stone-900 dark:hover:text-white cursor-pointer"
+                    >
+                      ✕ Close
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {[15, 25, 30, 45, 60].map(mins => (
+                      <button
+                        key={mins}
+                        type="button"
+                        onClick={() => {
+                          setSetupSettings(prev => ({ ...prev, durationMinutes: mins }));
+                          setIsCustomDuration(false);
+                          setIsAdjustingTimeBeforeStart(false);
+                        }}
+                        className={`py-2 px-1 rounded-xl border text-xs font-black transition-all cursor-pointer ${
+                          setupSettings.durationMinutes === mins && !isCustomDuration
+                            ? 'bg-orange-600 text-white border-orange-600'
+                            : isLight ? 'bg-orange-50 border-orange-200 text-stone-800 hover:bg-orange-100' : 'bg-white/5 border-white/10 text-orange-200'
+                        }`}
+                      >
+                        {mins}m
+                      </button>
+                    ))}
+                  </div>
+                  {/* Custom minutes input */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="number"
+                      min={1}
+                      max={180}
+                      value={customMinutes}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setCustomMinutes(val);
+                        const num = parseInt(val, 10);
+                        if (num > 0 && num <= 180) {
+                          setSetupSettings(prev => ({ ...prev, durationMinutes: num }));
+                          setIsCustomDuration(true);
+                        }
+                      }}
+                      placeholder="Custom mins"
+                      className={`w-full py-2 px-3 text-xs rounded-xl border font-bold focus:outline-none focus:border-orange-500 ${
+                        isLight ? 'bg-stone-50 border-stone-200 text-stone-900' : 'bg-[#14100e] border-[#362923] text-white'
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsAdjustingTimeBeforeStart(false)}
+                      className="px-4 py-2 rounded-xl bg-orange-600 text-white font-black text-xs uppercase tracking-wider cursor-pointer whitespace-nowrap"
+                    >
+                      Set
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Instant 1-Tap Action: Study Now */}
+            <div className="max-w-md mx-auto pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const subj = setupSettings.subject || lastActiveSession?.subject || 'General Study';
+                  const top = setupSettings.topic || lastActiveSession?.topic || 'Focused Study Session';
+                  const dur = setupSettings.timerMode === 'stopwatch' ? 0 : setupSettings.durationMinutes;
+                  const newSession: ActiveBubbleState = {
+                    subject: subj,
+                    topic: top,
+                    goal: setupSettings.goal || 'Complete dedicated focus study',
+                    durationMinutes: dur,
+                    studyMode: setupSettings.studyMode,
+                    timerMode: setupSettings.timerMode,
+                    remainingSeconds: dur * 60,
+                    elapsedSeconds: 0,
+                    isActive: true,
+                    isPausedOnBreak: false,
+                    scratchpadNotes: '',
+                    selectedMaterialId: studyMaterials[0]?.id || null,
+                    startedAt: new Date().toISOString()
+                  };
+                  setActiveSession(newSession);
+                  distractionShield.toggleShield();
+                }}
+                className="w-full py-4 sm:py-5 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black text-sm sm:text-base uppercase tracking-wider rounded-2xl shadow-xl shadow-orange-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Play size={20} className="fill-slate-950" />
+                <span>
+                  {setupSettings.timerMode === 'stopwatch' 
+                    ? 'Start Stopwatch Study' 
+                    : `Start Study Now (${setupSettings.durationMinutes}m)`}
+                </span>
+              </button>
             </div>
           </div>
 
-          {/* 5-Step Entry Workflow Form */}
-          <div className={`p-6 sm:p-8 rounded-[2.5rem] border shadow-xl space-y-6 transition-colors ${
+          {/* Optional Custom Session Details (Collapsible Accordion) */}
+          <details className={`p-6 sm:p-8 rounded-[2.5rem] border shadow-xl transition-colors group ${
             isLight ? 'bg-white border-orange-200 shadow-orange-500/5' : 'bg-[#2a221f] border-[#3f332c]'
           }`}>
-            {/* Step 1: Subject & Topic */}
-            <div className="space-y-3">
-              <label className={`text-[11px] font-black uppercase tracking-wider block ${
-                isLight ? 'text-stone-800' : 'text-orange-200'
-              }`}>
-                Step 1: Select Subject & Topic
-              </label>
+            <summary className="flex items-center justify-between cursor-pointer list-none select-none">
+              <div>
+                <h3 className={`text-sm sm:text-base font-black uppercase tracking-wider ${isLight ? 'text-stone-900' : 'text-orange-100'}`}>
+                  Custom Session Setup (Change Topic, Goal or Timer)
+                </h3>
+                <p className={`text-xs font-medium ${isLight ? 'text-stone-500' : 'text-orange-200/60'}`}>
+                  Click to modify subject, custom goal, or switch to physical textbook mode
+                </p>
+              </div>
+              <span className="text-xs font-black text-orange-600 uppercase tracking-wider group-open:rotate-180 transition-transform">
+                ▼
+              </span>
+            </summary>
+
+            <div className="pt-6 space-y-6 border-t border-orange-500/20 mt-4">
+              {/* Subject & Topic */}
+              <div className="space-y-3">
+                <label className={`text-[11px] font-black uppercase tracking-wider block ${
+                  isLight ? 'text-stone-800' : 'text-orange-200'
+                }`}>
+                  Select Subject & Topic
+                </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-bold text-stone-500 dark:text-orange-200/60 block mb-1">Subject</label>
@@ -439,32 +710,55 @@ export default function StudyBubble() {
               }`}>
                 Step 3: Session Duration
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
                 {[15, 25, 45].map(mins => (
                   <button
                     key={mins}
                     type="button"
                     onClick={() => {
                       setIsCustomDuration(false);
-                      setSetupSettings(prev => ({ ...prev, durationMinutes: mins }));
+                      setSetupSettings(prev => ({ ...prev, durationMinutes: mins, timerMode: 'countdown' }));
                     }}
-                    className={`py-3 px-4 rounded-xl border text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                      !isCustomDuration && setupSettings.durationMinutes === mins
+                    className={`py-3 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      !isCustomDuration && setupSettings.timerMode === 'countdown' && setupSettings.durationMinutes === mins
                         ? 'bg-orange-500 text-slate-950 border-orange-400 shadow-md'
                         : isLight
                         ? 'bg-orange-50/60 border-orange-200 text-stone-800 hover:border-orange-400'
                         : 'bg-[#1a1614] border-[#3f332c] text-orange-200/70 hover:border-orange-500/40'
                     }`}
                   >
-                    <Clock size={14} />
+                    <Clock size={13} />
                     <span>{mins} Mins</span>
                   </button>
                 ))}
 
+                {/* Stopwatch Preset */}
                 <button
                   type="button"
-                  onClick={() => setIsCustomDuration(true)}
-                  className={`py-3 px-4 rounded-xl border text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  onClick={() => {
+                    setIsCustomDuration(false);
+                    setSetupSettings(prev => ({ ...prev, timerMode: 'stopwatch' }));
+                  }}
+                  className={`py-3 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    !isCustomDuration && setupSettings.timerMode === 'stopwatch'
+                      ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md'
+                      : isLight
+                      ? 'bg-orange-50/60 border-orange-200 text-stone-800 hover:border-orange-400'
+                      : 'bg-[#1a1614] border-[#3f332c] text-orange-200/70 hover:border-orange-500/40'
+                  }`}
+                  title="Counts up automatically. Best for coverage targets without time anxiety."
+                >
+                  <Timer size={13} />
+                  <span>Stopwatch</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomDuration(true);
+                    setSetupSettings(prev => ({ ...prev, timerMode: 'countdown' }));
+                  }}
+                  className={`py-3 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                     isCustomDuration
                       ? 'bg-orange-500 text-slate-950 border-orange-400 shadow-md'
                       : isLight
@@ -472,8 +766,8 @@ export default function StudyBubble() {
                       : 'bg-[#1a1614] border-[#3f332c] text-orange-200/70 hover:border-orange-500/40'
                   }`}
                 >
-                  <Edit3 size={14} />
-                  <span>Custom Mins</span>
+                  <Edit3 size={13} />
+                  <span>Custom</span>
                 </button>
               </div>
 
@@ -552,7 +846,7 @@ export default function StudyBubble() {
             <div className="pt-3">
               <button
                 type="button"
-                onClick={handleStartSession}
+                onClick={() => handleStartSession()}
                 className="w-full py-5 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black uppercase tracking-widest text-xs rounded-2xl transition-all shadow-xl shadow-orange-500/20 active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Play size={18} className="fill-current" />
@@ -560,8 +854,9 @@ export default function StudyBubble() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </details>
+      </div>
+    )}
 
       {/* ========================================================================= */}
       {/* 2. ACTIVE STUDY BUBBLE WORKSPACE                                          */}
@@ -652,19 +947,31 @@ export default function StudyBubble() {
             <span className={`text-5xl sm:text-7xl font-mono font-black tracking-tight ${
               isLight ? 'text-stone-900' : 'text-amber-100'
             }`}>
-              {formatTime(activeSession.remainingSeconds)}
+              {activeSession.timerMode === 'stopwatch' 
+                ? formatTime(activeSession.elapsedSeconds)
+                : formatTime(activeSession.remainingSeconds)}
             </span>
+
+            <div className="flex items-center gap-1.5 text-xs font-bold text-orange-500">
+              {activeSession.timerMode === 'stopwatch' ? (
+                <span>⏱️ Open Stopwatch Active (Counting Up)</span>
+              ) : (
+                <span>⏳ Focus Countdown</span>
+              )}
+            </div>
 
             {/* Quick time controls */}
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setActiveSession(prev => prev ? ({ ...prev, remainingSeconds: prev.remainingSeconds + 300 }) : null)}
-                className={`px-3 py-1.5 rounded-xl border text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                  isLight ? 'bg-orange-50 border-orange-200 text-stone-800' : 'bg-[#1a1614] border-[#3f332c] text-orange-200'
-                }`}
-              >
-                +5 Mins
-              </button>
+              {activeSession.timerMode === 'countdown' && (
+                <button
+                  onClick={() => setActiveSession(prev => prev ? ({ ...prev, remainingSeconds: prev.remainingSeconds + 300 }) : null)}
+                  className={`px-3 py-1.5 rounded-xl border text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    isLight ? 'bg-orange-50 border-orange-200 text-stone-800' : 'bg-[#1a1614] border-[#3f332c] text-orange-200'
+                  }`}
+                >
+                  +5 Mins
+                </button>
+              )}
 
               <button
                 onClick={() => setActiveSession(prev => prev ? ({ ...prev, isActive: !prev.isActive }) : null)}
@@ -1068,11 +1375,20 @@ export default function StudyBubble() {
                     setSummaryData(null);
                     goBack();
                   }}
-                  className={`w-full py-3 rounded-xl border text-xs font-black uppercase tracking-wider cursor-pointer transition-all ${
-                    isLight ? 'bg-stone-50 border-orange-200 text-stone-800' : 'bg-[#1a1614] border-[#3f332c] text-orange-200'
-                  }`}
+                  className="w-full py-3.5 bg-orange-600 hover:bg-orange-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow cursor-pointer transition-all"
                 >
-                  Close & Continue Offline
+                  Close
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowSummaryModal(false);
+                    setSummaryData(null);
+                    setView('study-logs');
+                  }}
+                  className="w-full py-2.5 text-orange-500 hover:text-orange-400 text-xs font-bold uppercase tracking-wider cursor-pointer"
+                >
+                  📜 View & Copy in Daily Study Logs ➔
                 </button>
               </div>
             </motion.div>

@@ -12,9 +12,23 @@ import {
   Upload, 
   FileSpreadsheet, 
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Clock,
+  Play,
+  Pause,
+  RefreshCw,
+  Eye,
+  Sparkles,
+  Coffee,
+  Shield,
+  Sliders,
+  Check,
+  Keyboard,
+  Search,
+  ExternalLink
 } from 'lucide-react';
 import { t } from '../utils/translations';
+import { ShortcutsTable } from './ShortcutsTable';
 import { 
   exportToJSON, 
   validateAndParseBackup, 
@@ -36,7 +50,13 @@ export default function Settings() {
     revisions, setRevisions,
     examPlans, setExamPlans,
     studyMaterials, setStudyMaterials,
-    memoryLinks, setMemoryLinks
+    memoryLinks, setMemoryLinks,
+    adaptiveStudyConfig,
+    updateAdaptiveStudyConfig,
+    pauseAdaptiveStudyTracking,
+    resumeAdaptiveStudyTracking,
+    triggerManualInterventionTest,
+    resetAdaptiveStudyTimer
   } = useApp();
 
   const isLight = theme === 'light';
@@ -201,56 +221,74 @@ export default function Settings() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-12 space-y-12">
-      <header className="flex justify-between items-end border-b border-[#3f332c]/20 pb-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-10 space-y-8 sm:space-y-10 w-full max-w-full overflow-hidden">
+      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-orange-500/20 pb-6">
         <div>
-          <h2 className="text-5xl font-black text-orange-100 italic uppercase tracking-tighter drop-shadow-sm">{t.settings}</h2>
-          <p className="text-orange-200/40 text-[10px] font-black uppercase tracking-[0.3em] mt-2 italic">Customize your active recall system</p>
+          <h2 className={`text-3xl sm:text-4xl md:text-5xl font-black italic uppercase tracking-tighter drop-shadow-sm ${
+            isLight ? 'text-stone-900' : 'text-orange-100'
+          }`}>
+            {t.settings}
+          </h2>
+          <p className={`text-[10px] sm:text-xs font-black uppercase tracking-[0.25em] mt-1 italic ${
+            isLight ? 'text-stone-600' : 'text-orange-200/60'
+          }`}>
+            Customize active recall, study balance & keyboard shortcuts
+          </p>
         </div>
         {user && !isEditing && (
           <button 
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all border border-amber-500/20 shadow-lg active:scale-95"
+            className="flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500 text-amber-600 hover:text-white px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all border border-amber-500/20 shadow-sm active:scale-95 cursor-pointer w-fit"
           >
-            <Edit2 size={16} /> {t.edit}
+            <Edit2 size={15} /> {t.edit}
           </button>
         )}
       </header>
 
       {/* Floating Status Notification bar */}
       {statusMessage && (
-        <div className={`p-5 rounded-2xl border text-xs font-black uppercase tracking-wider flex items-center gap-3 transition-all ${
+        <div className={`p-4 sm:p-5 rounded-2xl border text-xs font-black uppercase tracking-wider flex items-center gap-3 transition-all ${
           statusMessage.type === 'success' 
-            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+            ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
             : statusMessage.type === 'error'
-              ? 'bg-rose-500/10 border-rose-500/20 text-rose-400'
-              : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+              ? 'bg-rose-500/15 border-rose-500/30 text-rose-600 dark:text-rose-400'
+              : 'bg-amber-500/15 border-amber-500/30 text-amber-600 dark:text-amber-400'
         }`}>
           {statusMessage.type === 'success' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
           <span>{statusMessage.text}</span>
         </div>
       )}
 
-      {/* Profile Section */}
-      <section className="bg-[#2a221f] border border-[#3f332c] rounded-[3.5rem] p-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-5">
-          <UserIcon size={120} className="text-orange-500" />
+      {/* Profile Section (Clean, Non-Clipping on Mobile) */}
+      <section className={`border rounded-3xl sm:rounded-[2.5rem] p-5 sm:p-8 shadow-xl relative overflow-hidden transition-colors ${
+        isLight ? 'bg-white border-orange-200 text-stone-900 shadow-orange-500/5' : 'bg-[#2a221f] border-[#3f332c] text-orange-100'
+      }`}>
+        <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+          <UserIcon size={100} className="text-orange-500" />
         </div>
         
-        <div className="flex items-center justify-between mb-10 relative z-10">
-          <div className="flex items-center space-x-6">
-            <div className="w-20 h-20 rounded-[2rem] bg-[#1a1614] border border-[#3f332c] text-orange-500 flex items-center justify-center shadow-inner">
-              <UserIcon size={40} />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8 relative z-10">
+          <div className="flex items-center space-x-4 min-w-0 flex-1">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-500 flex items-center justify-center shadow-inner shrink-0">
+              <UserIcon size={30} />
             </div>
-            <div>
-              <h3 className="text-2xl font-black text-orange-100 italic tracking-tight">{user?.name || 'Learner'}</h3>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-200/20">{user?.email || 'Offline Local Account'}</p>
+            <div className="min-w-0 flex-1">
+              <h3 className={`text-xl sm:text-2xl font-black italic tracking-tight truncate ${
+                isLight ? 'text-stone-900' : 'text-orange-100'
+              }`}>
+                {user?.name || 'Learner'}
+              </h3>
+              <p className={`text-[10px] sm:text-xs font-bold uppercase tracking-[0.15em] truncate ${
+                isLight ? 'text-stone-500' : 'text-orange-200/50'
+              }`}>
+                {user?.email || 'Offline Local Account'}
+              </p>
             </div>
           </div>
           {!user && (
             <button 
               onClick={() => setView('auth')}
-              className="bg-orange-600 text-white px-8 py-4 rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 active:scale-95"
+              className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:from-orange-700 hover:to-amber-700 transition-all shadow-md active:scale-95 shrink-0 cursor-pointer"
             >
               {t.signIn}
             </button>
@@ -362,57 +400,184 @@ export default function Settings() {
         </div>
       </section>
 
-      {/* Distraction Protection & Focus Guide Section */}
+      {/* Screen Balance & Adaptive Study Mode Section */}
       <section className={`rounded-[3.5rem] p-8 sm:p-10 shadow-lg space-y-6 border transition-colors ${
         isLight ? 'bg-white border-orange-200 shadow-orange-500/5' : 'bg-[#2a221f] border-[#3f332c]'
       }`}>
-        <div>
-          <h3 className={`text-lg font-black italic uppercase ${isLight ? 'text-stone-900' : 'text-orange-100'}`}>
-            Distraction Protection & Device Limits
-          </h3>
-          <p className={`text-[10px] uppercase tracking-wider font-bold ${isLight ? 'text-stone-500' : 'text-orange-200/50'}`}>
-            Understanding in-app focus controls versus device-level app blocking
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
+                <Coffee size={18} />
+              </span>
+              <h3 className={`text-lg font-black italic uppercase ${isLight ? 'text-stone-900' : 'text-orange-100'}`}>
+                Screen Balance & Adaptive Study Mode
+              </h3>
+            </div>
+            <p className={`text-[10px] uppercase tracking-wider font-bold mt-1 ${isLight ? 'text-stone-500' : 'text-orange-200/50'}`}>
+              Gently encourages students to take mindful breaks after prolonged continuous study
+            </p>
+          </div>
+
+          {/* Enable / Disable Toggle */}
+          <div className="flex items-center gap-3">
+            <span className={`text-xs font-bold ${isLight ? 'text-stone-700' : 'text-orange-200/80'}`}>
+              {adaptiveStudyConfig.isEnabled ? 'Enabled' : 'Disabled'}
+            </span>
+            <button
+              onClick={() => updateAdaptiveStudyConfig({ isEnabled: !adaptiveStudyConfig.isEnabled })}
+              className={`w-14 h-8 rounded-full p-1 transition-colors cursor-pointer relative ${
+                adaptiveStudyConfig.isEnabled ? 'bg-orange-500' : isLight ? 'bg-stone-300' : 'bg-stone-700'
+              }`}
+              aria-label="Toggle Adaptive Study Mode"
+            >
+              <div className={`w-6 h-6 rounded-full bg-white transition-transform shadow-md ${
+                adaptiveStudyConfig.isEnabled ? 'translate-x-6' : 'translate-x-0'
+              }`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Configuration Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 1. Threshold Selector */}
+          <div className={`p-6 rounded-3xl border space-y-4 ${
+            isLight ? 'bg-orange-50/60 border-orange-200 text-stone-900' : 'bg-[#1a1614] border-[#3f332c] text-orange-100'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                Intervention Threshold
+              </span>
+              <span className="text-xs font-bold text-amber-500">
+                Triggers after {adaptiveStudyConfig.thresholdHours} hours
+              </span>
+            </div>
+            <p className="text-xs leading-relaxed opacity-80">
+              Select how many hours of continuous active study (flashcards, recall, reading) should trigger the gentle 5-minute break intervention:
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {[2, 3].map(hours => (
+                <button
+                  key={hours}
+                  onClick={() => updateAdaptiveStudyConfig({ thresholdHours: hours })}
+                  className={`py-3 px-4 rounded-2xl border text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                    adaptiveStudyConfig.thresholdHours === hours
+                      ? 'bg-orange-500 text-slate-950 border-orange-400 shadow-md font-black'
+                      : isLight 
+                        ? 'bg-white hover:bg-orange-100/60 text-stone-700 border-orange-200' 
+                        : 'bg-[#241c19] hover:bg-[#322722] text-orange-200 border-[#3f332c]'
+                  }`}
+                >
+                  <Clock size={14} />
+                  <span>{hours} Hours {hours === 3 ? '(Default)' : ''}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 2. Active Study Session Tracking & Manual Controls */}
+          <div className={`p-6 rounded-3xl border space-y-4 ${
+            isLight ? 'bg-orange-50/60 border-orange-200 text-stone-900' : 'bg-[#1a1614] border-[#3f332c] text-orange-100'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                Continuous Active Study
+              </span>
+              <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                adaptiveStudyConfig.isTrackingPaused
+                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              }`}>
+                {adaptiveStudyConfig.isTrackingPaused ? 'Paused' : 'Tracking Active'}
+              </span>
+            </div>
+
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-mono font-black">
+                {Math.floor(adaptiveStudyConfig.continuousStudySeconds / 3600)}h{' '}
+                {Math.floor((adaptiveStudyConfig.continuousStudySeconds % 3600) / 60)}m{' '}
+                {adaptiveStudyConfig.continuousStudySeconds % 60}s
+              </span>
+              <span className="text-xs opacity-70">
+                / {adaptiveStudyConfig.thresholdHours}h target
+              </span>
+            </div>
+
+            <p className="text-[11px] leading-relaxed opacity-80">
+              Automatically pauses after 5 minutes of inactivity. Use manual pause when studying from physical books or paper scratchpads:
+            </p>
+
+            <div className="flex items-center gap-2 pt-1">
+              {adaptiveStudyConfig.isTrackingPaused ? (
+                <button
+                  onClick={resumeAdaptiveStudyTracking}
+                  className="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                >
+                  <Play size={14} /> Resume Tracking
+                </button>
+              ) : (
+                <button
+                  onClick={pauseAdaptiveStudyTracking}
+                  className="flex-1 py-2.5 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                >
+                  <Pause size={14} /> Pause Tracking
+                </button>
+              )}
+              <button
+                onClick={resetAdaptiveStudyTimer}
+                className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                  isLight ? 'bg-white hover:bg-stone-100 text-stone-700 border-stone-200' : 'bg-[#241c19] hover:bg-[#322722] text-orange-200 border-[#3f332c]'
+                }`}
+                title="Reset continuous study timer"
+              >
+                <RefreshCw size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Test & Preview Experience */}
+        <div className={`p-6 rounded-3xl border flex flex-wrap items-center justify-between gap-4 ${
+          isLight ? 'bg-amber-50/70 border-amber-200' : 'bg-[#181311] border-[#362923]'
+        }`}>
+          <div className="space-y-1 max-w-xl">
+            <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 text-amber-500">
+              <Eye size={15} /> Preview 5-Minute Grayscale Break Mode
+            </h4>
+            <p className="text-xs leading-relaxed opacity-85">
+              Experience how Memory Shaastra gently dims and shifts to grayscale without locking you out, blocking text, or resetting your study progress.
+            </p>
+          </div>
+
+          <button
+            onClick={triggerManualInterventionTest}
+            className="py-3 px-5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-2"
+          >
+            <Sparkles size={15} /> Test Break Mode Now
+          </button>
+        </div>
+
+        {/* 4. Technical Scope & Device Boundaries Disclosure */}
+        <div className={`p-5 rounded-2xl border text-xs leading-relaxed space-y-2 ${
+          isLight ? 'bg-stone-50 border-stone-200 text-stone-600' : 'bg-[#14100e] border-[#2c221e] text-orange-200/70'
+        }`}>
+          <div className="flex items-center gap-2 font-black text-stone-800 dark:text-orange-200">
+            <Shield size={14} className="text-orange-500" />
+            <span>Technical Scope & Device Limits Disclosure</span>
+          </div>
+          <p>
+            Adaptive Study Mode operates within the <strong>Memory Shaastra web application interface</strong>. Standard web security sandboxes do not permit web apps to alter operating-system-level device settings or forcibly close external apps.
+          </p>
+          <p>
+            Within Memory Shaastra, the feature applies CSS grayscale and modest dimming with a dismissible popup to give your eyes a gentle rest. It never locks your screen, never interrupts phone calls, and never discards your learning progress.
           </p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`p-5 rounded-2xl border space-y-2 ${
-            isLight ? 'bg-orange-50/70 border-orange-200 text-stone-900' : 'bg-[#1a1614] border-[#3f332c] text-orange-100'
-          }`}>
-            <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400">1. In-App Focus Shield</span>
-            <h4 className="text-xs font-bold">Memory Shaastra Workspace</h4>
-            <p className="text-[11px] text-stone-600 dark:text-orange-200/70 leading-relaxed">
-              Silences incoming study toast alerts, suppresses external notifications, and hides non-essential dashboard elements during Study Bubble sessions.
-            </p>
-            <span className="inline-block text-[10px] font-black text-emerald-600 dark:text-emerald-400">
-              ✓ Verified & Active
-            </span>
-          </div>
-
-          <div className={`p-5 rounded-2xl border space-y-2 ${
-            isLight ? 'bg-orange-50/70 border-orange-200 text-stone-900' : 'bg-[#1a1614] border-[#3f332c] text-orange-100'
-          }`}>
-            <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400">2. Device-Level Restrictions</span>
-            <h4 className="text-xs font-bold">OS App Blocking</h4>
-            <p className="text-[11px] text-stone-600 dark:text-orange-200/70 leading-relaxed">
-              Standard web apps cannot forcibly close or block other native phone apps. Use your device's built-in Focus Mode (Android Digital Wellbeing, iOS Focus, Windows Focus) for system-wide blocking.
-            </p>
-            <span className="inline-block text-[10px] font-black text-amber-600 dark:text-amber-400">
-              ℹ Setup via Device Settings
-            </span>
-          </div>
-
-          <div className={`p-5 rounded-2xl border space-y-2 ${
-            isLight ? 'bg-orange-50/70 border-orange-200 text-stone-900' : 'bg-[#1a1614] border-[#3f332c] text-orange-100'
-          }`}>
-            <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400">3. Screen-Time Tracking</span>
-            <h4 className="text-xs font-bold">Digital Wellbeing Dashboard</h4>
-            <p className="text-[11px] text-stone-600 dark:text-orange-200/70 leading-relaxed">
-              Memory Shaastra tracks study learning outcomes, retention rates, and recall consistency, not total device hours. Check your OS screen-time settings for full phone usage logs.
-            </p>
-          </div>
-        </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* KEYBOARD SHORTCUTS REFERENCE & SEARCHABLE TABLE                           */}
+      {/* ========================================================================= */}
+      <ShortcutsTable title="Facility Keyboard Shortcuts" />
 
       {/* Data Safety, Export & Import Backups */}
       <section className={`rounded-[3.5rem] p-8 sm:p-10 shadow-lg space-y-8 border transition-colors ${

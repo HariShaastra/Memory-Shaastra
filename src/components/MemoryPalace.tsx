@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Trash2, Map, Edit2, Play, ChevronLeft, Home, Box, ArrowRight, ArrowLeft, ChevronRight, HelpCircle, Search, X, LayoutGrid, LayoutList, RotateCcw } from 'lucide-react';
-import { MemoryPalace as PalaceType, PalaceLocation } from '../types';
+import { MemoryPalace as PalaceType, PalaceLocation, FileAttachment } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
 import { MaanasMascot } from './MaanasMascot';
 import { MemoryLinker } from './MemoryLinker';
+import { UniversalAttachmentManager } from './UniversalAttachmentManager';
 
 export default function MemoryPalace() {
   const { memoryPalaces, setMemoryPalaces, goBack, allSubjects } = useAppContext();
@@ -25,6 +26,7 @@ export default function MemoryPalace() {
   const [editingLocId, setEditingLocId] = useState<string | null>(null);
   const [newLocName, setNewLocName] = useState('');
   const [newLocConcept, setNewLocConcept] = useState('');
+  const [locAttachments, setLocAttachments] = useState<FileAttachment[]>([]);
 
   const [viewMode, setViewMode] = useState<'grid' | 'line' | 'flip'>('grid');
   const [flipIndex, setFlipIndex] = useState(0);
@@ -101,7 +103,7 @@ export default function MemoryPalace() {
       setMemoryPalaces(memoryPalaces.map(p => 
         p.id === activePalaceId ? {
           ...p,
-          locations: p.locations.map(l => l.id === editingLocId ? { ...l, name: newLocName, concept: newLocConcept } : l)
+          locations: p.locations.map(l => l.id === editingLocId ? { ...l, name: newLocName, concept: newLocConcept, attachments: locAttachments } : l)
         } : p
       ));
       setEditingLocId(null);
@@ -109,7 +111,8 @@ export default function MemoryPalace() {
       const loc: PalaceLocation = {
         id: Date.now().toString(),
         name: newLocName,
-        concept: newLocConcept
+        concept: newLocConcept,
+        attachments: locAttachments
       };
       setMemoryPalaces(memoryPalaces.map(p => 
         p.id === activePalaceId ? { ...p, locations: [...p.locations, loc] } : p
@@ -117,6 +120,7 @@ export default function MemoryPalace() {
     }
     setNewLocName('');
     setNewLocConcept('');
+    setLocAttachments([]);
     setIsAddingLocation(false);
   };
 
@@ -124,6 +128,7 @@ export default function MemoryPalace() {
     setEditingLocId(loc.id);
     setNewLocName(loc.name);
     setNewLocConcept(loc.concept);
+    setLocAttachments(loc.attachments || []);
     setIsAddingLocation(true);
     scrollToLocForm();
   };
@@ -631,36 +636,46 @@ export default function MemoryPalace() {
                 ref={locFormRef}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-[#2a221f] p-10 rounded-[3.5rem] border border-[#3f332c] flex flex-col md:flex-row gap-8 items-end shadow-2xl"
+                className="bg-[#2a221f] p-8 sm:p-10 rounded-[3rem] border border-[#3f332c] flex flex-col gap-6 shadow-2xl"
               >
-                <div className="flex-2 w-full space-y-2">
-                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">room/ spot/ item (e.g. Bed)</p>
-                  <input 
-                    type="text"
-                    placeholder="e.g. Wooden Sofa"
-                    value={newLocName}
-                    onChange={(e) => setNewLocName(e.target.value)}
-                    className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-5 px-8 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
-                  />
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1 w-full space-y-2">
+                    <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">Room/ spot/ item (e.g. Bed)</p>
+                    <input 
+                      type="text"
+                      placeholder="e.g. Wooden Sofa"
+                      value={newLocName}
+                      onChange={(e) => setNewLocName(e.target.value)}
+                      className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic text-sm"
+                    />
+                  </div>
+                  <div className="flex-1 w-full space-y-2">
+                    <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">Item to remember</p>
+                    <input 
+                      type="text"
+                      placeholder="e.g. Newton's Law"
+                      value={newLocConcept}
+                      onChange={(e) => setNewLocConcept(e.target.value)}
+                      className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic text-sm"
+                    />
+                  </div>
                 </div>
-                <div className="flex-2 w-full space-y-2">
-                  <p className="text-[10px] uppercase font-black text-orange-200/40 tracking-widest ml-4">Item to remember</p>
-                  <input 
-                    type="text"
-                    placeholder="e.g. Newton's Law"
-                    value={newLocConcept}
-                    onChange={(e) => setNewLocConcept(e.target.value)}
-                    className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-5 px-8 font-black text-orange-100 outline-none focus:ring-2 focus:ring-orange-500 italic"
-                  />
-                </div>
-                <div className="flex gap-4 shrink-0 mb-1">
+
+                {/* Multimedia Attachments */}
+                <UniversalAttachmentManager
+                  attachments={locAttachments}
+                  onChange={setLocAttachments}
+                  title="Location Media (Audio, Photos, Videos, Documents, Links)"
+                />
+
+                <div className="flex justify-end gap-3 pt-2">
                   <button 
-                    onClick={() => { setIsAddingLocation(false); setEditingLocId(null); }} 
+                    onClick={() => { setIsAddingLocation(false); setEditingLocId(null); setLocAttachments([]); }} 
                     className="px-5 py-2.5 text-xs font-bold text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white bg-stone-200/80 dark:bg-stone-800/80 hover:bg-stone-300 dark:hover:bg-stone-700 rounded-xl transition-all border border-stone-300 dark:border-stone-700"
                   >
                     Cancel
                   </button>
-                  <button onClick={addLocation} className="px-10 py-5 bg-emerald-500 text-white rounded-[1.5rem] font-black text-[10px] uppercase shadow-xl shadow-emerald-500/20 active:scale-95">Save</button>
+                  <button onClick={addLocation} className="px-10 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-lg active:scale-95 transition-all">Save Element</button>
                 </div>
               </motion.div>
             )}
@@ -698,6 +713,16 @@ export default function MemoryPalace() {
                   <p className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-500">Item to remember</p>
                   <p className="font-black text-orange-100/70 italic text-lg line-clamp-2 leading-tight">"{loc.concept}"</p>
                 </div>
+                {loc.attachments && loc.attachments.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-[#3f332c]">
+                    <UniversalAttachmentManager
+                      attachments={loc.attachments}
+                      onChange={() => {}}
+                      readOnly
+                      title="Location Attachments"
+                    />
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>

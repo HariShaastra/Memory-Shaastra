@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, onAuthStateChanged } from '../firebase';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { auth, onAuthStateChanged, signOut } from '../firebase';
 import { 
   User, 
   AppView, 
@@ -16,9 +16,23 @@ import {
   AppNotification,
   MemoryLink,
   ActivityEvent,
-  ScheduledRevisionTask
+  ScheduledRevisionTask,
+  StudySessionLog,
+  AdaptiveStudyConfig
 } from '../types';
 import { calculateSM2 } from '../utils/learningScience';
+import { 
+  DEMO_FLASHCARDS, 
+  DEMO_MNEMONICS, 
+  DEMO_PALACES, 
+  DEMO_LINK_CHAINS, 
+  DEMO_STORY_CHAINS, 
+  DEMO_FIRST_LETTER, 
+  DEMO_STUDY_TASKS, 
+  DEMO_SCHEDULED_REVISIONS, 
+  DEMO_EXAM_PLANS, 
+  DEMO_STUDY_MATERIALS 
+} from '../utils/cleanDemoData';
 
 interface ActiveFocusTask {
   title: string;
@@ -121,6 +135,40 @@ interface AppContextType {
   ) => void;
   markAsRead: (id: string) => void;
   clearAllNotifications: () => void;
+
+  // Study Session Logs & History
+  studySessionLogs: StudySessionLog[];
+  addStudySessionLog: (log: Omit<StudySessionLog, 'id'>) => void;
+  clearStudySessionLogs: () => void;
+  lastActiveSession: { subject: string; topic: string; durationMinutes: number; timestamp: string } | null;
+  saveLastActiveSession: (info: { subject: string; topic: string; durationMinutes: number }) => void;
+
+  // Adaptive Study Mode & Screen Balance
+  adaptiveStudyConfig: AdaptiveStudyConfig;
+  updateAdaptiveStudyConfig: (config: Partial<AdaptiveStudyConfig>) => void;
+  pauseAdaptiveStudyTracking: () => void;
+  resumeAdaptiveStudyTracking: () => void;
+  dismissAdaptiveIntervention: () => void;
+  triggerManualInterventionTest: () => void;
+  resetAdaptiveStudyTimer: () => void;
+
+  // Backward compatibility alias for socialBlockerConfig
+  socialBlockerConfig: {
+    blockedApps: string[];
+    studyAccounts: string[];
+    dailyLimitMinutes: number;
+    isEnabled: boolean;
+  };
+  updateSocialBlockerConfig: (config: Partial<{
+    blockedApps: string[];
+    studyAccounts: string[];
+    dailyLimitMinutes: number;
+    isEnabled: boolean;
+  }>) => void;
+
+  // Wellbeing Coach Widget
+  wellbeingCoachEnabled: boolean;
+  setWellbeingCoachEnabled: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -134,6 +182,21 @@ function safeLoadFromStorage<T>(key: string, fallback: T): T {
   } catch (err) {
     console.warn(`Failed to parse localStorage key "${key}", using fallback:`, err);
     return fallback;
+  }
+}
+
+const DEMO_RESET_KEY = 'ms_demo_v4_clean_single';
+if (typeof window !== 'undefined' && !localStorage.getItem(DEMO_RESET_KEY)) {
+  try {
+    [
+      'ms_study_tasks', 'ms_mnemonics', 'ms_memory_palaces', 'ms_link_chains',
+      'ms_story_chains', 'ms_first_letter', 'ms_flashcards', 'ms_exam_plans',
+      'ms_study_materials', 'ms_activity_events', 'ms_scheduled_revisions',
+      'ms_study_session_logs', 'ms_last_active_session'
+    ].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem(DEMO_RESET_KEY, 'true');
+  } catch (e) {
+    console.warn('Could not reset demo cache:', e);
   }
 }
 
@@ -228,59 +291,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     safeLoadFromStorage<number[]>('ms_revision_intervals', [1, 3, 7, 14, 30])
   );
 
-  // Calendar Activity Events
+  // Calendar Activity Events: Exactly ONE general demo event
   const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>(() =>
     safeLoadFromStorage<ActivityEvent[]>('ms_activity_events', [
-      { id: 'a1', title: 'Created Flashcard Deck', type: 'flashcard', createdAt: new Date(Date.now() - 86400000 * 2).toISOString(), description: 'Active Recall & Spaced Repetition' },
-      { id: 'a2', title: 'Created Mnemonic: Order of Planets', type: 'mnemonic', createdAt: new Date(Date.now() - 86400000 * 4).toISOString(), description: 'My Very Educated Mother Just Served Us Noodles' }
+      { 
+        id: 'demo_act_general', 
+        title: 'Spaced Recall Sprint', 
+        type: 'flashcard', 
+        createdAt: new Date().toISOString(), 
+        description: 'Completed 25m focus sprint and flashcard retrieval' 
+      }
     ])
   );
 
-  // Scheduled Revision Tasks (Intervals 1, 3, 7, 14, 30 days)
-  const [scheduledRevisions, setScheduledRevisions] = useState<ScheduledRevisionTask[]>(() => {
-    const saved = safeLoadFromStorage<ScheduledRevisionTask[] | null>('ms_scheduled_revisions', null);
-    if (Array.isArray(saved)) return saved;
-
-    // Initial default scheduled items for immediate usage
-    const today = new Date();
-    const formatDate = (d: Date) => d.toISOString().split('T')[0];
-    const day1 = new Date(today); day1.setDate(today.getDate() + 1);
-    const day3 = new Date(today); day3.setDate(today.getDate() + 3);
-    const day7 = new Date(today); day7.setDate(today.getDate() + 7);
-
-    return [
-      {
-        id: 'sr1',
-        activityId: 'a1',
-        itemTitle: 'Flashcards: Active Recall & Spaced Repetition',
-        itemType: 'flashcard',
-        dueDate: formatDate(today),
-        intervalDays: 1,
-        completed: false,
-        durationMinutes: 15
-      },
-      {
-        id: 'sr2',
-        activityId: 'a2',
-        itemTitle: 'Mnemonic: Order of Planets',
-        itemType: 'mnemonic',
-        dueDate: formatDate(day1),
-        intervalDays: 3,
-        completed: false,
-        durationMinutes: 10
-      },
-      {
-        id: 'sr3',
-        activityId: 'a1',
-        itemTitle: 'Flashcards: Key Memory Science',
-        itemType: 'flashcard',
-        dueDate: formatDate(day3),
-        intervalDays: 7,
-        completed: false,
-        durationMinutes: 20
-      }
-    ];
-  });
+  // Scheduled Revision Tasks: Exactly ONE general demo scheduled item
+  const [scheduledRevisions, setScheduledRevisions] = useState<ScheduledRevisionTask[]>(() =>
+    safeLoadFromStorage<ScheduledRevisionTask[]>('ms_scheduled_revisions', DEMO_SCHEDULED_REVISIONS)
+  );
 
   // Focus Timer active task
   const [activeFocusTask, setActiveFocusTask] = useState<ActiveFocusTask | null>(null);
@@ -380,51 +407,293 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNotifications([]);
   };
 
-  // Other Core Data State
-  const [studyTasks, setStudyTasks] = useState<StudyTask[]>(() =>
-    safeLoadFromStorage<StudyTask[]>('ms_study_tasks', [
-      { id: 'st1', subject: 'Economics', topic: 'Monetary Policy & Inflation Rates', plannedDate: new Date().toISOString().split('T')[0], estimatedTime: '30 mins', completed: false },
-      { id: 'st2', subject: 'Memory Science', topic: 'Loci Visualizations & Mind Palaces', plannedDate: new Date().toISOString().split('T')[0], estimatedTime: '25 mins', completed: true }
-    ])
-  );
-
-  const [mnemonics, setMnemonics] = useState<Mnemonic[]>(() =>
-    safeLoadFromStorage<Mnemonic[]>('ms_mnemonics', [
-      { id: '1', title: 'Order of Planets', phrase: 'My Very Educated Mother Just Served Us Noodles' },
-      { id: '2', title: 'Taxonomy Ranks', phrase: 'Dear King Philip Came Over For Good Soup' },
-    ])
-  );
-
-  const [memoryPalaces, setMemoryPalaces] = useState<MemoryPalace[]>(() =>
-    safeLoadFromStorage<MemoryPalace[]>('ms_memory_palaces', [
-      { 
-        id: 'p1', 
-        name: 'Grand Living Room', 
-        locations: [
-          { id: 'l1', name: 'Front Entrance Door', concept: 'Photosynthesis Phase I' },
-          { id: 'l2', name: 'Center Foyer Sofa', concept: 'Calvin Cycle Enzyme Step' }
-        ] 
+  // Study Session Logs & History: Exactly ONE general demo session log
+  const [studySessionLogs, setStudySessionLogs] = useState<StudySessionLog[]>(() =>
+    safeLoadFromStorage<StudySessionLog[]>('ms_study_session_logs', [
+      {
+        id: 'ssl_demo_general',
+        date: new Date().toISOString().split('T')[0],
+        startTime: new Date(Date.now() - 1500000).toISOString(),
+        endTime: new Date().toISOString(),
+        durationMinutes: 25,
+        durationSeconds: 1500,
+        subject: 'General Study',
+        topic: 'How to Study with Memory Shaastra',
+        goal: 'Complete 25-minute sprint and test recall with flashcards',
+        completed: true,
+        mode: 'timer',
+        activitiesDone: ['25m sprint completed', 'Tested 1 flashcard deck', 'Distraction shield active'],
+        notes: 'Session logged automatically. Tap 1-Click Copy to export summary to your study journal.'
       }
     ])
   );
 
+  const addStudySessionLog = (logData: Omit<StudySessionLog, 'id'>) => {
+    const newLog: StudySessionLog = {
+      ...logData,
+      id: 'ssl_' + Math.random().toString(36).substr(2, 9)
+    };
+    setStudySessionLogs(prev => {
+      const next = [newLog, ...prev];
+      safeSaveToStorage('ms_study_session_logs', next);
+      return next;
+    });
+  };
+
+  const clearStudySessionLogs = () => {
+    setStudySessionLogs([]);
+    safeSaveToStorage('ms_study_session_logs', []);
+  };
+
+  // Last Active Session for 3-Second Quick-Start (Single general starting item)
+  const [lastActiveSession, setLastActiveSession] = useState<{ subject: string; topic: string; durationMinutes: number; timestamp: string } | null>(() =>
+    safeLoadFromStorage('ms_last_active_session', {
+      subject: 'General Study',
+      topic: 'How to Study with Memory Shaastra',
+      durationMinutes: 25,
+      timestamp: new Date().toISOString()
+    })
+  );
+
+  const saveLastActiveSession = (info: { subject: string; topic: string; durationMinutes: number }) => {
+    const record = { ...info, timestamp: new Date().toISOString() };
+    setLastActiveSession(record);
+    safeSaveToStorage('ms_last_active_session', record);
+  };
+
+  // Adaptive Study Mode & Screen Balance State
+  const [adaptiveStudyConfig, setAdaptiveStudyConfig] = useState<AdaptiveStudyConfig>(() =>
+    safeLoadFromStorage<AdaptiveStudyConfig>('ms_adaptive_study_config', {
+      isEnabled: true,
+      thresholdHours: 3,
+      continuousStudySeconds: 0,
+      isTrackingPaused: false,
+      isInterventionActive: false,
+      interventionSecondsRemaining: 300,
+      lastInterventionTimestamp: undefined
+    })
+  );
+
+  const lastActivityTimestampRef = useRef<number>(Date.now());
+  const nextInterventionTargetSecondsRef = useRef<number>(adaptiveStudyConfig.thresholdHours * 3600);
+
+  // Keep target in sync if thresholdHours changes
+  useEffect(() => {
+    nextInterventionTargetSecondsRef.current = Math.max(
+      adaptiveStudyConfig.continuousStudySeconds + 1,
+      adaptiveStudyConfig.thresholdHours * 3600
+    );
+  }, [adaptiveStudyConfig.thresholdHours]);
+
+  // Track active user input across the app
+  useEffect(() => {
+    const recordActivity = () => {
+      lastActivityTimestampRef.current = Date.now();
+    };
+
+    const events = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll', 'click'];
+    events.forEach(evt => window.addEventListener(evt, recordActivity, { passive: true }));
+    return () => {
+      events.forEach(evt => window.removeEventListener(evt, recordActivity));
+    };
+  }, []);
+
+  // Continuous active study tracking & 5-minute break intervention ticker
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAdaptiveStudyConfig(prev => {
+        // If intervention is active: countdown 5 minutes
+        if (prev.isInterventionActive) {
+          const nextRemaining = prev.interventionSecondsRemaining - 1;
+          if (nextRemaining <= 0) {
+            // 5 minutes finished -> automatic restoration of normal appearance!
+            // Do NOT reset study timer; next intervention after +60m (3600s) continuous study
+            nextInterventionTargetSecondsRef.current = prev.continuousStudySeconds + 3600;
+            const updated: AdaptiveStudyConfig = {
+              ...prev,
+              isInterventionActive: false,
+              interventionSecondsRemaining: 300,
+              lastInterventionTimestamp: Date.now()
+            };
+            safeSaveToStorage('ms_adaptive_study_config', updated);
+            return updated;
+          }
+          return {
+            ...prev,
+            interventionSecondsRemaining: nextRemaining
+          };
+        }
+
+        // Check if enabled and tracking is not manually paused
+        if (!prev.isEnabled || prev.isTrackingPaused) {
+          return prev;
+        }
+
+        // Check inactivity: auto-pause after 5 minutes of no activity
+        const now = Date.now();
+        const inactiveMs = now - lastActivityTimestampRef.current;
+        const isInactive = inactiveMs > 5 * 60 * 1000;
+        if (isInactive) {
+          return prev;
+        }
+
+        // Active study views list: active recall, revision, practice, reading during learning session
+        const studyViews: AppView[] = [
+          'focus', 'study-bubble', 'flashcards', 'mnemonics', 'palace', 
+          'linking', 'story', 'first-letter', 'self-test', 'ai-tester', 
+          'rescue-queue', 'library', 'scheduler'
+        ];
+
+        // Only increment during declared learning/study sessions
+        if (!studyViews.includes(currentView)) {
+          return prev;
+        }
+
+        const nextContinuousSeconds = prev.continuousStudySeconds + 1;
+
+        // Check if intervention threshold reached
+        if (nextContinuousSeconds >= nextInterventionTargetSecondsRef.current) {
+          const updated: AdaptiveStudyConfig = {
+            ...prev,
+            continuousStudySeconds: nextContinuousSeconds,
+            isInterventionActive: true,
+            interventionSecondsRemaining: 300,
+            lastInterventionTimestamp: Date.now()
+          };
+          safeSaveToStorage('ms_adaptive_study_config', updated);
+          return updated;
+        }
+
+        const updated: AdaptiveStudyConfig = {
+          ...prev,
+          continuousStudySeconds: nextContinuousSeconds
+        };
+        if (nextContinuousSeconds % 10 === 0) {
+          safeSaveToStorage('ms_adaptive_study_config', updated);
+        }
+        return updated;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [currentView]);
+
+  const updateAdaptiveStudyConfig = (config: Partial<AdaptiveStudyConfig>) => {
+    setAdaptiveStudyConfig(prev => {
+      const next = { ...prev, ...config };
+      if (config.thresholdHours !== undefined) {
+        nextInterventionTargetSecondsRef.current = Math.max(
+          next.continuousStudySeconds + 1,
+          config.thresholdHours * 3600
+        );
+      }
+      safeSaveToStorage('ms_adaptive_study_config', next);
+      return next;
+    });
+  };
+
+  const pauseAdaptiveStudyTracking = () => {
+    updateAdaptiveStudyConfig({ isTrackingPaused: true });
+  };
+
+  const resumeAdaptiveStudyTracking = () => {
+    lastActivityTimestampRef.current = Date.now();
+    updateAdaptiveStudyConfig({ isTrackingPaused: false });
+  };
+
+  const dismissAdaptiveIntervention = () => {
+    setAdaptiveStudyConfig(prev => {
+      nextInterventionTargetSecondsRef.current = prev.continuousStudySeconds + 3600;
+      const next: AdaptiveStudyConfig = {
+        ...prev,
+        isInterventionActive: false,
+        interventionSecondsRemaining: 300,
+        lastInterventionTimestamp: Date.now()
+      };
+      safeSaveToStorage('ms_adaptive_study_config', next);
+      return next;
+    });
+  };
+
+  const triggerManualInterventionTest = () => {
+    setAdaptiveStudyConfig(prev => {
+      const next: AdaptiveStudyConfig = {
+        ...prev,
+        isInterventionActive: true,
+        interventionSecondsRemaining: 300
+      };
+      safeSaveToStorage('ms_adaptive_study_config', next);
+      return next;
+    });
+  };
+
+  const resetAdaptiveStudyTimer = () => {
+    setAdaptiveStudyConfig(prev => {
+      nextInterventionTargetSecondsRef.current = prev.thresholdHours * 3600;
+      const next: AdaptiveStudyConfig = {
+        ...prev,
+        continuousStudySeconds: 0,
+        isInterventionActive: false,
+        interventionSecondsRemaining: 300
+      };
+      safeSaveToStorage('ms_adaptive_study_config', next);
+      return next;
+    });
+  };
+
+  // Legacy fallback config for backward compatibility
+  const [socialBlockerConfig, setSocialBlockerConfig] = useState(() =>
+    safeLoadFromStorage('ms_social_blocker_config', {
+      blockedApps: ['YouTube & Shorts', 'Instagram & Reels', 'Facebook', 'X (Twitter)', 'Snapchat', 'Reddit', 'TikTok'],
+      studyAccounts: ['@KhanAcademy', '@CrashCourse', '@MITOpenCourseWare', '@MemoryShaastraOfficial'],
+      dailyLimitMinutes: 180,
+      isEnabled: true
+    })
+  );
+
+  const updateSocialBlockerConfig = (config: any) => {
+    setSocialBlockerConfig(prev => {
+      const next = { ...prev, ...config };
+      safeSaveToStorage('ms_social_blocker_config', next);
+      return next;
+    });
+  };
+
+  // Wellbeing Coach Widget
+  const [wellbeingCoachEnabled, setWellbeingCoachEnabled] = useState<boolean>(() =>
+    safeLoadFromStorage<boolean>('ms_wellbeing_coach_enabled', true)
+  );
+  useEffect(() => {
+    safeSaveToStorage('ms_wellbeing_coach_enabled', wellbeingCoachEnabled);
+  }, [wellbeingCoachEnabled]);
+
+  // Clean, Simple Pedagogical Demo Data Fallback for Guests
+  const [studyTasks, setStudyTasks] = useState<StudyTask[]>(() =>
+    safeLoadFromStorage<StudyTask[]>('ms_study_tasks', DEMO_STUDY_TASKS)
+  );
+
+  const [mnemonics, setMnemonics] = useState<Mnemonic[]>(() =>
+    safeLoadFromStorage<Mnemonic[]>('ms_mnemonics', DEMO_MNEMONICS)
+  );
+
+  const [memoryPalaces, setMemoryPalaces] = useState<MemoryPalace[]>(() =>
+    safeLoadFromStorage<MemoryPalace[]>('ms_memory_palaces', DEMO_PALACES)
+  );
+
   const [linkChains, setLinkChains] = useState<LinkChain[]>(() =>
-    safeLoadFromStorage<LinkChain[]>('ms_link_chains', [])
+    safeLoadFromStorage<LinkChain[]>('ms_link_chains', DEMO_LINK_CHAINS)
   );
 
   const [storyChains, setStoryChains] = useState<LinkChain[]>(() =>
-    safeLoadFromStorage<LinkChain[]>('ms_story_chains', [])
+    safeLoadFromStorage<LinkChain[]>('ms_story_chains', DEMO_STORY_CHAINS)
   );
 
   const [firstLetterEntries, setFirstLetterEntries] = useState<FirstLetterAid[]>(() =>
-    safeLoadFromStorage<FirstLetterAid[]>('ms_first_letter', [])
+    safeLoadFromStorage<FirstLetterAid[]>('ms_first_letter', DEMO_FIRST_LETTER)
   );
 
   const [flashcards, setFlashcards] = useState<Flashcard[]>(() =>
-    safeLoadFromStorage<Flashcard[]>('ms_flashcards', [
-      { id: '1', question: 'What is Active Recall?', answer: 'A learning technique that involves testing yourself on information to strengthen memory pathways.', difficulty: 'medium', nextReview: new Date().toISOString(), interval: 0, easeFactor: 2.5 },
-      { id: '2', question: 'Explain Spaced Repetition.', answer: 'Reviewing information at increasing intervals (1, 3, 7, 14, 30 days) to prevent forgetting.', difficulty: 'easy', nextReview: new Date().toISOString(), interval: 0, easeFactor: 2.5 },
-    ])
+    safeLoadFromStorage<Flashcard[]>('ms_flashcards', DEMO_FLASHCARDS)
   );
 
   const [revisions, setRevisions] = useState<Revision[]>(() =>
@@ -432,145 +701,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 
   const [examPlans, setExamPlans] = useState<ExamPlan[]>(() =>
-    safeLoadFromStorage<ExamPlan[]>('ms_exam_plans', [
-      {
-        id: 'ep1',
-        title: 'CA Inter Exam Plan',
-        examDate: '2026-04-30',
-        isActive: true,
-        subjects: [
-          {
-            id: 'es1',
-            name: 'Advanced Accounts',
-            chapters: [
-              {
-                id: 'ec1',
-                name: 'Accounting Standards & Financial Statements',
-                completed: false,
-                topics: [
-                  {
-                    id: 'et1',
-                    name: 'AS-15 Employee Benefits & AS-28 Impairment',
-                    completed: false,
-                    subTopics: [
-                      { id: 'est1', name: 'Actuarial Valuations & Defined Benefits', completed: true },
-                      { id: 'est2', name: 'Cash Generating Units (CGU) Valuation', completed: false }
-                    ]
-                  }
-                ]
-              },
-              {
-                id: 'ec2',
-                name: 'Consolidated Financial Statements',
-                completed: false,
-                topics: [
-                  {
-                    id: 'et2',
-                    name: 'Holding & Subsidiary Companies Equity',
-                    completed: false,
-                    subTopics: [
-                      { id: 'est3', name: 'Non-Controlling Interest (NCI) Calculation', completed: false }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            id: 'es2',
-            name: 'Corporate & Other Laws',
-            chapters: [
-              {
-                id: 'ec3',
-                name: 'Companies Act, 2013',
-                completed: false,
-                topics: [
-                  {
-                    id: 'et3',
-                    name: 'Management & Administration',
-                    completed: false,
-                    subTopics: [
-                      { id: 'est4', name: 'Annual General Meeting (AGM) Rules', completed: true },
-                      { id: 'est5', name: 'Board Meeting Quorum & Resolutions', completed: false }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            id: 'es3',
-            name: 'Taxation & GST',
-            chapters: [
-              {
-                id: 'ec4',
-                name: 'Goods & Services Tax (GST)',
-                completed: false,
-                topics: [
-                  {
-                    id: 'et4',
-                    name: 'Input Tax Credit (ITC) Mechanism',
-                    completed: false,
-                    subTopics: [
-                      { id: 'est6', name: 'Blocked Credits under Sec 17(5)', completed: false }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        phases: [],
-        revisionSchedule: []
-      }
-    ])
+    safeLoadFromStorage<ExamPlan[]>('ms_exam_plans', DEMO_EXAM_PLANS)
   );
 
-  const [studyMaterials, setStudyMaterials] = useState<StudyMaterial[]>(() => {
-    try {
-      const saved = localStorage.getItem('ms_study_materials');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (e) {
-      console.warn('Error reading study materials:', e);
-    }
-    const sampleGuideText = `MEMORY SHAASTRA - SCIENTIFIC STUDY & RECALL REFERENCE GUIDE
-====================================================================
-
-1. SPACED REPETITION (SM-2 INTERVALS)
-   - Review 1: +1 Day after initial learning
-   - Review 2: +3 Days after initial learning
-   - Review 3: +7 Days after initial learning
-   - Review 4: +14 Days after initial learning
-   - Review 5: +30 Days after initial learning
-
-2. CORE VISUAL MEMORY PEGS
-   - Method of Loci (Memory Palace): Anchor abstract concepts to familiar physical rooms.
-   - Link & Story Method: Chain sequential exam points into vivid, unforgettable narratives.
-   - First-Letter Mnemonics: Condense multi-part definitions into rapid-recall acronyms.`;
-
-    return [
-      {
-        id: 'sample_doc_1',
-        title: 'Memory Shaastra Core Study & Recall Reference Guide',
-        content: 'Complete summary of SM-2 spaced repetition intervals (1d, 3d, 7d, 14d, 30d), Method of Loci (Memory Palace), Associative Linking Chains, and Feynman Simplification strategies.',
-        groupName: 'Science & Medical',
-        subgroupName: 'Physics',
-        createdAt: new Date().toISOString(),
-        attachments: [
-          {
-            id: 'att_sample_1',
-            name: 'Memory_Shaastra_Reference_Guide.txt',
-            type: 'file',
-            url: 'data:text/plain;charset=utf-8,' + encodeURIComponent(sampleGuideText),
-            size: sampleGuideText.length
-          }
-        ]
-      } as any
-    ];
-  });
+  const [studyMaterials, setStudyMaterials] = useState<StudyMaterial[]>(() =>
+    safeLoadFromStorage<StudyMaterial[]>('ms_study_materials', DEMO_STUDY_MATERIALS)
+  );
 
   const [memoryLinks, setMemoryLinks] = useState<MemoryLink[]>(() =>
     safeLoadFromStorage<MemoryLink[]>('ms_memory_links', [])
@@ -974,7 +1110,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setNotifications,
       addNotification,
       markAsRead,
-      clearAllNotifications
+      clearAllNotifications,
+      studySessionLogs,
+      addStudySessionLog,
+      clearStudySessionLogs,
+      lastActiveSession,
+      saveLastActiveSession,
+      adaptiveStudyConfig,
+      updateAdaptiveStudyConfig,
+      pauseAdaptiveStudyTracking,
+      resumeAdaptiveStudyTracking,
+      dismissAdaptiveIntervention,
+      triggerManualInterventionTest,
+      resetAdaptiveStudyTimer,
+      socialBlockerConfig,
+      updateSocialBlockerConfig,
+      wellbeingCoachEnabled,
+      setWellbeingCoachEnabled
     }}>
       {children}
     </AppContext.Provider>

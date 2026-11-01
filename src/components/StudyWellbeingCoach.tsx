@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, Sparkles, HeartHandshake, ShieldAlert, Smile, Frown, Meh, Zap, Coffee, Clock, Brain, Loader2 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { aiGetWellbeingAdvice } from '../utils/aiClient';
+import { getWellbeingAdvice } from '../utils/studyEngine';
 import { triggerCompletionCelebration } from '../utils/confetti';
 
 export default function StudyWellbeingCoach() {
@@ -22,7 +22,7 @@ export default function StudyWellbeingCoach() {
     setLoading(true);
     setError(null);
     try {
-      const res = await aiGetWellbeingAdvice(sessionMinutes, recallAccuracy, mood, notes);
+      const res = await getWellbeingAdvice(sessionMinutes, recallAccuracy, mood, notes);
       setAdvice(res);
       triggerCompletionCelebration();
     } catch (err: any) {
@@ -63,7 +63,7 @@ export default function StudyWellbeingCoach() {
             <h1 className={`text-2xl sm:text-3xl font-black italic tracking-tight ${
               isLight ? 'text-stone-900' : 'text-amber-100'
             }`}>
-              AI Study Wellbeing Coach
+              Study Wellbeing Coach
             </h1>
             <p className={`text-xs mt-0.5 leading-relaxed ${
               isLight ? 'text-stone-600' : 'text-orange-200/60'
@@ -80,7 +80,7 @@ export default function StudyWellbeingCoach() {
         }`}>
           <ShieldAlert size={20} className="shrink-0 text-amber-500 mt-0.5" />
           <p className="leading-relaxed">
-            <strong>Wellbeing Guidance:</strong> Memory Shaastra supports academic endurance and healthy pacing. The AI Coach helps prevent study burnout and recommends optimal break rhythms.
+            <strong>Wellbeing Guidance:</strong> Memory Shaastra supports academic endurance and healthy pacing. The Wellbeing Coach helps prevent study burnout and recommends optimal break rhythms.
           </p>
         </div>
       </div>

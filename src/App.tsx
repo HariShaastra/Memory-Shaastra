@@ -18,19 +18,32 @@ import Settings from './components/Settings';
 import { ExamMode } from './components/ExamMode';
 import Library from './components/Library';
 import RescueQueue from './components/RescueQueue';
-import AiTester from './components/AiTester';
-import ConceptSimplifier from './components/ConceptSimplifier';
+import SelfTestFacility from './components/SelfTestFacility';
+import PromptFormatterFacility from './components/PromptFormatterFacility';
+import StudySessionLogs from './components/StudySessionLogs';
 import MemoryDna from './components/MemoryDna';
 import StudyWellbeingCoach from './components/StudyWellbeingCoach';
 import StudyBubble from './components/StudyBubble';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Menu, Sparkles, LogOut, LogIn, User as UserIcon, Play, Shield, Brain, Info, CheckCircle2, X, BellOff, Lock, Home, Calendar as CalendarIcon, BookOpen, Book, Target, LayoutGrid } from 'lucide-react';
+import { ArrowLeft, Menu, Sparkles, LogOut, LogIn, User as UserIcon, Play, Shield, Brain, Info, CheckCircle2, X, BellOff, Lock, Home, Calendar as CalendarIcon, BookOpen, Book, Target, LayoutGrid, Coffee, Eye } from 'lucide-react';
 import { t } from './utils/translations';
 import { CalendarView } from './components/CalendarView';
 import { distractionShield } from './utils/distractionShield';
+import { BookmarksBar } from './components/BookmarksBar';
+import { FACILITY_SHORTCUTS } from './utils/shortcuts';
 
 function AppContent() {
-  const { currentView, goBack, setView, theme, user, signOutUser, startStudyNow } = useApp();
+  const { 
+    currentView, 
+    goBack, 
+    setView, 
+    theme, 
+    user, 
+    signOutUser, 
+    startStudyNow,
+    adaptiveStudyConfig,
+    dismissAdaptiveIntervention
+  } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false);
   const [isFocusShieldActive, setIsFocusShieldActive] = React.useState(true);
@@ -60,6 +73,68 @@ function AppContent() {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [currentView]);
 
+  const [shortcutToast, setShortcutToast] = React.useState<{ label: string; key: string } | null>(null);
+
+  // Global Keyboard Shortcuts for All 21 Facilities
+  React.useEffect(() => {
+    // Keep window focused on interactions so shortcuts always receive keydown events
+    const ensureFocus = () => {
+      const activeEl = document.activeElement;
+      if (!activeEl || activeEl === document.body) {
+        window.focus();
+      }
+    };
+    window.addEventListener('click', ensureFocus);
+    window.addEventListener('pointerdown', ensureFocus);
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept if student is currently typing in an input, textarea, or contentEditable
+      const target = e.target as HTMLElement;
+      if (
+        target instanceof HTMLInputElement || 
+        target instanceof HTMLTextAreaElement || 
+        target instanceof HTMLSelectElement ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+
+      // Check for Alt combinations (supports Alt + Key, Alt + Shift + Key, and Ctrl + Alt + Key)
+      if ((e.altKey || (e.ctrlKey && e.altKey)) && !e.metaKey) {
+        const pressedKey = (e.key || '').toUpperCase();
+        const pressedCode = e.code || '';
+
+        const match = FACILITY_SHORTCUTS.find(s => {
+          const letter = s.code.replace('Key', '').toUpperCase();
+          return (
+            s.code === pressedCode ||
+            (pressedKey && pressedKey === letter) ||
+            (pressedCode && s.code.toLowerCase() === pressedCode.toLowerCase())
+          );
+        });
+
+        if (match) {
+          e.preventDefault();
+          e.stopPropagation();
+          setView(match.id);
+          setShortcutToast({ label: match.label, key: match.keyDisplay });
+          setTimeout(() => setShortcutToast(null), 2500);
+        }
+      }
+    };
+
+    // Attach to both window and document with capture: true to guarantee intercept
+    window.addEventListener('keydown', handleGlobalKeyDown, { capture: true });
+    document.addEventListener('keydown', handleGlobalKeyDown, { capture: true });
+
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true });
+      document.removeEventListener('keydown', handleGlobalKeyDown, { capture: true });
+      window.removeEventListener('click', ensureFocus);
+      window.removeEventListener('pointerdown', ensureFocus);
+    };
+  }, [setView]);
+
   // Render view router
   const renderView = () => {
     switch (currentView) {
@@ -80,10 +155,14 @@ function AppContent() {
       case 'settings': return <Settings />;
       case 'library': return <Library />;
       case 'rescue-queue': return <RescueQueue />;
-      case 'ai-tester': return <AiTester />;
-      case 'simplifier': return <ConceptSimplifier />;
+      case 'self-test': return <SelfTestFacility />;
+      case 'simplifier': return <PromptFormatterFacility />;
+      case 'prompt-formatter': return <PromptFormatterFacility />;
       case 'memory-dna': return <MemoryDna />;
       case 'wellbeing': return <StudyWellbeingCoach />;
+      case 'study-logs': return <StudySessionLogs />;
+      case 'social-focus': return <Settings />;
+      case 'adaptive-study': return <Settings />;
       default: return <HomeScreen />;
     }
   };
@@ -91,9 +170,17 @@ function AppContent() {
   const showBackButton = currentView !== 'dashboard';
 
   return (
-    <div className={`flex h-screen overflow-hidden font-sans relative transition-colors duration-300 w-full max-w-full ${
-      theme === 'dark' ? 'bg-[#1a1614] text-[#fef3c7]' : 'bg-[#fffaf5] text-stone-900'
-    }`}>
+    <div 
+      style={{
+        filter: adaptiveStudyConfig.isInterventionActive 
+          ? 'grayscale(85%) contrast(90%) brightness(92%)' 
+          : 'none',
+        transition: 'filter 0.8s ease-in-out'
+      }}
+      className={`flex h-screen overflow-hidden font-sans relative transition-colors duration-300 w-full max-w-full ${
+        theme === 'dark' ? 'bg-[#1a1614] text-[#fef3c7]' : 'bg-[#fffaf5] text-stone-900'
+      }`}
+    >
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -115,60 +202,59 @@ function AppContent() {
       <main ref={mainRef} className={`flex-1 overflow-y-auto overflow-x-hidden relative border-l w-full max-w-full transition-colors duration-300 ${
         theme === 'dark' ? 'bg-[#1a1614] border-[#3f332c] text-[#fef3c7]' : 'bg-[#fffaf5] border-orange-200 text-stone-900'
       }`}>
-        {/* TOP RIBBON - SYMMETRIC & RESPONSIVE ACROSS MOBILE, TABLET & DESKTOP */}
-        <header className={`sticky top-0 z-30 px-3 sm:px-5 lg:px-6 py-2.5 border-b shadow-md max-w-full w-full transition-colors duration-300 ${
+        {/* TOP RIBBON - SLEEK, COMPACT & NON-INTRUSIVE ACROSS ALL DEVICES */}
+        <header className={`sticky top-0 z-30 px-2.5 sm:px-5 lg:px-6 py-1.5 sm:py-2 border-b shadow-sm max-w-full w-full transition-colors duration-200 select-none ${
           theme === 'dark' ? 'bg-[#2a221f]/95 backdrop-blur-md text-orange-100 border-[#3f332c]' : 'bg-[#fffaf5]/95 backdrop-blur-md text-slate-900 border-orange-200'
         }`}>
-          {/* Primary Header Row */}
-          <div className="flex items-center justify-between gap-2 sm:gap-3 w-full">
-            {/* Left Group: Menu + Brand + Back */}
-            <div className="flex items-center gap-2 min-w-0 flex-1 sm:flex-initial">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-3 w-full">
+            {/* Left Group: Menu + Back + Brand */}
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 sm:flex-initial">
               <button 
                 onClick={() => setIsSidebarOpen(true)}
-                className={`lg:hidden h-9 w-9 sm:h-10 sm:w-10 rounded-xl border flex items-center justify-center active:scale-95 transition-all shrink-0 cursor-pointer ${
+                className={`lg:hidden h-8 w-8 sm:h-9 sm:w-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all shrink-0 cursor-pointer ${
                   theme === 'dark' ? 'bg-[#1a1614] text-orange-100 hover:bg-[#3f332c] border-[#3f332c]' : 'bg-white text-slate-800 hover:bg-orange-100 border-orange-300'
                 }`}
                 aria-label="Toggle Sidebar"
                 title="Open Navigation Menu"
               >
-                <Menu size={18} />
-              </button>
-
-              {/* Title Button in Top Ribbon leading to Home */}
-              <button
-                onClick={() => setView('dashboard')}
-                className={`h-9 sm:h-10 flex-1 sm:flex-initial flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 sm:px-3.5 rounded-xl border transition-all active:scale-95 group shadow-sm cursor-pointer ${
-                  theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] border-[#3f332c] text-orange-100' : 'bg-orange-100/90 hover:bg-orange-200/80 border-orange-300 text-slate-900'
-                }`}
-              >
-                <Logo size={18} className="group-hover:scale-110 transition-transform shrink-0" />
-                <span className={`font-black text-xs sm:text-sm tracking-tight transition-colors whitespace-nowrap ${
-                  theme === 'dark' ? 'text-orange-100 group-hover:text-orange-400' : 'text-slate-900 group-hover:text-orange-700'
-                }`}>
-                  Memory Shaastra
-                </span>
+                <Menu size={16} />
               </button>
 
               {showBackButton && (
                 <button 
                   onClick={goBack}
-                  className={`hidden sm:flex h-9 sm:h-10 items-center gap-1 transition-colors font-bold uppercase tracking-wider text-[10px] sm:text-xs px-2.5 sm:px-3 rounded-xl border shadow-sm active:scale-95 shrink-0 cursor-pointer ${
+                  className={`h-8 px-2 sm:h-9 sm:px-2.5 flex items-center justify-center gap-1 transition-colors font-bold uppercase tracking-wider text-[10px] sm:text-xs rounded-xl border shadow-sm active:scale-95 shrink-0 cursor-pointer ${
                     theme === 'dark' ? 'text-orange-200 hover:text-white bg-[#1a1614] hover:bg-[#3f332c] border-[#3f332c]' : 'text-slate-800 hover:text-slate-950 bg-white hover:bg-orange-50 border-orange-300'
                   }`}
                   title="Go Back"
                 >
-                  <ArrowLeft size={14} className="shrink-0" />
-                  <span>{t.back}</span>
+                  <ArrowLeft size={13} className="shrink-0" />
+                  <span className="hidden sm:inline">{t.back}</span>
                 </button>
               )}
+
+              {/* Title Button in Top Ribbon leading to Home */}
+              <button
+                onClick={() => setView('dashboard')}
+                className={`h-8 sm:h-9 px-2 sm:px-3 flex items-center justify-start gap-1.5 rounded-xl border transition-all active:scale-95 group shadow-sm cursor-pointer min-w-0 ${
+                  theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] border-[#3f332c] text-orange-100' : 'bg-orange-100/90 hover:bg-orange-200/80 border-orange-300 text-slate-900'
+                }`}
+              >
+                <Logo size={16} className="group-hover:scale-110 transition-transform shrink-0" />
+                <span className={`font-black text-xs sm:text-sm tracking-tight transition-colors truncate ${
+                  theme === 'dark' ? 'text-orange-100 group-hover:text-orange-400' : 'text-slate-900 group-hover:text-orange-700'
+                }`}>
+                  Memory Shaastra
+                </span>
+              </button>
             </div>
 
-            {/* Right Group: Focus Shield & Study Now (on sm+) + Account Profile */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 relative">
-              {/* Distraction-Free Focus Shield Toggle (Tablet & Desktop single row) */}
+            {/* Right Group: Shield + Study Now + Account */}
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0 relative">
+              {/* Distraction Shield Toggle */}
               <button
                 onClick={toggleFocusShield}
-                className={`hidden sm:flex h-9 sm:h-10 px-3 rounded-xl text-xs font-black transition-all items-center gap-1.5 active:scale-95 shrink-0 border cursor-pointer ${
+                className={`h-8 sm:h-9 px-2 sm:px-2.5 lg:px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 active:scale-95 shrink-0 border cursor-pointer relative ${
                   isFocusShieldActive
                     ? theme === 'dark'
                       ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
@@ -177,42 +263,46 @@ function AppContent() {
                       ? 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-200 border-[#3f332c]'
                       : 'bg-white hover:bg-orange-50 text-slate-800 border-orange-300'
                 }`}
-                title="Distraction-Free Immersion Shield: Outside notifications are suppressed while using the app and shown only after you exit."
+                title="Distraction-Free Immersion Shield: Outside notifications are suppressed while using the app."
               >
-                <BellOff size={14} className={isFocusShieldActive ? 'text-emerald-500 shrink-0' : 'text-orange-500 shrink-0'} />
-                <span className="text-xs font-black whitespace-nowrap xl:hidden">
-                  {isFocusShieldActive ? 'Shield: Active' : 'Shield: Off'}
+                <BellOff size={13} className={isFocusShieldActive ? 'text-emerald-500 shrink-0' : 'text-orange-500 shrink-0'} />
+                {isFocusShieldActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 sm:hidden" />
+                )}
+                <span className="text-xs font-black whitespace-nowrap hidden sm:inline md:hidden">
+                  {isFocusShieldActive ? 'Shield' : 'Shield Off'}
                 </span>
-                <span className="text-xs font-black whitespace-nowrap hidden xl:inline">
-                  {isFocusShieldActive ? 'Outside Notifications Suppressed' : 'Focus Shield: Off'}
+                <span className="text-xs font-black whitespace-nowrap hidden md:inline">
+                  {isFocusShieldActive ? 'Shield: Active' : 'Shield: Off'}
                 </span>
               </button>
 
-              {/* Study Now Focus Sprint Button (Tablet & Desktop single row) */}
+              {/* Study Now 1-Tap Button */}
               <button
                 onClick={() => {
                   distractionShield.enterFullscreenImmersion();
                   startStudyNow('Active Focus Study', 25);
                 }}
-                className="hidden sm:flex h-9 sm:h-10 px-3.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-black shadow-md transition-all items-center gap-1.5 active:scale-95 shrink-0 cursor-pointer"
+                className="h-8 sm:h-9 px-2 sm:px-3 lg:px-3.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-black shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-95 shrink-0 cursor-pointer"
                 title="Start Study Now Focus Sprint"
               >
-                <Play size={13} className="fill-current shrink-0" />
-                <span className="text-xs font-black whitespace-nowrap">Study Now</span>
+                <Play size={12} className="fill-current shrink-0" />
+                <span className="text-xs font-black whitespace-nowrap hidden sm:inline">Study Now</span>
+                <span className="text-[11px] font-black whitespace-nowrap sm:hidden">Study</span>
               </button>
 
-              {/* Sign In / Account Button in Top Ribbon */}
+              {/* Sign In / Account Button */}
               {user && user.id !== 'guest' && user.email !== 'guest@maanas.com' ? (
                 <div className="relative shrink-0">
                   <button
                     onClick={() => setIsProfileMenuOpen(prev => !prev)}
-                    className={`h-9 sm:h-10 px-2.5 sm:px-3.5 border rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0 cursor-pointer ${
+                    className={`h-8 sm:h-9 px-2 sm:px-3 border rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0 cursor-pointer ${
                       theme === 'dark' ? 'bg-[#1a1614] hover:bg-[#3f332c] text-orange-100 border-[#3f332c]' : 'bg-white hover:bg-orange-50 text-slate-800 border-orange-300'
                     }`}
                     title="Account Profile & Settings"
                   >
-                    <UserIcon size={15} className="text-orange-500 shrink-0" />
-                    <span className="font-bold text-[11px] sm:text-xs max-w-[85px] sm:max-w-[120px] truncate">
+                    <UserIcon size={14} className="text-orange-500 shrink-0" />
+                    <span className="font-bold text-[11px] sm:text-xs max-w-[70px] sm:max-w-[110px] truncate hidden xs:inline">
                       {user.name || user.email.split('@')[0]}
                     </span>
                   </button>
@@ -262,61 +352,36 @@ function AppContent() {
               ) : (
                 <button
                   onClick={() => setView('auth')}
-                  className="h-9 sm:h-10 px-3 sm:px-3.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95 shrink-0 cursor-pointer"
+                  className="h-8 sm:h-9 px-2 sm:px-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black text-xs rounded-xl shadow-sm transition-all flex items-center gap-1 active:scale-95 shrink-0 cursor-pointer"
                   title="Sign In / Log In"
                 >
-                  <UserIcon size={14} className="shrink-0" />
+                  <UserIcon size={13} className="shrink-0" />
                   <span className="text-[11px] sm:text-xs font-black whitespace-nowrap">
-                    <span className="sm:hidden">Sign In</span>
-                    <span className="hidden sm:inline">Sign In / Log In</span>
+                    <span className="hidden sm:inline">Sign In</span>
                   </span>
                 </button>
               )}
             </div>
           </div>
-
-          {/* Mobile Symmetric Action Row (< 640px) */}
-          <div className={`grid ${showBackButton ? 'grid-cols-3' : 'grid-cols-2'} gap-2 pt-2 sm:hidden`}>
-            {showBackButton && (
-              <button 
-                onClick={goBack}
-                className={`h-9 w-full px-2 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 border shadow-sm active:scale-95 cursor-pointer ${
-                  theme === 'dark' ? 'text-orange-200 bg-[#1a1614] border-[#3f332c]' : 'text-slate-800 bg-white border-orange-300'
-                }`}
-              >
-                <ArrowLeft size={13} className="shrink-0" />
-                <span>{t.back}</span>
-              </button>
-            )}
-
-            <button
-              onClick={toggleFocusShield}
-              className={`h-9 w-full px-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1.5 active:scale-95 border cursor-pointer ${
-                isFocusShieldActive
-                  ? theme === 'dark'
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
-                    : 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-sm'
-                  : theme === 'dark'
-                    ? 'bg-[#1a1614] text-orange-200 border-[#3f332c]'
-                    : 'bg-white text-slate-800 border-orange-300'
-              }`}
-            >
-              <BellOff size={13} className={isFocusShieldActive ? 'text-emerald-500 shrink-0' : 'text-orange-500 shrink-0'} />
-              <span className="whitespace-nowrap">{isFocusShieldActive ? 'Shield: Active' : 'Shield: Off'}</span>
-            </button>
-
-            <button
-              onClick={() => {
-                distractionShield.enterFullscreenImmersion();
-                startStudyNow('Active Focus Study', 25);
-              }}
-              className="h-9 w-full px-2.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-[11px] font-black shadow-md transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
-            >
-              <Play size={12} className="fill-current shrink-0" />
-              <span className="whitespace-nowrap">Study Now</span>
-            </button>
-          </div>
         </header>
+
+        {/* Global Shortcut Trigger Toast Confirmation */}
+        <AnimatePresence>
+          {shortcutToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -25, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -25, scale: 0.95 }}
+              className="fixed top-3 left-1/2 -translate-x-1/2 z-[200] px-4 py-2 rounded-2xl bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 text-white font-black text-xs shadow-2xl flex items-center gap-2 pointer-events-none border border-white/30 backdrop-blur-md"
+            >
+              <span className="text-sm">⚡</span>
+              <span>Opened <strong>{shortcutToast.label}</strong></span>
+              <span className="bg-black/30 px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold border border-white/20">
+                {shortcutToast.key}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* DISTRACTION-FREE SHIELD MODAL */}
         <AnimatePresence>
@@ -388,15 +453,117 @@ function AppContent() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="min-h-[calc(100vh-68px)] w-full max-w-full overflow-x-hidden"
+            className="min-h-[calc(100vh-68px)] w-full max-w-full overflow-x-hidden flex flex-col justify-between"
           >
-            {renderView()}
+            {/* Top Bookmarks Bar (Available Across Every Facility) */}
+            <BookmarksBar position="top" />
+
+            {/* Facility View Content */}
+            <div className="flex-1 w-full max-w-full">
+              {renderView()}
+            </div>
+
+            {/* Bottom Bookmarks Bar (Available Across Every Facility) */}
+            <BookmarksBar position="bottom" />
           </motion.div>
         </AnimatePresence>
 
         {/* AUTH POPUP WINDOW OVERLAY */}
         <AnimatePresence>
           {currentView === 'auth' && <Auth />}
+        </AnimatePresence>
+
+        {/* ADAPTIVE STUDY MODE - GENTLE 5-MINUTE BREAK INTERVENTION POPUP */}
+        <AnimatePresence>
+          {adaptiveStudyConfig.isInterventionActive && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                className={`max-w-md w-full p-6 rounded-3xl border shadow-2xl relative ${
+                  theme === 'dark' ? 'bg-[#241c19] border-[#4a3a32] text-[#fef3c7]' : 'bg-white border-orange-200 text-stone-900'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                      <Coffee size={24} />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-500">
+                        Adaptive Study Mode • Screen Balance
+                      </span>
+                      <h3 className="text-lg font-black tracking-tight">Time for a Mindful Break</h3>
+                    </div>
+                  </div>
+                  <button
+                    onClick={dismissAdaptiveIntervention}
+                    className="p-1.5 rounded-xl hover:bg-black/10 dark:hover:bg-white/10 text-stone-500 dark:text-stone-400 cursor-pointer"
+                    title="Dismiss Break"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="space-y-3.5 text-xs">
+                  <p className="leading-relaxed opacity-90">
+                    You have been studying continuously for <strong>{adaptiveStudyConfig.thresholdHours} hours</strong>. Research shows memory consolidation peaks when study sessions are followed by short rest intervals.
+                  </p>
+
+                  <div className={`p-4 rounded-2xl border space-y-2 ${
+                    theme === 'dark' ? 'bg-[#181311] border-[#362923]' : 'bg-amber-50/70 border-amber-200'
+                  }`}>
+                    <div className="flex items-center justify-between text-xs font-black">
+                      <span className="flex items-center gap-1.5 text-amber-500">
+                        <Eye size={14} /> 5-Minute Interface Calming Mode
+                      </span>
+                      <span className="font-mono text-sm">
+                        {Math.floor(adaptiveStudyConfig.interventionSecondsRemaining / 60)}:
+                        {(adaptiveStudyConfig.interventionSecondsRemaining % 60).toString().padStart(2, '0')}
+                      </span>
+                    </div>
+                    <p className="text-[11px] opacity-80 leading-relaxed">
+                      Memory Shaastra has temporarily switched to calming grayscale and modest dimming to rest your visual cortex. The interface will restore automatically in 5 minutes without disrupting your study timer.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px] font-bold">
+                    <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/15 flex items-center gap-2">
+                      <Eye size={14} className="shrink-0" />
+                      <span>20-20-20 eye gaze rest</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 flex items-center gap-2">
+                      <Coffee size={14} className="shrink-0" />
+                      <span>Hydrate & stretch posture</span>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-stone-500 dark:text-orange-200/50 italic leading-snug">
+                    * Note: This intervention operates within Memory Shaastra to promote balanced screen habits. A web app cannot modify your device's system-level display settings.
+                  </p>
+                </div>
+
+                <div className="mt-5 flex items-center gap-2.5">
+                  <button
+                    onClick={dismissAdaptiveIntervention}
+                    className="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
+                  >
+                    Restore Normal Appearance
+                  </button>
+                  <button
+                    onClick={() => {
+                      dismissAdaptiveIntervention();
+                      setView('settings');
+                    }}
+                    className="py-3 px-4 rounded-2xl border text-xs font-bold transition-all hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
+                  >
+                    Settings
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
         </AnimatePresence>
       </main>
     </div>

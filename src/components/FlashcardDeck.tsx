@@ -17,11 +17,12 @@ import {
   HelpCircle,
   Eye
 } from 'lucide-react';
-import { Flashcard } from '../types';
+import { Flashcard, FileAttachment } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
 import { MemoryLinker } from './MemoryLinker';
 import { triggerCompletionCelebration } from '../utils/confetti';
+import { UniversalAttachmentManager } from './UniversalAttachmentManager';
 
 export default function FlashcardDeck() {
   const { flashcards: cards, setFlashcards: setCards, rateRecall, allSubjects } = useAppContext();
@@ -43,6 +44,7 @@ export default function FlashcardDeck() {
   const [newQ, setNewQ] = useState('');
   const [newA, setNewA] = useState('');
   const [newSubject, setNewSubject] = useState('');
+  const [cardAttachments, setCardAttachments] = useState<FileAttachment[]>([]);
 
   // Quick inline flip viewer for grid/list cards
   const [previewCard, setPreviewCard] = useState<Flashcard | null>(null);
@@ -131,7 +133,7 @@ export default function FlashcardDeck() {
     if (editingId) {
       setCards(prev => prev.map(card => 
         card.id === editingId 
-          ? { ...card, question: newQ, answer: newA, subject: newSubject } 
+          ? { ...card, question: newQ, answer: newA, subject: newSubject, attachments: cardAttachments } 
           : card
       ));
       setEditingId(null);
@@ -144,7 +146,8 @@ export default function FlashcardDeck() {
         difficulty: 'medium',
         nextReview: new Date().toISOString(),
         interval: 0,
-        easeFactor: 2.5
+        easeFactor: 2.5,
+        attachments: cardAttachments
       };
       setCards([...cards, card]);
     }
@@ -152,6 +155,7 @@ export default function FlashcardDeck() {
     setNewQ('');
     setNewA('');
     setNewSubject('');
+    setCardAttachments([]);
     setIsAdding(false);
   };
 
@@ -159,6 +163,7 @@ export default function FlashcardDeck() {
     setNewQ(card.question);
     setNewA(card.answer);
     setNewSubject(card.subject || '');
+    setCardAttachments(card.attachments || []);
     setEditingId(card.id);
     setIsAdding(true);
   };
@@ -327,6 +332,16 @@ export default function FlashcardDeck() {
                 className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 text-orange-100 font-bold italic outline-none focus:ring-2 focus:ring-orange-500 resize-none transition-all shadow-inner" 
               />
             </div>
+
+            {/* Multimedia Attachments */}
+            <div className="pt-2">
+              <UniversalAttachmentManager
+                attachments={cardAttachments}
+                onChange={setCardAttachments}
+                title="Multimedia Attachments (Voice note, Photos, Videos, Documents, Links)"
+              />
+            </div>
+
             <div className="flex justify-end space-x-4">
               <button 
                 onClick={() => setIsAdding(false)} 
@@ -366,9 +381,19 @@ export default function FlashcardDeck() {
                     </div>
 
                     {/* Back */}
-                    <div className="absolute inset-0 bg-orange-600 text-white rounded-3xl sm:rounded-[4rem] p-6 sm:p-12 flex flex-col items-center justify-center text-center backface-hidden rotate-y-180 shadow-[0_30px_60px_-12px_rgba(234,88,12,0.3)]">
-                      <span className="text-[10px] uppercase font-black tracking-[0.4em] text-orange-100/40 mb-4 sm:mb-8 italic">The Answer</span>
+                    <div className="absolute inset-0 bg-orange-600 text-white rounded-3xl sm:rounded-[4rem] p-6 sm:p-12 flex flex-col items-center justify-center text-center backface-hidden rotate-y-180 shadow-[0_30px_60px_-12px_rgba(234,88,12,0.3)] overflow-y-auto">
+                      <span className="text-[10px] uppercase font-black tracking-[0.4em] text-orange-100/40 mb-3 sm:mb-4 italic">The Answer</span>
                       <p className="text-lg sm:text-2xl font-black italic tracking-tight uppercase leading-relaxed break-words max-w-full px-2">{currentCard.answer}</p>
+                      {currentCard.attachments && currentCard.attachments.length > 0 && (
+                        <div className="mt-4 w-full max-w-sm text-left" onClick={e => e.stopPropagation()}>
+                          <UniversalAttachmentManager
+                            attachments={currentCard.attachments}
+                            onChange={() => {}}
+                            readOnly
+                            title="Reference Media"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

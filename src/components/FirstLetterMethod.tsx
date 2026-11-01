@@ -19,10 +19,12 @@ import {
   LayoutList,
   RotateCcw
 } from 'lucide-react';
-import { FirstLetterAid } from '../types';
+import { FirstLetterAid, FileAttachment } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
 import { MemoryLinker } from './MemoryLinker';
+import { UniversalAttachmentManager } from './UniversalAttachmentManager';
+import { WellbeingCoachFooter } from './WellbeingCoachWidget';
 
 const WORD_BANK: Record<string, string[]> = {
   a: ['Amazing', 'Active', 'Alpha', 'Ancient'],
@@ -67,6 +69,7 @@ export default function FirstLetterMethod() {
   const [description, setDescription] = useState('');
   const [itemsText, setItemsText] = useState('');
   const [subject, setSubject] = useState('');
+  const [newAttachments, setNewAttachments] = useState<FileAttachment[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'line' | 'flip'>('grid');
   const [flipIndex, setFlipIndex] = useState(0);
@@ -105,6 +108,7 @@ export default function FirstLetterMethod() {
     setDescription('');
     setItemsText('');
     setSubject('');
+    setNewAttachments([]);
     setIsAddingAid(false);
     setEditingAidId(null);
   };
@@ -115,7 +119,14 @@ export default function FirstLetterMethod() {
     
     if (editingAidId) {
       setFirstLetterEntries(firstLetterEntries.map(a => 
-        a.id === editingAidId ? { ...a, title, description, items: itemsList, subject: subject || undefined } : a
+        a.id === editingAidId ? { 
+          ...a, 
+          title, 
+          description, 
+          items: itemsList, 
+          subject: subject || undefined,
+          attachments: newAttachments.length > 0 ? newAttachments : undefined
+        } : a
       ));
     } else {
       const newAid: FirstLetterAid = {
@@ -124,7 +135,8 @@ export default function FirstLetterMethod() {
         description,
         items: itemsList,
         mnemonic: '',
-        subject: subject || undefined
+        subject: subject || undefined,
+        attachments: newAttachments.length > 0 ? newAttachments : undefined
       };
       setFirstLetterEntries([newAid, ...firstLetterEntries]);
     }
@@ -137,6 +149,7 @@ export default function FirstLetterMethod() {
     setDescription(aid.description);
     setItemsText(aid.items.join('\n'));
     setSubject(aid.subject || '');
+    setNewAttachments(aid.attachments || []);
     setIsAddingAid(true);
     scrollToForm();
   };
@@ -435,6 +448,12 @@ export default function FirstLetterMethod() {
                 </div>
               </div>
 
+              <UniversalAttachmentManager 
+                attachments={newAttachments} 
+                onChange={setNewAttachments} 
+                title="Supporting Documents, Images & Audio" 
+              />
+
               <div className="flex justify-end gap-3 pt-4">
                 <button 
                   onClick={resetForm} 
@@ -640,6 +659,17 @@ export default function FirstLetterMethod() {
                       ))}
                       {aid.items.length > 0 && <span className="ml-2 text-[10px] text-orange-200/20 font-black uppercase tracking-widest">({aid.items.length} initialism)</span>}
                     </div>
+
+                    {aid.attachments && aid.attachments.length > 0 && (
+                      <div className="mb-6">
+                        <UniversalAttachmentManager 
+                          attachments={aid.attachments} 
+                          onChange={() => {}} 
+                          readOnly={true} 
+                          title="Attachments & Media" 
+                        />
+                      </div>
+                    )}
                   </div>
                   
                   <button 
@@ -656,6 +686,11 @@ export default function FirstLetterMethod() {
           );
         })()
       )}
+      </div>
+
+      {/* Inline Wellbeing Coach Footer */}
+      <div className="pt-6 border-t border-orange-500/10">
+        <WellbeingCoachFooter />
       </div>
     </div>
   );

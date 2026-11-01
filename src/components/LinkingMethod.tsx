@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Trash2, Link as LinkIcon, Edit2, Play, ChevronLeft, ChevronRight, Layers, Box, ArrowRight, ArrowLeft, HelpCircle, Search, X, Brain, LayoutGrid, LayoutList, RotateCcw } from 'lucide-react';
-import { LinkChain } from '../types';
+import { LinkChain, FileAttachment } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
 import { MaanasMascot } from './MaanasMascot';
 import { MemoryLinker } from './MemoryLinker';
+import { UniversalAttachmentManager } from './UniversalAttachmentManager';
+import { WellbeingCoachFooter } from './WellbeingCoachWidget';
 
 export default function LinkingMethod() {
   const { linkChains, setLinkChains, goBack, allSubjects } = useAppContext();
@@ -19,6 +21,7 @@ export default function LinkingMethod() {
   const [newItems, setNewItems] = useState('');
   const [newStory, setNewStory] = useState('');
   const [newSubject, setNewSubject] = useState('');
+  const [newAttachments, setNewAttachments] = useState<FileAttachment[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   // View mode states
@@ -61,7 +64,8 @@ export default function LinkingMethod() {
       title: newChainTitle,
       items: newItems.split(',').map(i => i.trim()).filter(i => i),
       story: newStory,
-      subject: newSubject || undefined
+      subject: newSubject || undefined,
+      attachments: newAttachments.length > 0 ? newAttachments : undefined
     };
     setLinkChains([chain, ...linkChains]);
     resetForm();
@@ -73,6 +77,7 @@ export default function LinkingMethod() {
     setNewItems(chain.items.join(', '));
     setNewStory(chain.story);
     setNewSubject(chain.subject || '');
+    setNewAttachments(chain.attachments || []);
     setIsAddingChain(true);
     scrollToForm();
   };
@@ -85,7 +90,8 @@ export default function LinkingMethod() {
         title: newChainTitle, 
         items: newItems.split(',').map(i => i.trim()).filter(i => i),
         story: newStory,
-        subject: newSubject || undefined
+        subject: newSubject || undefined,
+        attachments: newAttachments.length > 0 ? newAttachments : undefined
       } : c
     ));
     resetForm();
@@ -96,6 +102,7 @@ export default function LinkingMethod() {
     setNewItems('');
     setNewStory('');
     setNewSubject('');
+    setNewAttachments([]);
     setIsAddingChain(false);
     setActiveChainId(null);
   };
@@ -387,6 +394,12 @@ export default function LinkingMethod() {
                       className="w-full bg-[#1a1614] border border-[#3f332c] rounded-2xl py-4 px-6 text-orange-100 font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all resize-none italic text-xs"
                     />
                   </div>
+
+                  <UniversalAttachmentManager 
+                    attachments={newAttachments} 
+                    onChange={setNewAttachments} 
+                    title="Supporting Documents, Images & Audio" 
+                  />
                   <div className="flex justify-end gap-3 pt-4">
                     <button 
                       onClick={resetForm} 
@@ -613,6 +626,17 @@ export default function LinkingMethod() {
                           ))}
                         </div>
 
+                        {chain.attachments && chain.attachments.length > 0 && (
+                          <div className="relative z-10">
+                            <UniversalAttachmentManager 
+                              attachments={chain.attachments} 
+                              onChange={() => {}} 
+                              readOnly={true} 
+                              title="Attachments & Media" 
+                            />
+                          </div>
+                        )}
+
                         <div className="flex gap-4 pt-1 relative z-10">
                           <button 
                             onClick={() => startPractice(chain)}
@@ -632,6 +656,11 @@ export default function LinkingMethod() {
             </div>
           </>
         )}
+      </div>
+
+      {/* Inline Wellbeing Coach Footer */}
+      <div className="pt-6 border-t border-orange-500/10">
+        <WellbeingCoachFooter />
       </div>
     </div>
   );

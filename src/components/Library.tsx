@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { DocumentViewer, DocumentAttachment } from './DocumentViewer';
+import { WellbeingCoachFooter } from './WellbeingCoachWidget';
 
 interface Grouping {
   id: string;
@@ -867,6 +868,11 @@ export default function Library() {
           onClose={() => setModalAttachment(null)}
         />
       )}
+
+      {/* Inline Wellbeing Coach Footer */}
+      <div className="pt-6 border-t border-orange-500/10">
+        <WellbeingCoachFooter />
+      </div>
 
     </div>
   );

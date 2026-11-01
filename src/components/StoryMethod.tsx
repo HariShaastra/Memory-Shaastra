@@ -19,10 +19,12 @@ import {
   LayoutList,
   RotateCcw
 } from 'lucide-react';
-import { LinkChain } from '../types';
+import { LinkChain, FileAttachment } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
 import { MemoryLinker } from './MemoryLinker';
+import { UniversalAttachmentManager } from './UniversalAttachmentManager';
+import { WellbeingCoachFooter } from './WellbeingCoachWidget';
 
 export default function StoryMethod() {
   const { storyChains, setStoryChains, goBack, allSubjects } = useAppContext();
@@ -38,6 +40,7 @@ export default function StoryMethod() {
   const [newItems, setNewItems] = useState('');
   const [newStoryText, setNewStoryText] = useState('');
   const [newSubject, setNewSubject] = useState('');
+  const [newAttachments, setNewAttachments] = useState<FileAttachment[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   const [viewMode, setViewMode] = useState<'grid' | 'line' | 'flip'>('grid');
@@ -77,6 +80,7 @@ export default function StoryMethod() {
     setNewItems('');
     setNewStoryText('');
     setNewSubject('');
+    setNewAttachments([]);
     setIsAddingStory(false);
     setEditingStoryId(null);
   };
@@ -92,7 +96,8 @@ export default function StoryMethod() {
           title: newStoryTitle,
           items: itemList,
           story: newStoryText,
-          subject: newSubject || undefined
+          subject: newSubject || undefined,
+          attachments: newAttachments.length > 0 ? newAttachments : undefined
         } : s
       ));
     } else {
@@ -101,7 +106,8 @@ export default function StoryMethod() {
         title: newStoryTitle,
         items: itemList,
         story: newStoryText,
-        subject: newSubject || undefined
+        subject: newSubject || undefined,
+        attachments: newAttachments.length > 0 ? newAttachments : undefined
       };
       setStoryChains([story, ...storyChains]);
     }
@@ -114,6 +120,7 @@ export default function StoryMethod() {
     setNewItems(story.items.join(', '));
     setNewStoryText(story.story);
     setNewSubject(story.subject || '');
+    setNewAttachments(story.attachments || []);
     setIsAddingStory(true);
     scrollToForm();
   };
@@ -403,6 +410,12 @@ export default function StoryMethod() {
                 />
               </div>
 
+              <UniversalAttachmentManager 
+                attachments={newAttachments} 
+                onChange={setNewAttachments} 
+                title="Supporting Documents, Images & Audio" 
+              />
+
               <div className="flex justify-end gap-3 pt-4">
                 <button 
                   onClick={resetForm} 
@@ -582,6 +595,17 @@ export default function StoryMethod() {
                   <div className="bg-[#1a1614] p-5 sm:p-6 rounded-2xl border-2 border-orange-500/30 mb-6 relative shadow-md">
                     <p className="text-xs sm:text-sm font-bold text-orange-100 leading-relaxed italic line-clamp-4">"{story.story}"</p>
                   </div>
+
+                  {story.attachments && story.attachments.length > 0 && (
+                    <div className="mb-6">
+                      <UniversalAttachmentManager 
+                        attachments={story.attachments} 
+                        onChange={() => {}} 
+                        readOnly={true} 
+                        title="Attachments & Media" 
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -599,6 +623,11 @@ export default function StoryMethod() {
           </div>
         )
       )}
+      </div>
+
+      {/* Inline Wellbeing Coach Footer */}
+      <div className="pt-6 border-t border-orange-500/10">
+        <WellbeingCoachFooter />
       </div>
     </div>
   );

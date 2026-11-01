@@ -4,6 +4,7 @@ export interface FileAttachment {
   type: string;
   url: string;
   size: number;
+  description?: string;
 }
 
 export interface User {
@@ -107,6 +108,7 @@ export interface Revision {
   completedDates: string[];
   nextRevision: string;
   estimatedDuration?: string;
+  attachments?: FileAttachment[];
 }
 
 export interface StudyTask {
@@ -116,6 +118,7 @@ export interface StudyTask {
   plannedDate: string;
   estimatedTime?: string; // Optional e.g. "25 mins"
   completed: boolean;
+  attachments?: FileAttachment[];
 }
 
 export interface ExamPhase {
@@ -132,6 +135,7 @@ export interface RevisionScheduleItem {
   label: string;
   date: string;
   completed: boolean;
+  attachments?: FileAttachment[];
 }
 
 export interface ExamSubTopic {
@@ -168,6 +172,7 @@ export interface ExamPlan {
   phases: ExamPhase[];
   revisionSchedule: RevisionScheduleItem[];
   isActive: boolean;
+  attachments?: FileAttachment[];
 }
 
 export interface StudyMaterial {
@@ -208,6 +213,22 @@ export interface ActivityEvent {
   description?: string;
 }
 
+export interface StudySessionLog {
+  id: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // ISO string
+  endTime: string; // ISO string
+  durationMinutes: number;
+  durationSeconds: number;
+  subject: string;
+  topic: string;
+  goal: string;
+  completed: boolean;
+  mode: 'timer' | 'stopwatch' | 'offline';
+  activitiesDone: string[];
+  notes?: string;
+}
+
 export interface ScheduledRevisionTask {
   id: string;
   activityId: string;
@@ -219,6 +240,17 @@ export interface ScheduledRevisionTask {
   completed: boolean;
   completedAt?: string;
   durationMinutes?: number;
+  attachments?: FileAttachment[];
+}
+
+export interface AdaptiveStudyConfig {
+  isEnabled: boolean; // default: true
+  thresholdHours: number; // 2 or 3 hours (default: 3)
+  continuousStudySeconds: number; // active study tracked
+  isTrackingPaused: boolean; // manual pause / resume
+  isInterventionActive: boolean; // 5-minute break mode
+  interventionSecondsRemaining: number; // countdown 300s
+  lastInterventionTimestamp?: number;
 }
 
 export type AppView = 
@@ -238,12 +270,17 @@ export type AppView =
   | 'exam-mode'
   | 'library'
   | 'ai-tester'
+  | 'self-test'
   | 'simplifier'
+  | 'prompt-formatter'
   | 'memory-dna'
   | 'wellbeing'
   | 'scheduler'
   | 'memory-boost'
-  | 'rescue-queue';
+  | 'rescue-queue'
+  | 'study-logs'
+  | 'adaptive-study'
+  | 'social-focus';
 
 export interface QuestionPaperSpec {
   types: Array<'mcq' | 'fill-blank' | 'short' | 'long' | 'case' | 'true-false'>;

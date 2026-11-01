@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Trash2, Calendar, CheckCircle2, Clock, Edit2, ChevronLeft, Zap, Sparkles, Brain } from 'lucide-react';
-import { Revision } from '../types';
+import { Revision, FileAttachment } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { t } from '../utils/translations';
 import { MaanasMascot } from './MaanasMascot';
+import { UniversalAttachmentManager } from './UniversalAttachmentManager';
+import { WellbeingCoachFooter } from './WellbeingCoachWidget';
 
 export default function RevisionScheduler() {
   const { revisions, setRevisions, goBack } = useAppContext();
@@ -16,6 +18,7 @@ export default function RevisionScheduler() {
   const [examDate, setExamDate] = useState('');
   const [nextRevisionDate, setNextRevisionDate] = useState('');
   const [estimatedDuration, setEstimatedDuration] = useState('');
+  const [newAttachments, setNewAttachments] = useState<FileAttachment[]>([]);
 
   const addRevision = () => {
     if (!newSubject || !newChapter) return;
@@ -29,7 +32,8 @@ export default function RevisionScheduler() {
               chapter: newChapter, 
               examDate: examDate || '',
               nextRevision: nextRevisionDate ? new Date(nextRevisionDate).toISOString() : rev.nextRevision,
-              estimatedDuration: estimatedDuration.trim() || undefined
+              estimatedDuration: estimatedDuration.trim() || undefined,
+              attachments: newAttachments.length > 0 ? newAttachments : undefined
             } 
           : rev
       ));
@@ -43,7 +47,8 @@ export default function RevisionScheduler() {
         examDate: examDate || '',
         completedDates: [],
         nextRevision: nextRevisionDate ? new Date(nextRevisionDate).toISOString() : new Date(Date.now() + 86400000).toISOString(),
-        estimatedDuration: estimatedDuration.trim() || undefined
+        estimatedDuration: estimatedDuration.trim() || undefined,
+        attachments: newAttachments.length > 0 ? newAttachments : undefined
       };
       setRevisions([rev, ...revisions]);
     }
@@ -53,6 +58,7 @@ export default function RevisionScheduler() {
     setExamDate('');
     setNextRevisionDate('');
     setEstimatedDuration('');
+    setNewAttachments([]);
     setIsAdding(false);
   };
 
@@ -62,6 +68,7 @@ export default function RevisionScheduler() {
     setExamDate(rev.examDate);
     setNextRevisionDate(new Date(rev.nextRevision).toISOString().split('T')[0]);
     setEstimatedDuration(rev.estimatedDuration || '');
+    setNewAttachments(rev.attachments || []);
     setEditingId(rev.id);
     setIsAdding(true);
   };
@@ -182,6 +189,12 @@ export default function RevisionScheduler() {
                 />
               </div>
 
+              <UniversalAttachmentManager 
+                attachments={newAttachments} 
+                onChange={setNewAttachments} 
+                title="Revision Reference Documents, Notes & Audio" 
+              />
+
               <div className="flex justify-end gap-3 pt-4">
                 <button 
                   onClick={() => { setIsAdding(false); setEditingId(null); }} 
@@ -241,6 +254,16 @@ export default function RevisionScheduler() {
                         </>
                       )}
                     </div>
+                    {rev.attachments && rev.attachments.length > 0 && (
+                      <div className="pt-2">
+                        <UniversalAttachmentManager 
+                          attachments={rev.attachments} 
+                          onChange={() => {}} 
+                          readOnly={true} 
+                          title="Attached Media" 
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -281,6 +304,11 @@ export default function RevisionScheduler() {
           </div>
         </div>
       )}
+
+      {/* Inline Wellbeing Coach Footer */}
+      <div className="pt-6 border-t border-orange-500/10">
+        <WellbeingCoachFooter />
+      </div>
     </div>
   );
 }

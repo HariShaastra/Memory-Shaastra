@@ -9,7 +9,10 @@ import {
   Send
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { FileAttachment } from '../types';
 import { MaanasMascot } from './MaanasMascot';
+import { UniversalAttachmentManager } from './UniversalAttachmentManager';
+import { WellbeingCoachFooter } from './WellbeingCoachWidget';
 
 interface RescueItem {
   id: string;
@@ -18,6 +21,7 @@ interface RescueItem {
   answer: string;
   subject: string;
   strength: 'weak' | 'medium' | 'strong';
+  attachments?: FileAttachment[];
 }
 
 export default function RescueQueue() {
@@ -48,7 +52,8 @@ export default function RescueQueue() {
         question: f.question,
         answer: f.answer,
         subject: f.subject || "Flashcard",
-        strength: 'weak' as const
+        strength: 'weak' as const,
+        attachments: f.attachments
       });
     });
 
@@ -59,7 +64,8 @@ export default function RescueQueue() {
         question: `Recall memory phrase for: "${m.title}"`,
         answer: `Mnemonic trick: "${m.phrase || m.title}"`,
         subject: "Mnemonic",
-        strength: 'medium' as const
+        strength: 'medium' as const,
+        attachments: m.attachments
       });
     });
 
@@ -70,7 +76,8 @@ export default function RescueQueue() {
         question: `Explain core details from document: "${sm.title}"`,
         answer: sm.content || "Keep this concept in your library index.",
         subject: (sm as any).groupName || "Library Ref",
-        strength: 'strong' as const
+        strength: 'strong' as const,
+        attachments: sm.attachments
       });
     });
 
@@ -316,6 +323,18 @@ export default function RescueQueue() {
                       </p>
                     </div>
 
+                    {/* Attachments if any */}
+                    {currentItem.attachments && currentItem.attachments.length > 0 && (
+                      <div className="pt-2">
+                        <UniversalAttachmentManager 
+                          attachments={currentItem.attachments} 
+                          onChange={() => {}} 
+                          readOnly={true} 
+                          title="Reference Attachments & Media" 
+                        />
+                      </div>
+                    )}
+
                     <div className="text-center pt-2">
                       <p className="text-[11px] font-black uppercase tracking-wider text-orange-200/90">
                         Compare your answer with the actual solution and rate your recall:
@@ -367,6 +386,11 @@ export default function RescueQueue() {
           <button onClick={goBack} className="mt-6 px-8 py-4 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-orange-600/20">Go Back</button>
         </div>
       )}
+
+      {/* Inline Wellbeing Coach Footer */}
+      <div className="pt-6 border-t border-orange-500/10">
+        <WellbeingCoachFooter />
+      </div>
     </div>
   );
 }

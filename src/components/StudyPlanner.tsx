@@ -22,7 +22,9 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { StudyTask, ScheduledRevisionTask } from '../types';
+import { StudyTask, ScheduledRevisionTask, FileAttachment } from '../types';
+import { UniversalAttachmentManager } from './UniversalAttachmentManager';
+import { WellbeingCoachFooter } from './WellbeingCoachWidget';
 
 export const StudyPlanner: React.FC = () => {
   const { 
@@ -55,13 +57,22 @@ export const StudyPlanner: React.FC = () => {
     }, 100);
   };
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    subject: string;
+    topic: string;
+    plannedDate: string;
+    estimatedTime: string;
+    intervalDays: number;
+    completed: boolean;
+    attachments: FileAttachment[];
+  }>({
     subject: '',
     topic: '',
     plannedDate: new Date().toISOString().split('T')[0],
     estimatedTime: '',
     intervalDays: 1,
-    completed: false
+    completed: false,
+    attachments: []
   });
 
   const activeExamPlan = examPlans.find(p => p.isActive) || examPlans[0];
@@ -73,7 +84,8 @@ export const StudyPlanner: React.FC = () => {
       plannedDate: new Date().toISOString().split('T')[0],
       estimatedTime: '',
       intervalDays: 1,
-      completed: false
+      completed: false,
+      attachments: []
     });
     setEditingId(null);
     setEditingType(null);
@@ -91,7 +103,8 @@ export const StudyPlanner: React.FC = () => {
               topic: formData.topic, 
               subject: formData.subject || 'General', 
               plannedDate: formData.plannedDate, 
-              estimatedTime: formData.estimatedTime.trim() || undefined 
+              estimatedTime: formData.estimatedTime.trim() || undefined,
+              attachments: formData.attachments.length > 0 ? formData.attachments : undefined
             } 
           : task
       ));
@@ -102,7 +115,8 @@ export const StudyPlanner: React.FC = () => {
         itemTitle: formData.topic,
         dueDate: formData.plannedDate,
         durationMinutes: durMins,
-        intervalDays: formData.intervalDays || 1
+        intervalDays: formData.intervalDays || 1,
+        attachments: formData.attachments.length > 0 ? formData.attachments : undefined
       });
     } else {
       // Adding New
@@ -114,7 +128,8 @@ export const StudyPlanner: React.FC = () => {
           dueDate: formData.plannedDate,
           durationMinutes: durMins,
           intervalDays: formData.intervalDays || 1,
-          itemType: 'study-task'
+          itemType: 'study-task',
+          attachments: formData.attachments.length > 0 ? formData.attachments : undefined
         });
       } else {
         const task: StudyTask = {
@@ -123,7 +138,8 @@ export const StudyPlanner: React.FC = () => {
           topic: formData.topic,
           plannedDate: formData.plannedDate,
           estimatedTime: formData.estimatedTime.trim() || undefined,
-          completed: false
+          completed: false,
+          attachments: formData.attachments.length > 0 ? formData.attachments : undefined
         };
         setStudyTasks(prev => [...prev, task]);
       }
@@ -140,7 +156,8 @@ export const StudyPlanner: React.FC = () => {
       plannedDate: task.plannedDate,
       estimatedTime: task.estimatedTime || '',
       intervalDays: 1,
-      completed: task.completed
+      completed: task.completed,
+      attachments: task.attachments || []
     });
     setEditingId(task.id);
     setEditingType('task');
@@ -156,7 +173,8 @@ export const StudyPlanner: React.FC = () => {
       plannedDate: rev.dueDate,
       estimatedTime: rev.durationMinutes ? `${rev.durationMinutes} mins` : '',
       intervalDays: rev.intervalDays || 1,
-      completed: rev.completed
+      completed: rev.completed,
+      attachments: rev.attachments || []
     });
     setEditingId(rev.id);
     setEditingType('revision');
@@ -402,6 +420,12 @@ export const StudyPlanner: React.FC = () => {
               </div>
             </div>
 
+            <UniversalAttachmentManager 
+              attachments={formData.attachments} 
+              onChange={att => setFormData(prev => ({ ...prev, attachments: att }))} 
+              title="Task Study Materials & Reference Media" 
+            />
+
             <div className="flex justify-end space-x-3 pt-2">
               <button 
                 onClick={() => { setIsAdding(false); resetForm(); }}
@@ -451,6 +475,16 @@ export const StudyPlanner: React.FC = () => {
                     <span className="flex items-center space-x-1"><Clock size={12} className="text-sky-600 dark:text-sky-400" /><span>{task.estimatedTime}</span></span>
                   ) : null}
                 </div>
+                {task.attachments && task.attachments.length > 0 && (
+                  <div className="pt-2">
+                    <UniversalAttachmentManager 
+                      attachments={task.attachments} 
+                      onChange={() => {}} 
+                      readOnly={true} 
+                      title="Attached Media" 
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -528,6 +562,16 @@ export const StudyPlanner: React.FC = () => {
                     </span>
                   )}
                 </div>
+                {rev.attachments && rev.attachments.length > 0 && (
+                  <div className="pt-2">
+                    <UniversalAttachmentManager 
+                      attachments={rev.attachments} 
+                      onChange={() => {}} 
+                      readOnly={true} 
+                      title="Attached Media" 
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -566,6 +610,11 @@ export const StudyPlanner: React.FC = () => {
             {searchQuery && <p className="text-orange-400 font-bold">Try clearing your search query above.</p>}
           </div>
         )}
+      </div>
+
+      {/* Inline Wellbeing Coach Footer */}
+      <div className="pt-6 border-t border-orange-500/10">
+        <WellbeingCoachFooter />
       </div>
 
     </div>
